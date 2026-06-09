@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs — P-Sphere</title>
+  <meta name="description" content="P-Sphere documentation: how P2P sync works, app setup, and configuration." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    @media (max-width: 768px) {
+      .docs-layout { grid-template-columns: 1fr; }
+      .docs-sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <span class="nav-logo">P-Sphere</span>
+      <span class="nav-badge">Alpha</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#coming-soon">Roadmap</a>
+      <a href="download.html">Download</a>
+      <a href="docs.html" class="active">Docs</a>
+    </div>
+    <div class="nav-end">
+      <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary btn-sm">Download APK</a>
+    </div>
+  </div>
+</nav>
+
+<div class="dev-banner">
+  Documentation is a work in progress and may be incomplete during alpha.
+</div>
+
+<div class="page-header">
+  <div class="container">
+    <span class="section-label">Documentation</span>
+    <h1>P-Sphere Docs</h1>
+    <p>How the app works, how to get started, and what to expect.</p>
+  </div>
+</div>
+
+<section style="background: var(--bg);">
+  <div class="container">
+    <div class="docs-layout">
+
+      <!-- Sidebar -->
+      <div class="docs-sidebar">
+        <div class="docs-sidebar-group">
+          <span class="docs-sidebar-label">Getting started</span>
+          <a href="#overview" class="active">Overview</a>
+          <a href="#install">Installing the app</a>
+          <a href="#permissions">Permissions</a>
+        </div>
+        <div class="docs-sidebar-group">
+          <span class="docs-sidebar-label">Core features</span>
+          <a href="#backup">Photo backup</a>
+          <a href="#p2p">P2P sync</a>
+          <a href="#delta-sync">Delta sync</a>
+        </div>
+        <div class="docs-sidebar-group">
+          <span class="docs-sidebar-label">Coming soon</span>
+          <a href="#server">Core server</a>
+          <a href="#web-ui">Web dashboard</a>
+          <a href="#ai">AI features</a>
+        </div>
+        <div class="docs-sidebar-group">
+          <span class="docs-sidebar-label">Reference</span>
+          <a href="#faq">FAQ</a>
+          <a href="#privacy">Privacy</a>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="prose" style="padding-bottom: 80px;">
+
+        <h2 id="overview">Overview</h2>
+        <p>P-Sphere is a self-hosted photo library. The goal is to give you everything a cloud photo service offers — backup, search, albums, AI — without your photos ever leaving devices you control.</p>
+        <p>Right now, the Android app is working. It backs up your camera roll and syncs photos between devices on your local Wi-Fi network with no server required. The rest of the platform is in active development.</p>
+        <p><strong>What works today:</strong></p>
+        <ul>
+          <li>Automatic camera roll backup (to another device on your network)</li>
+          <li>P2P sync between Android phones on the same Wi-Fi</li>
+          <li>Hash-based delta sync (only new photos are transferred)</li>
+          <li>Background sync using Android WorkManager</li>
+        </ul>
+        <div class="callout callout-warning">
+          P-Sphere is <strong>alpha software</strong>. It is not production-ready. Always maintain independent backups of your photos outside of P-Sphere.
+        </div>
+
+        <hr>
+
+        <h2 id="install">Installing the app</h2>
+        <p>P-Sphere is not on the Google Play Store yet. You install it by sideloading the APK file. This is safe and reversible.</p>
+        <p>Full step-by-step instructions are on the <a href="download.html#install">download page</a>. In short:</p>
+        <ol>
+          <li>Download the APK from the <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases">releases page</a></li>
+          <li>Enable "Install unknown apps" for your browser or file manager</li>
+          <li>Tap the APK file and confirm installation</li>
+          <li>Open P-Sphere and grant the required permissions</li>
+        </ol>
+
+        <hr>
+
+        <h2 id="permissions">Permissions</h2>
+        <p>P-Sphere requests two permissions:</p>
+        <ul>
+          <li><strong>Photos / Media access</strong> — Required. Needed to read your camera roll for backup and sync.</li>
+          <li><strong>Notifications</strong> — Optional. Used to show sync progress and completion notices.</li>
+        </ul>
+        <p>P-Sphere does not request location, contacts, microphone, or camera permissions. No data is sent to any external server.</p>
+
+        <hr>
+
+        <h2 id="backup">Photo backup</h2>
+        <p>When another P-Sphere device is available on your network (either a phone or, in the future, the core server), the app backs up your camera roll automatically in the background.</p>
+        <p>Backup behaviour:</p>
+        <ul>
+          <li>Runs automatically on a configurable schedule (default: every 6 hours)</li>
+          <li>Only runs on Wi-Fi by default — you can optionally allow mobile data in settings</li>
+          <li>Skips backup when battery is low</li>
+          <li>Can be triggered manually from the app at any time</li>
+        </ul>
+
+        <hr>
+
+        <h2 id="p2p">P2P sync</h2>
+        <p>P2P mode lets two Android phones running P-Sphere sync photos directly over the same Wi-Fi network. No server or internet connection is needed.</p>
+
+        <h3>How discovery works</h3>
+        <p>P-Sphere uses Android's Network Service Discovery (NSD / mDNS) to broadcast its presence on the local network. Any other P-Sphere device on the same network will appear in the app's device list automatically. No IP addresses or pairing codes required.</p>
+
+        <h3>How transfer works</h3>
+        <p>Once you initiate a sync, P-Sphere:</p>
+        <ol>
+          <li>Exchanges a list of SHA-256 photo hashes with the other device</li>
+          <li>Identifies which photos each device is missing</li>
+          <li>Transfers only those files over a direct TCP connection</li>
+        </ol>
+        <p>This means syncing is always incremental — transferring a library of 5,000 photos the first time is slow, but every sync after that takes seconds.</p>
+
+        <h3>Security</h3>
+        <p>Connections are local-network only and require explicit authorization on both devices the first time. P-Sphere does not expose any port to the internet.</p>
+
+        <hr>
+
+        <h2 id="delta-sync">Delta sync</h2>
+        <p>Every photo is identified by its SHA-256 content hash, not its filename or date. This means:</p>
+        <ul>
+          <li>Renaming or moving a photo doesn't cause it to re-upload</li>
+          <li>Duplicates are detected automatically and skipped</li>
+          <li>If a photo exists on the receiving device (even under a different name), it won't be transferred again</li>
+        </ul>
+        <p>This makes repeated syncs very fast, even for large libraries.</p>
+
+        <hr>
+
+        <h2 id="server">Core server <span class="status-soon" style="vertical-align: middle; margin-left: 8px;">Coming soon</span></h2>
+        <p>The core server is a self-hosted Node.js backend that will act as the permanent home for your photo library. Once available, it will:</p>
+        <ul>
+          <li>Store photos on disk and serve them to connected devices</li>
+          <li>Run the AI pipeline (tagging, face detection, search) in the background</li>
+          <li>Serve the web dashboard</li>
+          <li>Manage device tokens and sync state</li>
+        </ul>
+        <p>You'll be able to run it on any always-on machine: a spare PC, a Raspberry Pi, a NAS, or a small VPS.</p>
+        <p><strong>Tech stack:</strong> Node.js 20, Express, PostgreSQL, Redis, BullMQ.</p>
+
+        <hr>
+
+        <h2 id="web-ui">Web dashboard <span class="status-soon" style="vertical-align: middle; margin-left: 8px;">Coming soon</span></h2>
+        <p>The web dashboard is a React app served by the core server. You'll be able to access it from any browser on your local network at <code>http://&lt;server-ip&gt;:5173</code>.</p>
+        <p>Planned features: photo timeline, album management, AI search, face cluster labelling, sync status.</p>
+
+        <hr>
+
+        <h2 id="ai">AI features <span class="status-soon" style="vertical-align: middle; margin-left: 8px;">Coming soon</span></h2>
+        <p>All AI in P-Sphere runs locally. Nothing is sent to an external API.</p>
+        <ul>
+          <li><strong>Natural language search</strong> — powered by a local LLM (Ollama, LM Studio, or any OpenAI-compatible endpoint you run yourself)</li>
+          <li><strong>Smart albums</strong> — the LLM clusters your photos into Trip, People, Pets, and Place albums</li>
+          <li><strong>Face detection and clustering</strong> — runs ONNX models offline, groups similar faces across your library</li>
+          <li><strong>Object tagging</strong> — identifies objects and scenes in your photos for richer search</li>
+        </ul>
+
+        <hr>
+
+        <h2 id="faq">FAQ</h2>
+
+        <h3>Does P-Sphere work without the internet?</h3>
+        <p>Yes. The Android app and P2P sync work entirely over your local Wi-Fi network. No internet connection is required for any currently available feature.</p>
+
+        <h3>Do I need an account?</h3>
+        <p>Not currently. The Android app works without any account or registration. When the core server is released, you'll create a local account on your own server — there's no central account system.</p>
+
+        <h3>Is my data safe?</h3>
+        <p>P-Sphere stores photos on the devices involved in the sync. Data safety depends on the health of those devices. We strongly recommend keeping independent backups — P-Sphere is alpha software and data loss is possible.</p>
+
+        <h3>Can multiple people use P-Sphere on the same network?</h3>
+        <p>Each phone runs its own independent instance. Multi-user support with shared libraries and per-user accounts is planned for the core server release.</p>
+
+        <h3>Is the source code available?</h3>
+        <p>P-Sphere is currently proprietary software. License terms are on the <a href="license.html">License page</a>. We may release it under an open-source license as the project matures.</p>
+
+        <h3>How do I report a bug?</h3>
+        <p>Open an issue on the <a href="https://github.com/Madhuhas/P-Sphere">GitHub repository</a>. Please include your Android version, the app version, and a description of what happened.</p>
+
+        <hr>
+
+        <h2 id="privacy">Privacy</h2>
+        <p>P-Sphere is designed so your photos never leave your devices:</p>
+        <ul>
+          <li>No external servers are involved in any currently available feature</li>
+          <li>The app collects no analytics or telemetry</li>
+          <li>No crash reports are sent automatically — you would need to do so manually</li>
+          <li>P2P sync happens directly between your devices over your local network</li>
+          <li>No account is needed, so there is nothing to track you with</li>
+        </ul>
+        <p>When the core server is released, that server will also be self-hosted on hardware you own. We will never operate cloud infrastructure on your behalf or have access to your photos.</p>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">P-Sphere</div>
+        <p>A self-hosted, privacy-first photo library for Android.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#coming-soon">Roadmap</a>
+        <a href="download.html">Download</a>
+        <a href="docs.html">Documentation</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="terms.html">Terms of Service</a>
+        <a href="license.html">License</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 P-Sphere. All rights reserved.</span>
+      <span><a href="terms.html">Terms</a> &nbsp;&middot;&nbsp; <a href="license.html">License</a></span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

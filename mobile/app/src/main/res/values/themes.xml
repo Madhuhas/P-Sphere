@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.PSphere" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.PSphere.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0f1923</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.PSphere</item>
+    </style>
+</resources>
