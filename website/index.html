@@ -1,234 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>P-Sphere — Private Photo Sync for Android</title>
-  <meta name="description" content="P-Sphere is a self-hosted photo library for Android. Sync your photos between devices over Wi-Fi with no cloud, no accounts, and no subscription." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P-Sphere — Private photo sync for Android</title>
+  <meta name="description" content="Back up your camera roll and sync photos between devices over Wi-Fi. No cloud, no accounts, no subscription.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<nav>
-  <div class="nav-inner">
-    <a href="index.html" class="nav-brand">
-      <span class="nav-logo">P-Sphere</span>
-      <span class="nav-badge">Alpha</span>
-    </a>
+<header>
+  <nav>
+    <a href="index.html" class="brand">P-Sphere <span class="alpha-badge">Alpha</span></a>
     <div class="nav-links">
       <a href="#features">Features</a>
-      <a href="#coming-soon">Roadmap</a>
+      <a href="#roadmap">Roadmap</a>
       <a href="download.html">Download</a>
       <a href="docs.html">Docs</a>
     </div>
-    <div class="nav-end">
-      <a href="download.html" class="btn btn-primary btn-sm">Download APK</a>
-    </div>
-  </div>
-</nav>
+    <a href="download.html" class="btn btn-primary btn-sm">Download APK</a>
+  </nav>
+</header>
 
-<div class="dev-banner">
-  P-Sphere is in early alpha. Features are under active development — use at your own risk.
+<div class="banner">
+  Early alpha — expect rough edges and occasional bugs while we build.
 </div>
 
-<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
-<section class="hero">
-  <div class="container">
-    <div class="hero-label">
-      <span></span> Android app available now
+<main>
+  <section class="hero">
+    <div class="container">
+      <p class="hero-status">Android app is live</p>
+      <h1>Your photos.<br><em>No cloud required.</em></h1>
+      <p class="hero-sub">P-Sphere backs up your camera roll and syncs photos directly between your Android devices over Wi-Fi. Nothing passes through a server you don't own.</p>
+      <div class="hero-actions">
+        <a href="download.html" class="btn btn-primary btn-lg">Download for Android</a>
+        <a href="#features" class="btn btn-outline btn-lg">See what's working</a>
+      </div>
+      <p class="hero-note">Requires Android 8.0 or higher</p>
     </div>
-    <h1>Your photos.<br><em>No cloud required.</em></h1>
-    <p class="hero-sub">
-      P-Sphere is a personal photo library for Android. Back up your camera roll and sync between your devices over your local network — no internet, no accounts, no subscription.
-    </p>
-    <div class="hero-actions">
-      <a href="download.html" class="btn btn-primary btn-lg">Download for Android</a>
-      <a href="#features" class="btn btn-secondary btn-lg">See what works</a>
-    </div>
-    <p class="hero-note">Alpha · Android 8.0+ · Free to use</p>
-  </div>
-</section>
+  </section>
 
-<!-- ── Features ──────────────────────────────────────────────────────────── -->
-<section id="features" class="alt">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-label">Available now</span>
-      <h2>What works today</h2>
-      <p>The core sync engine and Android app are functional. Here's what you can use right now.</p>
-    </div>
-
-    <div class="features-grid">
-
-      <div class="feat-card">
-        <div class="feat-card-head">
-          <div class="feat-icon">&#128247;</div>
-          <span class="status-live">Live</span>
-        </div>
-        <h3>Automatic photo backup</h3>
-        <p>P-Sphere runs in the background on your Android phone and automatically backs up your camera roll as you take photos. Battery-aware and network-aware — it only syncs when conditions are right.</p>
+  <section id="features" class="tinted">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Available now</p>
+        <h2 class="section-title">What works today</h2>
+        <p class="section-desc">The sync engine is stable. These features are ready to use.</p>
       </div>
-
-      <div class="feat-card">
-        <div class="feat-card-head">
-          <div class="feat-icon">&#8596;</div>
-          <span class="status-live">Live</span>
+      <div class="feat-grid">
+        <div class="feat-card">
+          <div class="feat-head">
+            <span class="feat-icon">&#128247;</span>
+            <span class="badge-live">Live</span>
+          </div>
+          <h3>Automatic backup</h3>
+          <p>P-Sphere runs quietly in the background and backs up your camera roll as you shoot. It waits for Wi-Fi and skips when battery is low.</p>
         </div>
-        <h3>P2P device sync</h3>
-        <p>Sync photos directly between two Android phones on the same Wi-Fi network. P-Sphere discovers nearby devices automatically using mDNS — no server, no internet, no configuration needed.</p>
-      </div>
-
-      <div class="feat-card">
-        <div class="feat-card-head">
-          <div class="feat-icon">&#9889;</div>
-          <span class="status-live">Live</span>
+        <div class="feat-card">
+          <div class="feat-head">
+            <span class="feat-icon">&#8596;</span>
+            <span class="badge-live">Live</span>
+          </div>
+          <h3>P2P device sync</h3>
+          <p>Two phones on the same network find each other automatically using mDNS. No server, no IP config, no pairing codes needed.</p>
         </div>
-        <h3>Smart delta sync</h3>
-        <p>Every photo is identified by its SHA-256 hash. Only photos the receiving device doesn't already have are transferred. Repeat syncs are instant, even for large libraries.</p>
-      </div>
-
-      <div class="feat-card">
-        <div class="feat-card-head">
-          <div class="feat-icon">&#128274;</div>
-          <span class="status-live">Live</span>
+        <div class="feat-card">
+          <div class="feat-head">
+            <span class="feat-icon">&#9889;</span>
+            <span class="badge-live">Live</span>
+          </div>
+          <h3>Delta sync</h3>
+          <p>Photos are identified by SHA-256 hash, not filename. Only missing files transfer, so syncs stay fast regardless of library size.</p>
         </div>
-        <h3>Completely offline</h3>
-        <p>Nothing leaves your local network. P-Sphere has no external server, no telemetry, and no account system. Your photos stay on your devices, period.</p>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ── How it works ───────────────────────────────────────────────────────── -->
-<section id="how-it-works">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-label">How it works</span>
-      <h2>Simple by design</h2>
-      <p>Getting started takes less than two minutes.</p>
-    </div>
-
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <h3>Install P-Sphere on your Android phone</h3>
-          <p>Download the APK and sideload it onto your device. Android 8.0 or higher required.</p>
-          <a href="download.html">Installation guide &rarr;</a>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <h3>Open the app — it finds nearby devices automatically</h3>
-          <p>P-Sphere broadcasts its presence on your local network using mDNS. Any other device running P-Sphere on the same Wi-Fi will appear automatically.</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <h3>Authorize the connection and sync</h3>
-          <p>Approve the connection on both devices once. Photos sync automatically from that point on — no internet required, no ongoing configuration.</p>
+        <div class="feat-card">
+          <div class="feat-head">
+            <span class="feat-icon">&#128274;</span>
+            <span class="badge-live">Live</span>
+          </div>
+          <h3>Completely offline</h3>
+          <p>Sync is device-to-device over your local network. No external servers, no telemetry, no account required to use the app.</p>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── Coming soon ────────────────────────────────────────────────────────── -->
-<section id="coming-soon" class="alt">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-label">Roadmap</span>
-      <h2>What we're building next</h2>
-      <p>P-Sphere is growing into a full self-hosted photo platform. These features are in active development.</p>
+  <section>
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Getting started</p>
+        <h2 class="section-title">Up and running in two minutes</h2>
+        <p class="section-desc">Installing takes a few taps and syncing is automatic after that.</p>
+      </div>
+      <div class="steps" style="max-width: 600px;">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-body">
+            <h3>Download and sideload the APK</h3>
+            <p>P-Sphere isn't on the Play Store yet. Download the APK and install it directly — takes about two minutes.</p>
+            <a href="download.html">Installation guide &#8594;</a>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-body">
+            <h3>Open the app on both phones</h3>
+            <p>As long as both devices are on the same Wi-Fi network, they'll discover each other automatically. No setup needed.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-body">
+            <h3>Approve the connection once</h3>
+            <p>Confirm on both devices the first time. After that, syncing happens in the background on its own.</p>
+          </div>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <div class="soon-grid">
-
-      <div class="soon-card">
-        <div><span class="status-soon">Coming soon</span></div>
-        <h3>Self-hosted core server</h3>
-        <p>A Node.js backend you run on any home machine or NAS. Acts as a permanent home for your library and powers the web interface.</p>
+  <section id="roadmap" class="tinted">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Roadmap</p>
+        <h2 class="section-title">What's coming</h2>
+        <p class="section-desc">P-Sphere is growing into a full self-hosted photo platform. These are the next pieces.</p>
       </div>
-
-      <div class="soon-card">
-        <div><span class="status-soon">Coming soon</span></div>
-        <h3>Web dashboard</h3>
-        <p>A browser-based photo viewer served by the core server. View your timeline, manage albums, and browse from any device on your network.</p>
+      <div class="roadmap-grid">
+        <div class="roadmap-card">
+          <span class="badge-soon">In development</span>
+          <h3>Core server</h3>
+          <p>A Node.js backend you self-host at home. Permanent photo storage, web UI, and the AI pipeline all run through it.</p>
+        </div>
+        <div class="roadmap-card">
+          <span class="badge-soon">In development</span>
+          <h3>Web dashboard</h3>
+          <p>A browser-based photo viewer served by the core server. Browse your timeline and manage albums from any device on your network.</p>
+        </div>
+        <div class="roadmap-card">
+          <span class="badge-soon">In development</span>
+          <h3>AI search</h3>
+          <p>Search photos using natural language. Runs locally through Ollama or any OpenAI-compatible endpoint. Nothing leaves your machine.</p>
+        </div>
+        <div class="roadmap-card">
+          <span class="badge-soon">In development</span>
+          <h3>Smart albums</h3>
+          <p>Automatically group your library by trip, people, pets, and place using a local AI model.</p>
+        </div>
+        <div class="roadmap-card">
+          <span class="badge-soon">In development</span>
+          <h3>Face recognition</h3>
+          <p>Detect and cluster faces across your library entirely offline using ONNX models.</p>
+        </div>
+        <div class="roadmap-card">
+          <span class="badge-soon">In development</span>
+          <h3>Multi-user support</h3>
+          <p>Separate accounts and libraries for each person on a shared server, with optional shared albums.</p>
+        </div>
       </div>
-
-      <div class="soon-card">
-        <div><span class="status-soon">Coming soon</span></div>
-        <h3>AI-powered search</h3>
-        <p>Search your photos using natural language — "beach trip 2023" or "photos with the dog." Runs locally using Ollama or any OpenAI-compatible model. Nothing leaves your machine.</p>
-      </div>
-
-      <div class="soon-card">
-        <div><span class="status-soon">Coming soon</span></div>
-        <h3>Smart albums</h3>
-        <p>Automatically organise your library into albums by trip, people, pets, and place. Generated on-device using your local AI model.</p>
-      </div>
-
-      <div class="soon-card">
-        <div><span class="status-soon">Coming soon</span></div>
-        <h3>Face recognition</h3>
-        <p>Detect and cluster faces in your photo library without sending a single image to a cloud API. Runs entirely offline using ONNX models.</p>
-      </div>
-
-      <div class="soon-card">
-        <div><span class="status-soon">Coming soon</span></div>
-        <h3>Multi-user support</h3>
-        <p>Each person in your household gets their own account and library on the same server. Shared albums and selective sharing are on the roadmap too.</p>
-      </div>
-
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── Download CTA ───────────────────────────────────────────────────────── -->
-<section id="download">
-  <div class="container">
-    <div class="download-box">
-      <span class="chip chip-warning" style="margin-bottom: 20px;">Alpha — use at your own risk</span>
-      <h2>Download P-Sphere</h2>
-      <p>Free for personal use. The Android app is available now — the rest of the platform is on its way.</p>
-      <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary btn-lg">Download for Android</a>
-      <p class="download-meta">Android 8.0+ &nbsp;&middot;&nbsp; Sideload required &nbsp;&middot;&nbsp; <a href="download.html">Installation guide</a></p>
+  <section>
+    <div class="container">
+      <div class="cta-box">
+        <h2>Download P-Sphere</h2>
+        <p>The Android app is free. Install it in minutes and keep your photos on your own devices.</p>
+        <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary btn-lg">Download for Android</a>
+        <p class="cta-meta">Android 8.0 or higher &nbsp; <a href="download.html">How to sideload</a></p>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
+</main>
 
-<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
 <footer>
-  <div class="container">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <div class="footer-logo">P-Sphere</div>
-        <p>A self-hosted, privacy-first photo library for Android. Your photos on your devices — no cloud required.</p>
-      </div>
-      <div class="footer-col">
-        <h4>Product</h4>
-        <a href="#features">Features</a>
-        <a href="#coming-soon">Roadmap</a>
-        <a href="download.html">Download</a>
-        <a href="docs.html">Documentation</a>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <a href="terms.html">Terms of Service</a>
-        <a href="license.html">License</a>
-      </div>
+  <div class="foot-top">
+    <div class="foot-brand">
+      <p class="foot-logo">P-Sphere</p>
+      <p>A self-hosted, privacy-first photo library for Android. Your photos stay on your devices.</p>
     </div>
-    <div class="footer-bottom">
-      <span>&copy; 2025 P-Sphere. All rights reserved.</span>
-      <span><a href="terms.html">Terms</a> &nbsp;&middot;&nbsp; <a href="license.html">License</a></span>
+    <div class="foot-col">
+      <h4>Product</h4>
+      <a href="#features">Features</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="download.html">Download</a>
+      <a href="docs.html">Documentation</a>
+    </div>
+    <div class="foot-col">
+      <h4>Legal</h4>
+      <a href="terms.html">Terms of Service</a>
+      <a href="license.html">License</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2025 P-Sphere. All rights reserved.</span>
+    <div class="foot-links">
+      <a href="terms.html">Terms</a>
+      <a href="license.html">License</a>
     </div>
   </div>
 </footer>
-
 </body>
 </html>

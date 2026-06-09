@@ -1,228 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Download — P-Sphere</title>
-  <meta name="description" content="Download the P-Sphere Android APK. Step-by-step sideload instructions included." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="Download the P-Sphere Android APK with step-by-step sideload instructions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<nav>
-  <div class="nav-inner">
-    <a href="index.html" class="nav-brand">
-      <span class="nav-logo">P-Sphere</span>
-      <span class="nav-badge">Alpha</span>
-    </a>
+<header>
+  <nav>
+    <a href="index.html" class="brand">P-Sphere <span class="alpha-badge">Alpha</span></a>
     <div class="nav-links">
       <a href="index.html#features">Features</a>
-      <a href="index.html#coming-soon">Roadmap</a>
+      <a href="index.html#roadmap">Roadmap</a>
       <a href="download.html" class="active">Download</a>
       <a href="docs.html">Docs</a>
     </div>
-    <div class="nav-end">
-      <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary btn-sm">Download APK</a>
-    </div>
-  </div>
-</nav>
+    <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary btn-sm">Download APK</a>
+  </nav>
+</header>
 
-<div class="dev-banner">
-  P-Sphere is in early alpha. Features are under active development — use at your own risk.
+<div class="banner">
+  P-Sphere is alpha software. Keep independent backups of photos you care about.
 </div>
 
-<div class="page-header">
-  <div class="container">
-    <span class="section-label">Download</span>
-    <h1>Get P-Sphere</h1>
-    <p>The Android app is available now. The server and web dashboard are coming soon.</p>
-  </div>
-</div>
-
-<section>
-  <div class="container">
-
-    <div class="callout callout-warning" style="margin-bottom: 40px;">
-      <strong>Alpha software.</strong> P-Sphere is not production-ready. Data loss is possible. Do not use it as your only photo backup. Always keep an independent copy of your photos.
-    </div>
-
-    <div class="dl-grid">
-
-      <div class="dl-card">
-        <div>
-          <h3>Android App</h3>
-          <span class="chip chip-success" style="margin-top: 6px;">Available</span>
-        </div>
-        <p>Backs up your camera roll and syncs photos between devices over your local Wi-Fi network. No server required.</p>
-        <div class="dl-card-meta">
-          <strong>Requires:</strong><br>
-          Android 8.0 (API 26) or higher<br>
-          Local Wi-Fi network<br>
-          ~15 MB storage
-        </div>
-        <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary">Download APK</a>
-        <span style="font-size: 12px; color: var(--text-3);">v0.1.0-alpha &nbsp;&middot;&nbsp; SHA-256 checksum in release notes</span>
-      </div>
-
-      <div class="dl-card" style="opacity: 0.7;">
-        <div>
-          <h3>Core Server</h3>
-          <span class="status-soon" style="margin-top: 6px; display: inline-block;">Coming soon</span>
-        </div>
-        <p>A Node.js backend you self-host on any machine. Permanent home for your library, powers the web UI and AI features.</p>
-        <div class="dl-card-meta">
-          <strong>Will require:</strong><br>
-          Node.js 20+ &nbsp;&middot;&nbsp; PostgreSQL 15+<br>
-          Redis 7+ &nbsp;&middot;&nbsp; 2 GB RAM minimum
-        </div>
-        <a href="docs.html#server-setup" class="btn btn-secondary">Preview setup guide &rarr;</a>
-      </div>
-
-      <div class="dl-card" style="opacity: 0.7;">
-        <div>
-          <h3>Web Dashboard</h3>
-          <span class="status-soon" style="margin-top: 6px; display: inline-block;">Coming soon</span>
-        </div>
-        <p>A React web app served by the core server. Browse your timeline, search with AI, and manage albums from any browser on your network.</p>
-        <div class="dl-card-meta">
-          <strong>Included with core server.</strong><br>
-          No separate install needed.
-        </div>
-        <a href="docs.html#web-ui" class="btn btn-secondary">Learn more &rarr;</a>
-      </div>
-
+<main>
+  <div class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Download</p>
+      <h1>Get P-Sphere</h1>
+      <p>The Android app is available now. The server and web UI are coming soon.</p>
     </div>
   </div>
-</section>
 
-<!-- ── Install guide ──────────────────────────────────────────────────────── -->
-<section class="alt" id="install">
-  <div class="container">
-    <div class="section-header" style="text-align: left; margin-bottom: 36px;">
-      <span class="section-label">Android</span>
-      <h2 style="text-align: left;">Installing the APK</h2>
-      <p style="text-align: left; max-width: 600px;">P-Sphere is not on the Google Play Store yet. You'll install it by sideloading — this takes about two minutes.</p>
-    </div>
+  <section>
+    <div class="container">
+      <div class="dl-grid">
+        <div class="dl-card">
+          <div>
+            <h3>Android App</h3>
+            <span class="badge-live" style="margin-top: 6px; display: inline-block;">Available</span>
+          </div>
+          <p>Backs up your camera roll and syncs photos between devices over your local Wi-Fi network. No server required.</p>
+          <div class="dl-meta">
+            <strong>Requires Android 8.0 (API 26) or higher</strong><br>
+            Local Wi-Fi network<br>
+            Around 15 MB storage
+          </div>
+          <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary btn-md">Download APK</a>
+          <span class="dl-hint">v0.1.0-alpha &nbsp; SHA-256 checksum in release notes</span>
+        </div>
 
-    <div class="callout callout-info" style="max-width: 680px; margin-bottom: 32px;">
-      Sideloading is safe and reversible. You can remove P-Sphere at any time from your device's app settings like any other app.
-    </div>
+        <div class="dl-card" style="opacity: 0.6;">
+          <div>
+            <h3>Core Server</h3>
+            <span class="badge-soon" style="margin-top: 6px; display: inline-block;">Coming soon</span>
+          </div>
+          <p>A Node.js backend you self-host on any machine. Permanent photo storage, powers the web UI and AI features.</p>
+          <div class="dl-meta">
+            <strong>Will require</strong><br>
+            Node.js 20+ and PostgreSQL 15+<br>
+            Redis 7+ and 2 GB RAM minimum
+          </div>
+          <a href="docs.html#server" class="btn btn-outline btn-md">Preview setup guide &#8594;</a>
+        </div>
 
-    <div class="steps" style="max-width: 680px; margin: 0;">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <h3>Download the APK to your Android device</h3>
-          <p>Open the download link on your phone, or transfer the <code>psphere-v0.1.0-alpha.apk</code> file from your PC via USB or Bluetooth.</p>
-          <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases">Get the latest release &rarr;</a>
+        <div class="dl-card" style="opacity: 0.6;">
+          <div>
+            <h3>Web Dashboard</h3>
+            <span class="badge-soon" style="margin-top: 6px; display: inline-block;">Coming soon</span>
+          </div>
+          <p>A React app served by the core server. Browse your timeline, search with AI, and manage albums from any browser on your network.</p>
+          <div class="dl-meta">
+            <strong>Included with the core server</strong><br>
+            No separate install needed
+          </div>
+          <a href="docs.html#web-ui" class="btn btn-outline btn-md">Learn more &#8594;</a>
         </div>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <h3>Allow installation from unknown sources</h3>
-          <p>Go to <strong>Settings &rarr; Apps &rarr; Special app access &rarr; Install unknown apps</strong>. Find your browser or Files app and enable "Allow from this source."</p>
-          <div class="callout callout-info" style="margin-top: 12px;">
-            The exact path varies by manufacturer. On Samsung: <em>Settings &rarr; Biometrics and security &rarr; Install unknown apps</em>.
+    </div>
+  </section>
+
+  <section class="tinted" id="install">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Android</p>
+        <h2 class="section-title">Installing the APK</h2>
+        <p class="section-desc">P-Sphere isn't on the Play Store yet. Sideloading takes about two minutes and is fully reversible.</p>
+      </div>
+
+      <div class="callout callout-info" style="max-width: 660px; margin-bottom: 32px;">
+        Sideloading is safe. You can uninstall P-Sphere at any time from your device settings like any other app.
+      </div>
+
+      <div class="steps" style="max-width: 660px;">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-body">
+            <h3>Download the APK to your Android device</h3>
+            <p>Open the download link on your phone, or transfer the APK file from your PC via USB or Bluetooth.</p>
+            <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases">Get the latest release &#8594;</a>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-body">
+            <h3>Allow installation from unknown sources</h3>
+            <p>Go to <strong>Settings &#8594; Apps &#8594; Special app access &#8594; Install unknown apps</strong>. Find your browser or file manager and enable "Allow from this source."</p>
+            <div class="callout callout-info">
+              The exact path varies by manufacturer. On Samsung: <em>Settings &#8594; Biometrics and security &#8594; Install unknown apps</em>.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-body">
+            <h3>Tap the APK to install</h3>
+            <p>Open the APK from your file manager or browser downloads. Tap <strong>Install</strong> when Android prompts you. You can re-disable "Install unknown apps" afterwards.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">4</div>
+          <div class="step-body">
+            <h3>Grant permissions</h3>
+            <p>Open the app and grant <strong>Photos / Media</strong> access when prompted. This is required to read your camera roll. Notification permission is optional.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">5</div>
+          <div class="step-body">
+            <h3>You're ready</h3>
+            <p>P-Sphere will start working in the background. Open the app to browse photos, trigger a manual sync, or discover nearby devices.</p>
+            <a href="docs.html">Full documentation &#8594;</a>
           </div>
         </div>
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <h3>Tap the APK file to install</h3>
-          <p>Open the APK from your file manager or browser downloads. Tap <strong>Install</strong> when Android prompts you. You can re-disable "Install unknown apps" afterwards.</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-body">
-          <h3>Open P-Sphere and grant permissions</h3>
-          <p>Open the app and grant <strong>Photos / Media</strong> access when prompted. This is required for the app to read your camera roll. Notification permission is optional.</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">5</div>
-        <div class="step-body">
-          <h3>You're ready</h3>
-          <p>P-Sphere will start working in the background. Open the app to see your photos, trigger a manual sync, or discover nearby devices.</p>
-          <a href="docs.html">Full documentation &rarr;</a>
-        </div>
-      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── System requirements ────────────────────────────────────────────────── -->
-<section>
-  <div class="container">
-    <div class="section-header" style="text-align: left; margin-bottom: 28px;">
-      <h2 style="text-align: left; font-size: 22px;">System requirements</h2>
+  <section>
+    <div class="container">
+      <h2 class="section-title" style="margin-bottom: 20px;">System requirements</h2>
+      <div class="table-wrap" style="max-width: 700px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Minimum</th>
+              <th>Recommended</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Android</td>
+              <td>Android 8.0 (API 26)</td>
+              <td>Android 12 or higher</td>
+            </tr>
+            <tr>
+              <td>Storage</td>
+              <td>~15 MB for the app</td>
+              <td>Depends on library size</td>
+            </tr>
+            <tr>
+              <td>Network</td>
+              <td>Local Wi-Fi</td>
+              <td>802.11ac or better</td>
+            </tr>
+            <tr>
+              <td>Core server (coming soon)</td>
+              <td>1 GB RAM</td>
+              <td>4 GB RAM</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="table-wrap" style="max-width: 720px;">
-      <table>
-        <thead>
-          <tr>
-            <th>Component</th>
-            <th>Minimum</th>
-            <th>Recommended</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Android</td>
-            <td>Android 8.0 (API 26)</td>
-            <td>Android 12+</td>
-          </tr>
-          <tr>
-            <td>Storage (app)</td>
-            <td>~15 MB</td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td>Network</td>
-            <td>Local Wi-Fi</td>
-            <td>802.11ac or better</td>
-          </tr>
-          <tr>
-            <td>Core server (coming soon)</td>
-            <td>1 GB RAM</td>
-            <td>4 GB RAM</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
+  </section>
+</main>
 
 <footer>
-  <div class="container">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <div class="footer-logo">P-Sphere</div>
-        <p>A self-hosted, privacy-first photo library for Android.</p>
-      </div>
-      <div class="footer-col">
-        <h4>Product</h4>
-        <a href="index.html#features">Features</a>
-        <a href="index.html#coming-soon">Roadmap</a>
-        <a href="download.html">Download</a>
-        <a href="docs.html">Documentation</a>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <a href="terms.html">Terms of Service</a>
-        <a href="license.html">License</a>
-      </div>
+  <div class="foot-top">
+    <div class="foot-brand">
+      <p class="foot-logo">P-Sphere</p>
+      <p>A self-hosted, privacy-first photo library for Android. Your photos stay on your devices.</p>
     </div>
-    <div class="footer-bottom">
-      <span>&copy; 2025 P-Sphere. All rights reserved.</span>
-      <span><a href="terms.html">Terms</a> &nbsp;&middot;&nbsp; <a href="license.html">License</a></span>
+    <div class="foot-col">
+      <h4>Product</h4>
+      <a href="index.html#features">Features</a>
+      <a href="index.html#roadmap">Roadmap</a>
+      <a href="download.html">Download</a>
+      <a href="docs.html">Documentation</a>
+    </div>
+    <div class="foot-col">
+      <h4>Legal</h4>
+      <a href="terms.html">Terms of Service</a>
+      <a href="license.html">License</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2025 P-Sphere. All rights reserved.</span>
+    <div class="foot-links">
+      <a href="terms.html">Terms</a>
+      <a href="license.html">License</a>
     </div>
   </div>
 </footer>
-
 </body>
 </html>
