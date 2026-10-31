@@ -2,6 +2,7 @@
 
 [![Tests](https://github.com/Madhuhas/P-Sphere/actions/workflows/test.yml/badge.svg)](https://github.com/Madhuhas/P-Sphere/actions/workflows/test.yml)
 [![License](https://img.shields.io/github/license/Madhuhas/P-Sphere)](LICENSE)
+<a href="https://kadhai.pages.dev/badge/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://kadhai.pages.dev/badges/built-with-kadhai-light.svg"><img src="https://kadhai.pages.dev/badges/built-with-kadhai-dark.svg" alt="Built with Kadhai" width="119" height="20"></picture></a>
 
 **Website:** [psphere.pages.dev](https://psphere.pages.dev) · **Community:** [discussions](https://github.com/Madhuhas/P-Sphere/discussions)
 

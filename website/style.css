@@ -317,6 +317,7 @@ footer { border-top: 1px solid var(--line); background: var(--paper-2); padding:
 .foot h4 { font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--mute); margin-bottom: 14px; }
 .foot a { display: block; color: var(--ink-2); text-decoration: none; padding: 4px 0; }
 .foot a:hover { color: var(--brand); }
+.foot a.built-with { display: inline-block; margin-top: 16px; padding: 0; line-height: 0; }
 .foot-bottom { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; color: var(--mute); font-size: 13.5px; }
 @media (max-width: 720px) { .foot { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .foot > div:first-child { grid-column: 1 / -1; } }
 
