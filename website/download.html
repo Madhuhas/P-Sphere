@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Download — P-Sphere</title>
-  <meta name="description" content="Download the P-Sphere Android app and install it in a few steps. Requirements for the optional self-hosted server.">
+  <meta name="description" content="Download P-Sphere for Android and Windows, and how to install it.">
   <meta name="theme-color" content="#0F1923">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231565C0'/%3E%3Cpath d='M11 8v16h3v-6h4.5c3 0 5-2 5-5s-2-5-5-5zm3 2.7h4.2c1.4 0 2.3.9 2.3 2.3s-.9 2.3-2.3 2.3H14z' fill='%23fff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,39 +35,42 @@
     <div class="container">
       <p class="eyebrow">Download</p>
       <h1>Get P-Sphere</h1>
-      <p>Install the Android app on every phone you want to back up. The server is optional and you can add it later.</p>
+      <p>Install P-Sphere on every device you want in your backups: your phone, your tablet and your Windows laptop. They link to each other once and back each other up from then on.</p>
     </div>
   </div>
 
   <section style="padding-top:48px">
     <div class="container">
+      <p class="note warn" style="margin-bottom:28px; max-width:820px"><strong>The first release of version 2.0 is being prepared.</strong> When it's published, the Android and Windows files will be on the <a href="https://github.com/Madhuhas/P-Sphere/releases">releases page</a>. Until then you can <a href="docs.html#build">build P-Sphere from source</a>.</p>
       <div class="dl">
         <div class="panel">
-          <h3>Android app <span class="pill">Available</span></h3>
-          <p>Nearby phone-to-phone backup, gallery and photo viewer. Connects to your server when you have one.</p>
+          <h3>Android app <span class="pill neutral">Coming soon</span></h3>
+          <p>For phones and tablets. Backs up the folders you choose, and keeps backups from your other devices.</p>
           <ul class="meta-list">
             <li><span>Requires</span>Android 8.0 (API 26) or later</li>
-            <li><span>Network</span>Wi-Fi shared with your other phones</li>
-            <li><span>Distribution</span>APK from GitHub Releases</li>
+            <li><span>Network</span>The same Wi-Fi as your other devices</li>
+            <li><span>File</span>An <code>.apk</code> from the releases page</li>
           </ul>
-          <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary">
+          <a href="https://github.com/Madhuhas/P-Sphere/releases" class="btn btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
-            Download the latest APK
+            Releases page
           </a>
-          <p class="note" style="margin-top:20px"><strong>Update every phone together.</strong> Version 1.1 uses a new sync protocol, so it can't sync with phones still on 1.0. The app tells you when this happens.</p>
         </div>
-
         <div class="panel">
-          <h3>Server <span class="pill neutral">Optional</span></h3>
-          <p>Run the Core server, vision worker and web app on a spare PC, mini-PC or NAS for a permanent library, albums and AI search.</p>
+          <h3>Windows app <span class="pill neutral">Coming soon</span></h3>
+          <p>For laptops and PCs. Keeps backups on any drive, backs up the computer's own folders, and runs quietly in the tray.</p>
           <ul class="meta-list">
-            <li><span>Runtime</span>Node.js 20+</li>
-            <li><span>Database</span>PostgreSQL 15+, Redis 7+</li>
-            <li><span>Memory</span>2 GB minimum, 4 GB with AI</li>
+            <li><span>Requires</span>Windows 10 or 11, 64-bit</li>
+            <li><span>Network</span>The same Wi-Fi or wired network as your other devices</li>
+            <li><span>File</span>An <code>.msi</code> installer from the releases page</li>
           </ul>
-          <a href="docs.html#self-hosting" class="btn btn-secondary">Read the setup guide</a>
+          <a href="https://github.com/Madhuhas/P-Sphere/releases" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
+            Releases page
+          </a>
         </div>
       </div>
+      <p class="note" style="margin-top:28px; max-width:820px"><strong>Update every device together.</strong> Version 2.0 doesn't work with 1.x, so install it on all your devices. The app tells you when another device has an older version.</p>
     </div>
   </section>
 
@@ -76,19 +79,19 @@
       <div class="section-head">
         <p class="eyebrow">Android</p>
         <h2>Install the APK</h2>
-        <p>P-Sphere isn't on the Play Store yet, so you install it directly. It takes about two minutes and you can uninstall it like any other app.</p>
+        <p>P-Sphere isn't on the Play Store yet, so you install it directly. It takes about two minutes, and you can uninstall it like any other app.</p>
       </div>
       <ol class="numbered">
         <li>
           <div>
             <h3>Download the APK on your phone</h3>
-            <p>Open the <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases">releases page</a> on the phone and download the newest <code>.apk</code> file. You can also copy it over from a computer with a USB cable.</p>
+            <p>Open the <a href="https://github.com/Madhuhas/P-Sphere/releases">releases page</a> on the phone and download the newest <code>.apk</code> file. You can also copy it over from a computer with a USB cable.</p>
           </div>
         </li>
         <li>
           <div>
             <h3>Allow your browser or file manager to install apps</h3>
-            <p>Open the APK. If Android asks, tap <strong>Settings</strong> and turn on <strong>Allow from this source</strong>. On most phones this lives under <strong>Settings → Apps → Special app access → Install unknown apps</strong>.</p>
+            <p>Open the APK. If Android asks, tap <strong>Settings</strong> and turn on <strong>Allow from this source</strong>. On most phones this is under <strong>Settings → Apps → Special app access → Install unknown apps</strong>.</p>
           </div>
         </li>
         <li>
@@ -99,14 +102,44 @@
         </li>
         <li>
           <div>
-            <h3>Allow access to photos</h3>
-            <p>P-Sphere asks to read your photos and videos. It needs this to back them up. Notifications are optional and only show sync progress.</p>
+            <h3>Name the device and link it</h3>
+            <p>Give the phone a name your other devices will see, like “Phone”. Then open <strong>Devices → Link a device</strong> to link it with your laptop or tablet.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="windows">
+    <div class="container" style="max-width: 820px;">
+      <div class="section-head">
+        <p class="eyebrow">Windows</p>
+        <h2>Install on Windows</h2>
+        <p>The installer puts P-Sphere in your Start menu. It needs no administrator rights and includes everything it needs to run.</p>
+      </div>
+      <ol class="numbered">
+        <li>
+          <div>
+            <h3>Download and open the installer</h3>
+            <p>Download the newest <code>.msi</code> file from the <a href="https://github.com/Madhuhas/P-Sphere/releases">releases page</a> and open it. The installer isn't code-signed yet, so Windows may say <em>Windows protected your PC</em>: choose <strong>More info</strong>, then <strong>Run anyway</strong>.</p>
           </div>
         </li>
         <li>
           <div>
-            <h3>Choose “Start with nearby sync” and pick a folder</h3>
-            <p>In <strong>Settings → Backup</strong>, choose the folder to back up (usually <code>DCIM/Camera</code>). Do the same on your other phone, then tap <strong>Sync now</strong>.</p>
+            <h3>Allow it on private networks</h3>
+            <p>The first time P-Sphere runs, Windows Firewall asks about it. Allow <strong>Private networks</strong>; that's what lets your phone find the laptop. Your home Wi-Fi should be set as a private network in Windows.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Choose where backups go</h3>
+            <p>In <strong>Receiving</strong>, choose a folder or drive for backups from your other devices, such as <code>D:\PSphere Backups</code>.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Link your phone</h3>
+            <p>Open <strong>Devices → Link a device</strong>. Scan the QR code with P-Sphere on your phone. Then, on the phone, choose folders to back up to the laptop in <strong>Sending</strong>.</p>
           </div>
         </li>
       </ol>
@@ -114,21 +147,19 @@
     </div>
   </section>
 
-  <section>
+  <section class="band">
     <div class="container" style="max-width: 820px;">
       <div class="section-head" style="margin-bottom:24px">
         <h2>System requirements</h2>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th scope="col">Component</th><th scope="col">Minimum</th><th scope="col">Recommended</th></tr></thead>
+          <thead><tr><th scope="col">Device</th><th scope="col">Minimum</th><th scope="col">Recommended</th></tr></thead>
           <tbody>
-            <tr><td>Android</td><td>8.0 (API 26)</td><td>12 or later</td></tr>
-            <tr><td>Network for nearby sync</td><td>Home Wi-Fi with multicast (mDNS) allowed</td><td>Both phones on the same 5 GHz network</td></tr>
-            <tr><td>Server hardware</td><td>Any always-on 64-bit machine</td><td>Mini-PC, NAS or Raspberry Pi 5</td></tr>
-            <tr><td>Server memory</td><td>2 GB</td><td>4 GB or more with the vision worker and a local LLM</td></tr>
-            <tr><td>Server software</td><td>Node.js 20, PostgreSQL 15, Redis 7</td><td>Same, managed by systemd or PM2</td></tr>
-            <tr><td>Storage</td><td colspan="2">Enough disk for your photo library plus generated thumbnails</td></tr>
+            <tr><td>Android phone or tablet</td><td>Android 8.0 (API 26)</td><td>Android 12 or later</td></tr>
+            <tr><td>Windows computer</td><td>Windows 10, 64-bit</td><td>Windows 11</td></tr>
+            <tr><td>Network</td><td>Home Wi-Fi where devices can see each other</td><td>All devices on the same 5 GHz network</td></tr>
+            <tr><td>Storage on receiving devices</td><td colspan="2">Enough free space for the backups you send them, plus 1 GB that P-Sphere always leaves free</td></tr>
           </tbody>
         </table>
       </div>
@@ -158,7 +189,7 @@
       <div>
         <h4>Docs</h4>
         <a href="docs.html#quick-start">Quick start</a>
-        <a href="docs.html#self-hosting">Self-hosting</a>
+        <a href="docs.html#windows">Windows app</a>
         <a href="docs.html#troubleshooting">Troubleshooting</a>
       </div>
       <div>
