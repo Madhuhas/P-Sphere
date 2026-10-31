@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>P-Sphere — Private photo backup between your own devices</title>
-  <meta name="description" content="P-Sphere backs up photos directly between your Android phones over Wi-Fi, with an optional self-hosted server for albums and local AI search. No cloud account.">
+  <title>P-Sphere — Backup between your own devices</title>
+  <meta name="description" content="P-Sphere backs up folders between your phone, tablet and Windows laptop over your home Wi-Fi. No server, no account, nothing leaves your home. Free and open source.">
   <meta name="theme-color" content="#0F1923">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231565C0'/%3E%3Cpath d='M11 8v16h3v-6h4.5c3 0 5-2 5-5s-2-5-5-5zm3 2.7h4.2c1.4 0 2.3.9 2.3 2.3s-.9 2.3-2.3 2.3H14z' fill='%23fff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,20 +34,20 @@
   <section class="hero">
     <div class="container">
       <div>
-        <p class="eyebrow">Self-hosted photo backup</p>
+        <p class="eyebrow">Backup between your own devices</p>
         <h1>Back up your photos to your <span>own devices</span>, not someone's cloud.</h1>
-        <p class="hero-sub">P-Sphere copies photos directly between Android phones on the same Wi-Fi. Add an optional home server for albums, a web timeline and AI search that runs on your hardware.</p>
+        <p class="hero-sub">P-Sphere backs up folders between your phone, tablet and Windows laptop over your home Wi-Fi. You choose which folders go to which device. There's no server and no account, and nothing leaves your home.</p>
         <div class="hero-actions">
           <a href="download.html" class="btn btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
-            Download for Android
+            Download
           </a>
-          <a href="docs.html#quick-start" class="btn btn-secondary">Read the quick start</a>
+          <a href="#how" class="btn btn-secondary">See how it works</a>
         </div>
         <ul class="hero-facts">
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>No account needed</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Works without internet</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Android 8.0+</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Android 8.0+ and Windows 10+</li>
         </ul>
       </div>
 
@@ -55,31 +55,31 @@
         <div class="phone">
           <div class="phone-screen">
             <div class="ph-status"><span>9:41</span><span>Wi-Fi · 82%</span></div>
-            <div class="ph-bar"><span class="ph-title">PSphere</span><span class="ph-chip">Nearby sync</span></div>
+            <div class="ph-bar"><span class="ph-title">Phone</span><span class="ph-chip">Local only</span></div>
             <div class="ph-body">
               <div class="ph-card ok">
                 <div class="ph-row">
                   <span class="ph-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></span>
-                  <div><div class="ph-h">Sync complete</div><div class="ph-s">Sent 17, received 7 · 2 phones</div></div>
+                  <div><div class="ph-h">Everything is backed up</div><div class="ph-s">Last backup just now</div></div>
                 </div>
-                <div class="ph-btn">Sync now</div>
+                <div class="ph-btn">Back up now</div>
               </div>
               <div class="ph-card">
                 <div class="ph-row">
                   <span class="ph-ic slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
-                  <div><div style="font-weight:500">Backing up “Camera”</div><div class="ph-s">Other phones save it to Pictures/PSphere Backup</div></div>
+                  <div><div style="font-weight:500">Camera</div><div class="ph-s">To Tablet, Laptop · 1,284 files</div></div>
                 </div>
               </div>
               <div class="ph-card">
-                <div class="ph-sec">Nearby phones <em>2 found</em></div>
-                <div class="ph-peer"><span class="ph-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/></svg></span><div><div>Galaxy S23</div><div class="ph-s">192.168.1.23</div></div><span class="ph-online">Online</span></div>
-                <div class="ph-peer"><span class="ph-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/></svg></span><div><div>Pixel 7a</div><div class="ph-s">192.168.1.41</div></div><span class="ph-online">Online</span></div>
+                <div class="ph-sec">My devices <em>2 linked</em></div>
+                <div class="ph-peer"><span class="ph-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/></svg></span><div><div>Tablet</div><div class="ph-s">Keeping 412 files</div></div><span class="ph-online">On Wi-Fi</span></div>
+                <div class="ph-peer"><span class="ph-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg></span><div><div>Laptop</div><div class="ph-s">Last backup 2 h ago</div></div><span class="ph-online">On Wi-Fi</span></div>
               </div>
             </div>
             <div class="ph-nav">
-              <span class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 0 0-14.3-4.9M4 12a8 8 0 0 0 14.3 4.9M4 4v4h4m12 12v-4h-4"/></svg></i>Sync</span>
-              <span><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/></svg></i>Photos</span>
-              <span><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></i>Settings</span>
+              <span class="on"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="13" height="10" rx="1.5"/><rect x="17" y="8" width="5" height="11" rx="1"/><path d="M5 18h8"/></svg></i>Devices</span>
+              <span><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V8m0 0-3 3m3-3 3 3"/><path d="M7 18a5 5 0 0 1-.5-9.97A6 6 0 0 1 18 9a4 4 0 0 1-1 8"/></svg></i>Sending</span>
+              <span><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v8m0 0-3-3m3 3 3-3"/><path d="M7 18a5 5 0 0 1-.5-9.97A6 6 0 0 1 18 9a4 4 0 0 1-1 8"/></svg></i>Receiving</span>
             </div>
           </div>
         </div>
@@ -91,21 +91,21 @@
     <div class="container">
       <div class="section-head">
         <p class="eyebrow">How it works</p>
-        <h2>Your phones keep each other backed up</h2>
-        <p>There's no pairing code and no server to set up. Every phone running P-Sphere on the same Wi-Fi network takes part.</p>
+        <h2>Your devices keep each other backed up</h2>
+        <p>Set it up once on each device. After that, backups run by themselves whenever your devices are on the same Wi-Fi.</p>
       </div>
       <ol class="steps">
         <li>
-          <h3>Pick a folder to back up</h3>
-          <p>Choose a folder such as your Camera roll in Settings. Only photos and videos from that folder are shared.</p>
+          <h3>Link your devices</h3>
+          <p>One device shows a QR code and the other scans it. The laptop always shows the code, since it has no camera. If scanning doesn't work, you compare a 6-digit code instead. You do this once for each pair.</p>
         </li>
         <li>
-          <h3>Phones find each other</h3>
-          <p>P-Sphere announces itself on your local network with mDNS, so other phones running it show up within seconds.</p>
+          <h3>Choose folders and where they go</h3>
+          <p>Pick a folder, like Camera, and tick the devices it should go to. Each device chooses its own backup location, and keeps every device's files in their own folder, like <em>Phone/Camera</em>.</p>
         </li>
         <li>
-          <h3>Only missing photos move</h3>
-          <p>Each phone compares SHA-256 fingerprints and sends only what the other is missing. Received photos appear in Pictures/<em>folder name</em>.</p>
+          <h3>Backups run by themselves</h3>
+          <p>When two of your devices are on the same Wi-Fi, they send each other only what's missing. If one is off, its files wait, or arrive later through another device that already has a copy.</p>
         </li>
       </ol>
     </div>
@@ -114,25 +114,26 @@
   <section id="modes">
     <div class="container">
       <div class="section-head">
-        <p class="eyebrow">Two ways to use it</p>
-        <h2>Start with phones only, add a server when you want more</h2>
-        <p>Nearby sync works on its own. A self-hosted P-Sphere server adds long-term storage and the features that need a computer behind them.</p>
+        <p class="eyebrow">Features</p>
+        <h2>What works today, and what's next</h2>
+        <p>P-Sphere is in early development. The Android and Windows apps do the backing up now; one photo library across all your devices comes next.</p>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th scope="col">Feature</th><th scope="col">Nearby sync only</th><th scope="col">With your P-Sphere server</th></tr>
+            <tr><th scope="col">Feature</th><th scope="col">Status</th></tr>
           </thead>
           <tbody>
-            <tr><td>Phone-to-phone backup over Wi-Fi</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
-            <tr><td>Automatic background sync on a schedule</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
-            <tr><td>Free up space once photos are on another phone</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
-            <tr><td>Permanent library on a home server or NAS</td><td class="no">—</td><td class="yes">Yes</td></tr>
-            <tr><td>Web timeline, albums and admin dashboard</td><td class="no">—</td><td class="yes">Yes</td></tr>
-            <tr><td>Smart albums: trips, people, pets, places</td><td class="no">—</td><td class="yes">Yes</td></tr>
-            <tr><td>Search in plain words with a local LLM</td><td class="no">—</td><td class="yes">Yes</td></tr>
-            <tr><td>Face grouping and duplicate detection</td><td class="no">—</td><td class="yes">Yes</td></tr>
-            <tr><td>What you need</td><td>Two or more Android phones</td><td>An always-on computer with Node.js, PostgreSQL and Redis</td></tr>
+            <tr><td>Several folders per device, each going to the devices you choose</td><td class="yes">Available</td></tr>
+            <tr><td>Every device sends and receives: phone, tablet and Windows laptop</td><td class="yes">Available</td></tr>
+            <tr><td>Each device chooses where backups are saved, on any folder or drive</td><td class="yes">Available</td></tr>
+            <tr><td>Backup, not mirror: deleting a file never deletes its copies</td><td class="yes">Available</td></tr>
+            <tr><td>Relay: a device that's off catches up from any device holding a copy</td><td class="yes">Available</td></tr>
+            <tr><td>Big videos resume where they stopped after an interruption</td><td class="yes">Available</td></tr>
+            <tr><td>Windows app that runs in the tray and can start with Windows</td><td class="yes">Available</td></tr>
+            <tr><td>One photo library: see every device's photos on any device</td><td class="no">Coming next</td></tr>
+            <tr><td>Free up space on your phone once photos are safe elsewhere</td><td class="no">Coming next</td></tr>
+            <tr><td>Albums, faces and search on the laptop</td><td class="no">Later</td></tr>
           </tbody>
         </table>
       </div>
@@ -149,20 +150,19 @@
         <div class="feature">
           <div class="feature-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a7 7 0 0 1 14 0M8.5 16a3.5 3.5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg></div>
           <h3>Local network only</h3>
-          <p>Phones talk to each other directly over your Wi-Fi. No relay, no P-Sphere servers, nothing exposed to the internet.</p>
+          <p>Your devices talk to each other directly over your Wi-Fi. There's no P-Sphere server, no cloud and no account, and nothing goes to the internet.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+          <h3>Only your linked devices</h3>
+          <p>Every connection is encrypted, and each device checks that the other is one you linked. Other P-Sphere devices on the same Wi-Fi are ignored.</p>
         </div>
         <div class="feature">
           <div class="feature-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
-          <h3>Every file verified</h3>
-          <p>Each received photo is checked against its SHA-256 fingerprint before it's kept. Interrupted or damaged transfers are thrown away and retried next time.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 21 12a10 10 0 0 1-2.3 3.1M6.2 6.2A10 10 0 0 0 3 12a10 10 0 0 0 13.4 5.7"/></svg></div>
-          <h3>No accounts, no tracking</h3>
-          <p>The app has no sign-up, no analytics and no crash reporting. The optional server's AI runs locally through Ollama or LM Studio.</p>
+          <h3>Nothing lost silently</h3>
+          <p>Every file is checked against its SHA-256 fingerprint when it arrives. Deleting a file never deletes its copies, and when a file changes, the old version is kept for 30 days.</p>
         </div>
       </div>
-      <p class="note warn" style="margin-top:32px; max-width: 760px;"><strong>Use nearby sync on networks you trust.</strong> In this alpha, transfers between phones aren't encrypted and any phone running P-Sphere on the same Wi-Fi can sync. Home networks are fine; avoid public or shared Wi-Fi.</p>
     </div>
   </section>
 
@@ -170,15 +170,13 @@
     <div class="container">
       <div class="section-head">
         <p class="eyebrow">What's in the project</p>
-        <h2>One platform, five parts</h2>
-        <p>Every part runs on hardware you control. None of it depends on a service we operate.</p>
+        <h2>Two apps, one engine</h2>
+        <p>Both apps share the same core, so they behave the same way. All of it is open source under the GNU AGPL-3.0.</p>
       </div>
       <dl class="stack">
-        <div><dt>Android app</dt><dd>Backup, nearby sync, gallery and viewer. Works alone or with a server.</dd><span class="tech">Kotlin · Jetpack Compose · WorkManager</span></div>
-        <div><dt>Core server</dt><dd>Stores the library, makes thumbnails, reads EXIF and serves the API.</dd><span class="tech">Node.js · Express · PostgreSQL · Redis</span></div>
-        <div><dt>Vision worker</dt><dd>Finds faces, groups them and tags objects and scenes in the background.</dd><span class="tech">ONNX Runtime · BullMQ</span></div>
-        <div><dt>Web app</dt><dd>Timeline, albums, search, devices and an admin dashboard in the browser.</dd><span class="tech">React · Vite</span></div>
-        <div><dt>Desktop app</dt><dd>Backs up a folder from your computer to the same server.</dd><span class="tech">Electron · React</span></div>
+        <div><dt>Android app</dt><dd>For phones and tablets. Backs up folders you pick and keeps backups from your other devices.</dd><span class="tech">Kotlin · Jetpack Compose · WorkManager</span></div>
+        <div><dt>Windows app</dt><dd>Keeps backups on any drive, backs up the laptop's own folders, and runs quietly in the tray.</dd><span class="tech">Kotlin · Compose for Desktop</span></div>
+        <div><dt>Shared core</dt><dd>Linking, encryption, the folder rules, relay and resume: the same code in both apps, with automated tests.</dd><span class="tech">Kotlin · TLS · SHA-256</span></div>
       </dl>
     </div>
   </section>
@@ -191,27 +189,30 @@
       </div>
       <div class="faq">
         <details>
-          <summary>Do I need the server to use P-Sphere?</summary>
-          <div><p>No. Install the app on two or more phones, choose a backup folder, and they back each other up over Wi-Fi. The server is optional and adds albums, search and a permanent library.</p></div>
+          <summary>Do I need a server or an account?</summary>
+          <div><p>No. Install P-Sphere on two or more of your devices, link them, and they back each other up over your Wi-Fi. Nothing else is needed.</p></div>
         </details>
         <details>
-          <summary>Where do photos from other phones end up?</summary>
-          <div><p>In <code>Pictures/&lt;folder name&gt;</code> on the receiving phone, where the folder name is set by the sending phone (it's “PSphere Backup” unless you change it). They show up in your normal Gallery app.</p></div>
+          <summary>Where do backups from my other devices end up?</summary>
+          <div><p>In the backup location you choose on each device, for example <code>D:\PSphere Backups</code> on a laptop or <code>Pictures/PSphere</code> on a phone. Inside it, each device gets its own folder, like <code>Phone/Camera</code>.</p></div>
+        </details>
+        <details>
+          <summary>If I delete a photo on my phone, is it deleted from the backups?</summary>
+          <div><p>No. P-Sphere is a backup, not a mirror. Copies on your other devices stay where they are.</p></div>
         </details>
         <details>
           <summary>Does it work when I'm not at home?</summary>
-          <div><p>Nearby sync needs both phones on the same Wi-Fi network. Sync waits until they are, then catches up with only the photos that changed.</p></div>
+          <div><p>Your devices need to be on the same Wi-Fi. Backups wait until they are, then catch up with only what changed. A device that was off can also catch up from any other device that already has a copy.</p></div>
         </details>
         <details>
           <summary>Is it on the Play Store?</summary>
-          <div><p>Not yet. During the alpha you install the APK directly. The <a href="download.html#install">download page</a> walks through it.</p></div>
+          <div><p>Not yet. You install the Android app from its APK file and the Windows app from its installer. The <a href="download.html#install">download page</a> walks through it.</p></div>
         </details>
         <details>
           <summary>Can I rely on it as my only backup?</summary>
-          <div><p>Not yet. P-Sphere is alpha software. Keep another copy of photos you can't afford to lose until it reaches a stable release.</p></div>
+          <div><p>Not yet. P-Sphere is in early development. Keep another copy of photos you can't afford to lose until it reaches a stable release.</p></div>
         </details>
       </div>
-      <p style="margin-top:24px"><a href="docs.html#faq">More answers in the documentation</a></p>
     </div>
   </section>
 
@@ -255,11 +256,11 @@
     <div class="container">
       <div class="cta">
         <div>
-          <h2>Try P-Sphere on your phones</h2>
-          <p>Free for personal use. Install on two phones and run your first sync in a few minutes.</p>
+          <h2>Try P-Sphere on your devices</h2>
+          <p>Free and open source. Install it on your phone and laptop, link them, and your first backup starts in a minute.</p>
         </div>
         <div class="hero-actions" style="margin-top:0">
-          <a href="download.html" class="btn btn-primary">Download for Android</a>
+          <a href="download.html" class="btn btn-primary">Download</a>
           <a href="docs.html" class="btn btn-secondary">Documentation</a>
         </div>
       </div>
@@ -272,7 +273,7 @@
     <div class="foot">
       <div>
         <a href="index.html" class="brand"><span class="brand-mark">P</span>P-Sphere</a>
-        <p>Self-hosted photo backup for people who'd rather keep their photos at home.</p>
+        <p>Backup between your own devices, for people who'd rather keep their photos at home.</p>
         <a class="built-with" href="https://kadhai.pages.dev">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="https://kadhai.pages.dev/badges/built-with-kadhai-light.svg">
