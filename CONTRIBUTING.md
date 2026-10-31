@@ -121,7 +121,7 @@ cd ../mobile
 | `shared/` | The pure-Kotlin core used by every app (package `com.psphere.core`): protocol, encryption, linking, rules, relay, resume and the catalog. A standalone Gradle build with its own tests. |
 | `mobile/` | The Android app (Kotlin, Jetpack Compose, package `com.psphere`). Includes `shared/` as a composite build. |
 | `docs/p2p-v3.md` | The spec: what PSphere does and how it works underneath. |
-| `website/` | The website's source. The published site lives in [PSphere-Website](https://github.com/Madhuhas/PSphere-Website). |
+| `website/` | The website's source. The published site, [psphere.pages.dev](https://psphere.pages.dev), is built from [PSphere-Website](https://github.com/Madhuhas/PSphere-Website). |
 
 ### Windows: "Unable to delete directory"
 

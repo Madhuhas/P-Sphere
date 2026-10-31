@@ -3,7 +3,7 @@
 [![Tests](https://github.com/Madhuhas/P-Sphere/actions/workflows/test.yml/badge.svg)](https://github.com/Madhuhas/P-Sphere/actions/workflows/test.yml)
 [![License](https://img.shields.io/github/license/Madhuhas/P-Sphere)](LICENSE)
 
-**Website:** [PSphere-Website](https://github.com/Madhuhas/PSphere-Website) · **Community:** [discussions](https://github.com/Madhuhas/P-Sphere/discussions)
+**Website:** [psphere.pages.dev](https://psphere.pages.dev) · **Community:** [discussions](https://github.com/Madhuhas/P-Sphere/discussions)
 
 > **Early development.** The Android app works and has been tested on an emulator; the Windows app is not built yet. Expect rough edges, and please report what breaks.
 
