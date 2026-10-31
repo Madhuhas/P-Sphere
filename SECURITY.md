@@ -20,7 +20,7 @@ Anything that breaks a promise PSphere makes, for example:
 - a file, file name or folder name travelling unencrypted, or readable by someone on the same Wi-Fi,
 - linking succeeding when the codes on the two screens do not match,
 - PSphere reading or writing outside the folders you chose, or a sender choosing where a file lands on the receiving device,
-- a backup copy being deleted because the file was deleted on its original device, or an older version being lost instead of kept in `.psphere-old` for 30 days,
+- a backup copy being deleted because the file was deleted on its original device, or an older version being lost instead of kept in `.psphere/old` for 30 days,
 - PSphere contacting anything on the internet,
 - a crafted message from another device crashing the app, filling the disk past the space PSphere keeps free, or reaching files it should not.
 

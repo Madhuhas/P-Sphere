@@ -197,7 +197,7 @@ One timeline on every device, showing the photos and videos from the backup fold
 - **On request:** a device can ask a linked device for one file by its hash, to show a full-size freed photo or to download it back (6.3b). It can also ask "do you still have these?" (the free-up-space re-check, 6.3a).
 
 ### 7.4 Edits and name clashes
-- A **file changed on the source** (same name, new content): the new version replaces the backup copy. The old version is moved to `<backup location>/.psphere-old/` and deleted after 30 days.
+- A **file changed on the source** (same name, new content): the new version replaces the backup copy. The old version is moved to `<backup location>/.psphere/old/<date>/` and deleted after 30 days.
 - **Different files with the same name** can't clash, because each source has its own folder.
 
 ### 7.5 Disk space
