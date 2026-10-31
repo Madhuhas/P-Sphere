@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PSphere v3 Preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0">
+<style>
+/* Page chrome (outside the phone) */
+:root { --page-bg:#eef0f5; --page-fg:#1b1d22; --page-muted:#5d616b; --page-card:#fff; --page-line:#d9dce3; --page-accent:#1565C0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page-bg:#0b0d11; --page-fg:#e1e2e8; --page-muted:#9a9ea8; --page-card:#16191e; --page-line:#2a2e35; --page-accent:#A9C7FF; } }
+:root[data-theme="dark"] { --page-bg:#0b0d11; --page-fg:#e1e2e8; --page-muted:#9a9ea8; --page-card:#16191e; --page-line:#2a2e35; --page-accent:#A9C7FF; }
+
+/* App colour scheme, copied from ui/theme/Theme.kt */
+.app.light { --primary:#1565C0; --onPrimary:#fff; --primaryContainer:#D6E3FF; --onPrimaryContainer:#001B3E;
+  --secondaryContainer:#D7E3F8; --onSecondaryContainer:#101C2B; --surface:#F8F9FE; --onSurface:#191C20;
+  --onSurfaceVariant:#43474E; --outline:#73777F; --outlineVariant:#C3C6CF; --error:#BA1A1A; --onError:#fff;
+  --scLow:#F2F3F9; --sc:#ECEEF4; --scHigh:#E6E8EE; --scHighest:#E1E2E8;
+  --success:#1B6D2F; --successContainer:#D3F5D6; --onSuccessContainer:#002109;
+  --warning:#8A5100; --warningContainer:#FFDDB8; --onWarningContainer:#2C1600; }
+.app.dark { --primary:#A9C7FF; --onPrimary:#003063; --primaryContainer:#00468C; --onPrimaryContainer:#D6E3FF;
+  --secondaryContainer:#3B4858; --onSecondaryContainer:#D7E3F8; --surface:#111318; --onSurface:#E1E2E8;
+  --onSurfaceVariant:#C3C6CF; --outline:#8D9199; --outlineVariant:#43474E; --error:#FFB4AB; --onError:#690005;
+  --scLow:#191C20; --sc:#1D2024; --scHigh:#282A2F; --scHighest:#33353A;
+  --success:#8BD89A; --successContainer:#0B5321; --onSuccessContainer:#A6F4B4;
+  --warning:#FFB866; --warningContainer:#693C00; --onWarningContainer:#FFDDB8; }
+
+* { box-sizing:border-box; }
+body { margin:0; background:var(--page-bg); color:var(--page-fg); font-family:Roboto, system-ui, sans-serif; }
+.layout { display:flex; gap:32px; justify-content:center; align-items:flex-start; padding:24px 16px 48px; flex-wrap:wrap; }
+.panel { width:300px; max-width:100%; background:var(--page-card); border:1px solid var(--page-line); border-radius:16px; padding:18px; position:sticky; top:16px; }
+.panel h1 { font-size:18px; margin:0 0 4px; }
+.panel p.sub { margin:0 0 14px; color:var(--page-muted); font-size:13px; line-height:1.45; }
+.panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--page-muted); margin:16px 0 8px; font-weight:500; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chips button { font:inherit; font-size:13px; border:1px solid var(--page-line); background:transparent; color:var(--page-fg); padding:5px 10px; border-radius:8px; cursor:pointer; }
+.chips button.on { background:var(--page-accent); border-color:var(--page-accent); color:var(--page-bg); }
+.note { font-size:12px; color:var(--page-muted); line-height:1.45; margin-top:14px; }
+
+/* Device frame */
+.device { border-radius:36px; padding:10px; background:#1a1c20; box-shadow:0 20px 60px rgba(0,0,0,.25); max-width:100%; }
+.device.tablet { border-radius:28px; }
+.app { width:380px; max-width:calc(100vw - 52px); height:800px; border-radius:28px; overflow:hidden; position:relative;
+  background:var(--surface); color:var(--onSurface); display:flex; flex-direction:column; font-size:14px; }
+.device.tablet .app { width:900px; height:640px; border-radius:20px; }
+.statusbar { height:28px; flex:none; display:flex; justify-content:space-between; align-items:center; padding:0 22px; font-size:12px; font-weight:500; }
+.statusbar .ms { font-size:15px; }
+.main { flex:1; display:flex; min-height:0; }
+.screen { flex:1; display:flex; flex-direction:column; min-width:0; }
+.topbar { height:64px; flex:none; display:flex; align-items:center; gap:4px; padding:0 4px 0 16px; font-size:22px; }
+.topbar.back { padding-left:4px; }
+.topbar .t { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.topbar .t.bold { font-weight:600; }
+.scroll { flex:1; overflow-y:auto; scrollbar-width:thin; }
+.col { max-width:640px; margin:0 auto; padding:8px 16px 24px; display:flex; flex-direction:column; gap:12px; }
+.col.tight { gap:8px; padding-top:4px; }
+
+.ms { font-family:'Material Symbols Outlined'; font-weight:normal; font-style:normal; font-size:24px; line-height:1; display:inline-block; -webkit-font-smoothing:antialiased; font-variation-settings:'FILL' 0; user-select:none; }
+.ms.fill { font-variation-settings:'FILL' 1; }
+
+.t-display { font-size:36px; line-height:44px; font-weight:600; }
+.t-title-l { font-size:22px; line-height:28px; }
+.t-title-m { font-size:16px; line-height:24px; font-weight:500; }
+.t-title-s { font-size:14px; line-height:20px; font-weight:500; }
+.t-body-l { font-size:16px; line-height:24px; }
+.t-body-m { font-size:14px; line-height:20px; }
+.t-body-s { font-size:12px; line-height:16px; }
+.t-label-l { font-size:14px; line-height:20px; font-weight:500; }
+.muted { color:var(--onSurfaceVariant); }
+.err { color:var(--error); }
+.ok { color:var(--success); }
+
+.section { color:var(--primary); font-size:14px; font-weight:500; padding:8px 4px 2px; }
+.card { background:var(--scLow); border-radius:12px; overflow:hidden; }
+.card.click { cursor:pointer; }
+.card.click:hover { filter:brightness(.98); }
+.pad { padding:16px; }
+.row { display:flex; align-items:center; gap:14px; }
+.row.top { align-items:flex-start; }
+.row16 { display:flex; align-items:center; gap:16px; padding:16px; }
+.grow { flex:1; min-width:0; }
+.stack2 { display:flex; flex-direction:column; gap:2px; }
+.stack12 { display:flex; flex-direction:column; gap:12px; }
+.divider { height:1px; background:var(--outlineVariant); }
+.divider.inset { margin-left:56px; }
+.divider.inset70 { margin-left:70px; }
+.badge { border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; }
+.icon-p { color:var(--primary); }
+.chev { color:var(--onSurfaceVariant); }
+
+.btn { font:inherit; font-size:14px; font-weight:500; border:none; border-radius:100px; height:40px; padding:0 24px; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; }
+.btn .ms { font-size:18px; }
+.btn.full { width:100%; }
+.btn.h52 { height:52px; }
+.btn.h48 { height:48px; }
+.btn.filled { background:var(--primary); color:var(--onPrimary); }
+.btn.filled:disabled { background:color-mix(in srgb, var(--onSurface) 12%, transparent); color:color-mix(in srgb, var(--onSurface) 38%, transparent); cursor:default; }
+.btn.tonal { background:var(--secondaryContainer); color:var(--onSecondaryContainer); padding:0 16px; }
+.btn.tonal:disabled { background:color-mix(in srgb, var(--onSurface) 12%, transparent); color:color-mix(in srgb, var(--onSurface) 38%, transparent); }
+.btn.outlined { background:transparent; color:var(--primary); border:1px solid var(--outline); }
+.btn.outlined.danger { color:var(--error); }
+.btn.text { background:transparent; color:var(--primary); padding:0 12px; }
+.btn.text.danger { color:var(--error); }
+.btn.text:disabled { color:color-mix(in srgb, var(--onSurface) 38%, transparent); }
+.iconbtn { width:48px; height:48px; border:none; background:transparent; color:var(--onSurface); border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+.field { position:relative; border:1px solid var(--outline); border-radius:4px; padding:16px 16px 14px; }
+.field label { position:absolute; top:-9px; left:12px; background:inherit; padding:0 4px; font-size:12px; color:var(--primary); }
+.field-wrap { background:var(--scLow); }
+.field input { font:inherit; font-size:16px; border:none; outline:none; background:transparent; color:var(--onSurface); width:100%; }
+.support { font-size:12px; color:var(--onSurfaceVariant); padding:4px 16px 0; }
+
+.switch { width:52px; height:32px; border-radius:16px; flex:none; position:relative; border:2px solid var(--outline); background:var(--scHighest); transition:.15s; }
+.switch::after { content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:var(--outline); top:6px; left:6px; transition:.15s; }
+.switch.on { background:var(--primary); border-color:var(--primary); }
+.switch.on::after { width:24px; height:24px; top:2px; left:22px; background:var(--onPrimary); }
+.check { width:18px; height:18px; border:2px solid var(--onSurfaceVariant); border-radius:2px; margin:15px; flex:none; display:flex; align-items:center; justify-content:center; }
+.check.on { background:var(--primary); border-color:var(--primary); color:var(--onPrimary); }
+.check .ms { font-size:16px; font-weight:700; }
+.radio { width:20px; height:20px; border:2px solid var(--onSurfaceVariant); border-radius:50%; margin:14px; flex:none; position:relative; }
+.radio.on { border-color:var(--primary); }
+.radio.on::after { content:''; position:absolute; inset:3px; border-radius:50%; background:var(--primary); }
+.toggle-row { cursor:pointer; }
+
+.fchip { font:inherit; font-size:14px; font-weight:500; height:32px; padding:0 12px; border-radius:8px; border:1px solid var(--outline); background:transparent; color:var(--onSurfaceVariant); cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+.fchip.on { background:var(--secondaryContainer); color:var(--onSecondaryContainer); border-color:transparent; }
+.fchip .ms { font-size:18px; }
+
+.progress { height:4px; border-radius:2px; overflow:hidden; position:relative; }
+.progress > div { height:100%; border-radius:2px; }
+.spinner { width:24px; height:24px; border-radius:50%; border:2.5px solid currentColor; border-right-color:transparent; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Bottom navigation and rail */
+.navbar { height:80px; flex:none; background:var(--sc); display:flex; }
+.navbar button, .rail button { font:inherit; border:none; background:transparent; color:var(--onSurfaceVariant); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px; font-weight:500; }
+.navbar button { flex:1; padding-top:12px; }
+.navbar .pill, .rail .pill { width:64px; height:32px; border-radius:16px; display:flex; align-items:center; justify-content:center; }
+.navbar button.on, .rail button.on { color:var(--onSurface); }
+.navbar button.on .pill, .rail button.on .pill { background:var(--secondaryContainer); color:var(--onSecondaryContainer); }
+.rail { width:80px; flex:none; background:var(--surface); display:flex; flex-direction:column; gap:12px; padding-top:16px; }
+.rail .pill { width:56px; }
+
+/* Dialog */
+.scrim { position:absolute; inset:0; background:rgba(0,0,0,.32); display:flex; align-items:center; justify-content:center; padding:24px; z-index:5; }
+.dialog { background:var(--scHigh); border-radius:28px; padding:24px; width:100%; max-width:312px; }
+.dialog h3 { margin:0 0 16px; font-size:24px; line-height:32px; font-weight:400; }
+.dialog .actions { display:flex; justify-content:flex-end; gap:8px; margin-top:24px; }
+.code { font-family:'Roboto Mono', monospace; font-size:36px; letter-spacing:4px; text-align:center; margin-top:12px; }
+
+.qr { background:#fff; border-radius:12px; padding:12px; align-self:center; }
+.qr svg { display:block; width:240px; height:240px; }
+.empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 32px; text-align:center; }
+.empty .body { max-width:360px; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="panel">
+    <h1>PSphere v3 preview</h1>
+    <p class="sub">A clickable mock of the Android screens in <code>mobile/…/ui/</code>, using the same colours, text and states. Nothing is really sent or received.</p>
+
+    <h2>Screen</h2>
+    <div class="chips" id="screens"></div>
+
+    <h2>Situation</h2>
+    <div class="chips" id="situations"></div>
+
+    <h2>Receiving</h2>
+    <div class="chips" id="recv"></div>
+
+    <h2>Look</h2>
+    <div class="chips" id="look"></div>
+
+    <p class="note">Mock data: this device is <b>Phone</b>, linked with <b>Tablet</b> (on Wi-Fi) and <b>Laptop</b> (away). The Link screen's QR code is a decoration, not a real code.</p>
+  </aside>
+
+  <div class="device" id="device"><div class="app light" id="app"></div></div>
+</div>
+
+<script>
+const S = {
+  screen: 'devices', dark: matchMedia('(prefers-color-scheme: dark)').matches, tablet: false,
+  situation: 'waiting', recv: 'normal', dialog: null, folderId: null, deviceId: null,
+  linked: null, nearby: true, name: 'Phone',
+};
+
+const DEVICES = [
+  { id:'tab', name:'Tablet', online:true,  last:'5 min ago' },
+  { id:'lap', name:'Laptop', online:false, last:'2 days ago' },
+];
+let FOLDERS = [
+  { id:'cam', label:'Camera',          loc:'Internal storage/DCIM/Camera',   dest:['tab','lap'], include:'media', files:1284, size:'6.2 GB',  show:true,  waiting:{ tab:0, lap:12 } },
+  { id:'wa',  label:'WhatsApp Images', loc:'Internal storage/WhatsApp/Media/WhatsApp Images', dest:['lap'], include:'media', files:3410, size:'1.8 GB', show:true, waiting:{ lap:41 } },
+  { id:'doc', label:'Documents',       loc:'Internal storage/Documents',     dest:['lap'], include:'all',  files:96,   size:'412.5 MB', show:false, waiting:{ lap:0 } },
+];
+const KEPT = [
+  { origin:'tab', originName:'Tablet', label:'Camera',     files:412, size:'1.9 GB',  path:'Tablet/Camera' },
+  { origin:'tab', originName:'Tablet', label:'Downloads',  files:58,  size:'230.4 MB', path:'Tablet/Downloads' },
+];
+
+const SCREENS = [['welcome','Welcome'],['devices','Devices'],['device','Device (Laptop)'],['link','Link a device'],['sending','Sending'],['folder','Edit folder'],['addfolder','Add a folder'],['receiving','Receiving'],['settings','Settings']];
+const SITUATIONS = [['busy','Backing up'],['ready','Ready to back up'],['waiting','Waiting for Laptop'],['done','Everything backed up'],['nofolders','No folders yet'],['nodevices','Nothing linked'],['error','Has a problem']];
+const RECV = [['normal','Normal'],['unset','No folder chosen'],['low','Nearly full'],['paused','Paused']];
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ic = (n, cls='', style='') => `<span class="ms ${cls}" style="${style}">${n}</span>`;
+const plural = (n, w) => `${n.toLocaleString('en-US')} ${w}${n !== 1 ? 's' : ''}`;
+const badge = (icon, bg, fg, size=40) => `<div class="badge" style="width:${size}px;height:${size}px;background:${bg};color:${fg}">${ic(icon,'',`font-size:${Math.round(size*.55)}px`)}</div>`;
+const section = t => `<div class="section">${esc(t)}</div>`;
+const sw = on => `<div class="switch ${on?'on':''}"></div>`;
+
+function linked() { return S.situation === 'nodevices' ? [] : DEVICES; }
+function folders() { return S.situation === 'nofolders' || S.situation === 'nodevices' ? [] : FOLDERS; }
+function waitingFor(id) {
+  if (S.situation === 'done' || S.situation === 'busy') return 0;
+  const n = folders().filter(f => f.dest.includes(id)).reduce((s, f) => s + (f.waiting[id] || 0), 0);
+  return n;
+}
+function isOnline(d) { return S.situation === 'ready' ? true : d.online; }
+function onlineLine(d) {
+  if (isOnline(d)) return `<div class="t-label-l ok">On this Wi-Fi</div>`;
+  return `<div class="t-label-l muted">Not nearby · last backup ${d.last}</div>`;
+}
+
+/* ---------- screens ---------- */
+
+function topbar(title, { back=false, bold=false, action='' } = {}) {
+  return `<div class="topbar ${back?'back':''}">${back ? `<button class="iconbtn" data-go="${back}">${ic('arrow_back')}</button>` : ''}<div class="t ${bold?'bold':''}">${esc(title)}</div>${action}</div>`;
+}
+
+function welcome() {
+  const point = (i, t, b) => `<div class="row top" style="gap:16px">${ic(i,'icon-p')}<div><div class="t-title-m">${t}</div><div class="t-body-m muted">${b}</div></div></div>`;
+  return `<div class="scroll"><div class="col" style="padding:32px 24px;gap:20px">
+    <div class="t-display">PSphere</div>
+    <div class="t-title-m muted" style="font-weight:400">Your own Google Photos, where your devices are the cloud. Photos stay on your home Wi-Fi.</div>
+    ${point('devices','Link your devices','Your phone, tablet and laptop back up to each other.')}
+    ${point('folder_copy','Choose folders','Pick which folders go to which device.')}
+    ${point('photo_library','See everything anywhere','Coming next: one photo library on every device, and Free up space.')}
+    ${point('lock','Private','Only your linked devices can connect, and everything is encrypted.')}
+    <div style="margin-top:4px" class="field-wrap"><div class="field" style="background:var(--surface)"><label style="background:var(--surface)">Name for this device</label><input id="nameInput" value="${esc(S.name)}" maxlength="40"></div>
+      <div class="support">Your other devices see this name, e.g. “Phone” or “Tablet”.</div></div>
+    <button class="btn filled full h52 t-title-s" data-go="devices">Continue</button>
+  </div></div>`;
+}
+
+function statusCard() {
+  const rows = linked().map(d => ({ d, waiting: waitingFor(d.id), online: isOnline(d) }));
+  const busy = S.situation === 'busy';
+  const on = rows.filter(r => r.waiting > 0 && r.online), off = rows.filter(r => r.waiting > 0 && !r.online);
+  const list = rs => rs.map(r => `${plural(r.waiting,'file')} for ${r.d.name}`).join(' · ');
+  let L;
+  if (busy) L = { t:'Backing up', d:'Sending to Tablet · 37 of 120', i:'sync', bg:'var(--primaryContainer)', fg:'var(--onPrimaryContainer)' };
+  else if (!folders().length) L = { t:'Choose what to back up', d:'Pick folders on this device and the devices they go to.', i:'folder_open', bg:'var(--warningContainer)', fg:'var(--onWarningContainer)' };
+  else if (on.length) L = { t:'Ready to back up', d:list(on), i:'cloud_upload', bg:'var(--scHigh)', fg:'var(--onSurface)' };
+  else if (off.length) L = { t:`Waiting for ${off.map(r=>r.d.name).join(', ')}`, d:list(off) + ". Backs up when it's on this Wi-Fi.", i:'hourglass_bottom', bg:'var(--scHigh)', fg:'var(--onSurface)' };
+  else L = { t:'Everything is backed up', d:'Last backup just now', i:'check_circle', bg:'var(--successContainer)', fg:'var(--onSuccessContainer)' };
+  const lead = busy
+    ? `<div class="badge" style="width:48px;height:48px;border-radius:28px;background:color-mix(in srgb, ${L.fg} 8%, transparent)"><div class="spinner"></div></div>`
+    : badge(L.i, `color-mix(in srgb, ${L.fg} 10%, transparent)`, L.fg, 48);
+  const bar = busy ? `<div class="progress" style="margin-top:16px;background:color-mix(in srgb, ${L.fg} 15%, transparent)"><div style="width:31%;background:${L.fg}"></div></div>` : '';
+  const btn = !folders().length && !busy
+    ? `<button class="btn filled full h52 t-title-s" data-go="sending">Choose folders</button>`
+    : `<button class="btn filled full h52 t-title-s" ${busy?'disabled':''} data-sit="busy">${ic('sync','','font-size:20px')}${busy?'Backing up…':'Back up now'}</button>`;
+  return `<div style="background:${L.bg};color:${L.fg};border-radius:20px;padding:20px">
+    <div class="row">${lead}<div class="grow"><div class="t-title-l">${esc(L.t)}</div>${L.d?`<div class="t-body-m" style="opacity:.8">${esc(L.d)}</div>`:''}</div></div>
+    ${bar}<div style="height:18px"></div>${btn}</div>`;
+}
+
+function notes(list) {
+  if (!list.length) return '';
+  return `<div style="background:var(--warningContainer);color:var(--onWarningContainer);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    ${list.map(n => `<div class="row top" style="gap:10px">${ic('warning','','font-size:18px;margin-top:1px')}<div class="t-body-m">${esc(n)}</div></div>`).join('')}</div>`;
+}
+const PROBLEMS = ['Laptop: not enough space for 3 files. It stops receiving when 2.0 GB is left.', "Can't open “Documents”. Choose the folder again in Sending."];
+
+function devicesScreen() {
+  if (!linked().length) {
+    return topbar(S.name, { bold:true }) + `<div class="scroll"><div class="empty">
+      ${badge('devices','var(--scHigh)','var(--onSurfaceVariant)',72)}
+      <div class="t-title-l" style="margin-top:20px">Link your other devices</div>
+      <div class="t-body-m muted body">Open PSphere on your tablet or laptop, then link it here. Linked devices back up to each other on your Wi-Fi.</div>
+      <button class="btn filled" style="margin-top:24px" data-go="link">Link a device</button></div></div>`;
+  }
+  const cards = linked().map(d => {
+    const w = waitingFor(d.id), isDest = folders().some(f => f.dest.includes(d.id));
+    const kept = KEPT.filter(k => k.origin === d.id);
+    return `<div class="card click" data-device="${d.id}"><div class="row pad">
+      ${badge('devices','var(--primaryContainer)','var(--onPrimaryContainer)')}
+      <div class="grow stack2"><div class="t-title-m">${d.name}</div>${onlineLine(d)}
+        ${isDest ? `<div class="t-body-m muted">${w > 0 ? `Sending: ${plural(w,'file')} waiting` : 'Sending: up to date'}</div>` : ''}
+        ${kept.length ? `<div class="t-body-m muted">Keeping: ${plural(kept.reduce((s,k)=>s+k.files,0),'file')} · 2.1 GB</div>` : ''}
+      </div>${ic('chevron_right','chev')}</div></div>`;
+  }).join('');
+  return topbar(S.name, { bold:true }) + `<div class="scroll"><div class="col">
+    ${statusCard()}
+    ${notes(S.situation === 'error' ? PROBLEMS : [])}
+    ${section('My devices')}${cards}
+    <button class="btn outlined full" data-go="link">${ic('add')}Link a device</button>
+  </div></div>`;
+}
+
+function deviceScreen() {
+  const d = DEVICES.find(x => x.id === (S.deviceId || 'lap'));
+  const busy = S.situation === 'busy';
+  const sending = folders().filter(f => f.dest.includes(d.id));
+  const keeping = KEPT.filter(k => k.origin === d.id);
+  const frow = (i, t, sub) => `<div class="row16">${ic(i,'icon-p')}<div class="grow"><div class="t-body-l">${esc(t)}</div><div class="t-body-m muted">${esc(sub)}</div></div></div>`;
+  const join = arr => arr.join('<div class="divider inset"></div>');
+  return topbar(d.name, { back:'devices' }) + `<div class="scroll"><div class="col tight">
+    ${onlineLine(d)}
+    <button class="btn filled full h48" style="margin-top:8px" ${busy?'disabled':''} data-sit="busy">${ic('sync')}${busy?'Sending to Tablet · 37 of 120':`Back up with ${d.name} now`}</button>
+    ${S.situation === 'error' && d.id === 'lap' ? notes([PROBLEMS[0].replace('Laptop: ','')]) : ''}
+    ${section(`Sending to ${d.name}`)}
+    <div class="card">${sending.length ? join(sending.map(f => { const w = S.situation==='done'||busy ? 0 : (f.waiting[d.id]||0); return frow('folder_open', f.label, w>0 ? `${plural(w,'file')} waiting` : 'Up to date'); }))
+      : `<div class="pad t-body-m muted">None of this device's folders go to ${d.name}. Choose destinations in Sending.</div>`}</div>
+    ${section(`Keeping from ${d.name}`)}
+    <div class="card">${keeping.length ? join(keeping.map(k => frow('folder', k.label, `${plural(k.files,'file')} · ${k.size} · ${k.path}`)))
+      : `<div class="pad t-body-m muted">Nothing from ${d.name} is stored here yet.</div>`}</div>
+    <div style="height:16px"></div>
+    <button class="btn outlined danger full" data-dialog="unlink">${ic('link_off')}Unlink ${d.name}</button>
+  </div></div>`;
+}
+
+function qrSvg() {
+  // Decorative: finder patterns plus a fixed pseudo-random grid.
+  const n = 29, cells = [];
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const finder = (x, y) => x < 7 && y < 7;
+  const isFinder = (x, y) => finder(x, y) || finder(n-1-x, y) || finder(x, n-1-y);
+  const finderOn = (x, y) => { const fx = x < 7 ? x : n-1-x, fy = y < 7 ? y : n-1-y; const m = Math.max(Math.abs(fx-3), Math.abs(fy-3)); return m !== 2; };
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const on = isFinder(x, y) ? finderOn(x, y) : (x === 7 || y === 7 || x === n-8 || y === n-8) && (isFinder(x+1,y)||isFinder(x-1,y)||isFinder(x,y+1)||isFinder(x,y-1)) ? false : rnd() > .52;
+    if (on) cells.push(`<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`);
+  }
+  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" fill="#000">${cells.join('')}</svg>`;
+}
+
+function linkScreen() {
+  const near = S.nearby ? [{ name:'Laptop', status:'Ready to link', ok:true }, { name:"Mum's tablet", status:'Has an older version of PSphere. Update it first.', ok:false }] : [];
+  const banner = S.linked ? `<div style="background:var(--successContainer);color:var(--onSuccessContainer);border-radius:12px"><div class="row pad" style="gap:12px">${ic('check_circle')}<div class="grow"><div class="t-title-m">Linked with ${S.linked}</div><div class="t-body-m">Choose folders for it in Sending.</div></div><button class="btn text" style="color:inherit" data-go="devices">Done</button></div></div>` : '';
+  return topbar('Link a device', { back:'devices' }) + `<div class="scroll"><div class="col tight">
+    ${banner}
+    ${section("Scan the other device's code")}
+    <div class="card pad stack12"><div class="t-body-m muted">On your other device, open PSphere › Link a device. A code appears there.</div>
+      <button class="btn filled full" data-dialog="code">${ic('qr_code_scanner')}Scan a code</button></div>
+    ${section("Or show this device's code")}
+    <div class="card pad stack12" style="align-items:center"><div class="qr">${qrSvg()}</div>
+      <div class="t-body-m muted" style="text-align:center">Scan this with PSphere on your other device. It works for 10 minutes, once.</div></div>
+    ${section('Link without a camera')}
+    <div class="card">${near.length ? near.map((d, i) => `${i ? '<div class="divider inset70"></div>' : ''}<div class="row" style="padding:10px 16px">
+        ${badge('devices','var(--secondaryContainer)','var(--onSecondaryContainer)')}
+        <div class="grow"><div class="t-body-l">${esc(d.name)}</div><div class="t-body-s muted">${esc(d.status)}</div></div>
+        <button class="btn tonal" ${d.ok?'':'disabled'} data-dialog="code">Link</button></div>`).join('')
+      : `<div class="pad t-body-m muted">Open “Link a device” on the other device too. It appears here when it's on this Wi-Fi.</div>`}</div>
+  </div></div>`;
+}
+
+function sendingScreen() {
+  if (!folders().length) {
+    return topbar('Sending') + `<div class="scroll"><div class="empty">
+      ${badge('folder_open','var(--scHigh)','var(--onSurfaceVariant)',72)}
+      <div class="t-title-l" style="margin-top:20px">Choose folders to back up</div>
+      <div class="t-body-m muted body">Pick a folder on this device, like Camera, and the devices it should go to.</div>
+      <button class="btn filled" style="margin-top:24px" data-go="addfolder">Add a folder</button></div></div>`;
+  }
+  const cards = folders().map(f => {
+    const broken = S.situation === 'error' && f.id === 'doc';
+    const w = S.situation === 'done' || S.situation === 'busy' ? 0 : Object.values(f.waiting).reduce((a,b)=>a+b,0);
+    const dest = f.dest.map(id => DEVICES.find(d => d.id === id).name).sort();
+    return `<div class="card click" data-folder="${f.id}"><div class="row pad">
+      ${badge('folder_open','var(--secondaryContainer)','var(--onSecondaryContainer)')}
+      <div class="grow stack2"><div class="t-title-m">${esc(f.label)}</div>
+        ${broken ? `<div class="row" style="gap:6px">${ic('warning','err','font-size:16px')}<div class="t-body-m err">Can't open this folder. Tap to choose it again.</div></div>` : `<div class="t-body-s muted">${esc(f.loc)}</div>`}
+        <div class="t-body-m">${dest.length ? 'To ' + dest.join(', ') : 'Not going anywhere yet'}</div>
+        <div class="t-body-s muted">${plural(f.files,'file')} · ${f.size}${f.include==='media'?' · photos and videos':''}${w>0?` · ${w} waiting`:''}</div>
+      </div>${ic('chevron_right','chev')}</div></div>`;
+  }).join('');
+  return topbar('Sending') + `<div class="scroll"><div class="col">
+    <div class="t-body-m muted">Folders on this device and where they're backed up. Deleting files here never deletes the backups.</div>
+    ${cards}
+    <button class="btn outlined full" data-go="addfolder">${ic('add')}Add a folder</button>
+  </div></div>`;
+}
+
+function folderScreen(isNew) {
+  const f = isNew ? { label:'', loc:null, dest: linked().map(d=>d.id), include:'media', show:true }
+                  : (FOLDERS.find(x => x.id === (S.folderId || 'cam')));
+  S.edit = S.edit && S.edit.key === (isNew ? 'new' : f.id) ? S.edit : { key: isNew ? 'new' : f.id, label:f.label, loc:f.loc, dest:[...f.dest], include:f.include, show:f.show };
+  const E = S.edit;
+  const canSave = E.label.trim() && E.loc;
+  const devs = linked();
+  return topbar(isNew ? 'Add a folder' : f.label, { back:'sending', action:`<button class="btn text" ${canSave?'':'disabled'} data-go="sending">Save</button>` }) + `<div class="scroll"><div class="col tight">
+    ${section('Folder')}
+    <div class="card pad stack12">
+      <div class="row" style="gap:16px">${ic('folder_open','icon-p')}<div class="t-body-l grow ${E.loc?'':'err'}">${E.loc ? esc(E.loc) : 'No folder chosen'}</div></div>
+      <button class="btn outlined full" data-act="pick">${E.loc ? 'Change folder' : 'Choose folder'}</button>
+      <div><div class="field" style="background:var(--scLow)"><label style="background:var(--scLow)">Name</label><input id="labelInput" value="${esc(E.label)}" maxlength="60"></div>
+        <div class="support">Other devices keep it in a folder with this name.</div></div>
+    </div>
+    ${section('Back up to')}
+    <div class="card">${devs.length ? devs.map((d, i) => `${i?'<div class="divider inset"></div>':''}<div class="row toggle-row" style="padding:4px 8px;gap:0" data-dest="${d.id}"><div class="check ${E.dest.includes(d.id)?'on':''}">${E.dest.includes(d.id)?ic('check'):''}</div><div class="t-body-l">${d.name}</div></div>`).join('')
+      : `<div class="pad" style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><div class="t-body-m muted">Link your other devices first, then choose where this folder goes.</div><button class="btn outlined" data-go="link">Link a device</button></div>`}</div>
+    ${section('What to include')}
+    <div class="card">
+      <div class="row toggle-row" style="padding:8px;gap:0" data-include="media"><div class="radio ${E.include==='media'?'on':''}"></div><div><div class="t-body-l">Photos and videos</div><div class="t-body-m muted">Skips other files, like documents</div></div></div>
+      <div class="divider inset"></div>
+      <div class="row toggle-row" style="padding:8px;gap:0" data-include="all"><div class="radio ${E.include==='all'?'on':''}"></div><div><div class="t-body-l">All files</div><div class="t-body-m muted">Everything in the folder and its subfolders</div></div></div>
+    </div>
+    ${section('Photos')}
+    <div class="card"><div class="row16 toggle-row" data-act="show"><div class="grow"><div class="t-body-l">Show on my other devices</div><div class="t-body-m muted">Photos from this folder appear in Photos on your linked devices. Turn off for private folders.</div></div>${sw(E.show)}</div></div>
+    <div style="height:8px"></div>
+    <button class="btn filled full h48" ${canSave?'':'disabled'} data-go="sending">${isNew ? 'Start backing up' : 'Save'}</button>
+    ${isNew ? '' : `<button class="btn text danger full" data-dialog="stop">Stop backing up this folder</button>`}
+  </div></div>`;
+}
+
+function receivingScreen() {
+  const unset = S.recv === 'unset', low = S.recv === 'low', paused = S.recv === 'paused';
+  const free = low ? '2.8 GB' : '41.6 GB', reserve = '2.0 GB';
+  const groups = S.situation === 'nodevices' ? [] : KEPT;
+  return topbar('Receiving') + `<div class="scroll"><div class="col tight">
+    <div class="t-body-m muted">Backups your other devices send to ${esc(S.name)}.</div>
+    ${section('Backup location')}
+    <div class="card pad stack12">
+      <div class="row" style="gap:16px">${ic('save_alt','icon-p')}<div class="grow"><div class="t-body-l ${unset?'err':''}">${unset ? 'Not chosen' : 'Internal storage/Pictures/PSphere'}</div>
+        <div class="t-body-m muted">${unset ? 'Choose a folder, such as Pictures/PSphere, before other devices can back up here.' : 'Inside it, each device gets its own folder, like Phone/Camera.'}</div></div></div>
+      <button class="btn outlined full" data-recv="${unset?'normal':'unset'}">${unset ? 'Choose folder' : 'Change folder'}</button>
+      ${unset ? '' : `<div class="t-body-s muted">Changing it doesn't move backups already saved. New backups go to the new folder.</div>`}
+    </div>
+    ${unset ? '' : `${section('Space')}
+    <div class="card">
+      <div class="row16">${ic('storage', low ? 'err' : 'icon-p')}<div class="grow"><div class="t-body-l">${free} free</div>
+        <div class="t-body-m ${low?'err':'muted'}">${low ? `Nearly full. PSphere stops receiving when ${reserve} is left.` : `PSphere always leaves ${reserve} free. Previews use 84.2 MB.`}</div></div></div>
+      <div class="divider"></div>
+      <div class="row16 toggle-row" data-recv="${paused?'normal':'paused'}"><div class="grow"><div class="t-body-l">Pause receiving</div><div class="t-body-m muted">Other devices wait until you turn this off.</div></div>${sw(paused)}</div>
+    </div>`}
+    ${section('Kept here')}
+    <div class="card">${groups.length ? `<div class="t-title-s" style="padding:14px 16px 0">From Tablet</div>` + groups.map(g => `<div class="row16">${ic('folder','icon-p','font-size:22px')}<div class="grow"><div class="t-body-l">${g.label}</div><div class="t-body-m muted">${plural(g.files,'file')} · ${g.size} · ${g.path}</div></div></div>`).join('')
+      : `<div class="pad t-body-m muted">Nothing yet. Backups appear here once another device sends folders to ${esc(S.name)}.</div>`}</div>
+    ${paused ? `<div class="t-body-m" style="color:var(--warning)">Receiving is paused.</div>` : ''}
+  </div></div>`;
+}
+
+function settingsScreen() {
+  S.set = S.set || { charging:true, interval:6, stay:false };
+  const T = S.set;
+  const nav = (i, t, s, attr='') => `<div class="row16 toggle-row" ${attr}>${ic(i,'icon-p')}<div class="grow"><div class="t-body-l">${esc(t)}</div><div class="t-body-m muted">${esc(s)}</div></div>${ic('chevron_right','chev')}</div>`;
+  const tog = (i, t, s, on, key) => `<div class="row16 toggle-row" data-set="${key}">${ic(i,'icon-p')}<div class="grow"><div class="t-body-l">${t}</div><div class="t-body-m muted">${s}</div></div>${sw(on)}</div>`;
+  const devs = linked();
+  return topbar('Settings') + `<div class="scroll"><div class="col tight">
+    ${section('This device')}
+    <div class="card">${nav('edit','Name',S.name,'data-dialog="rename"')}</div>
+    ${section('When to back up')}
+    <div class="card">
+      ${tog('battery_charging_full','Only while charging','For backups in the background. “Back up now” always works.',T.charging,'charging')}
+      <div class="divider inset"></div>
+      <div class="row16 top">${ic('schedule','icon-p')}<div><div class="t-body-l">Back up in the background every</div>
+        <div class="t-body-m muted">On Wi-Fi only. Also whenever a linked device shows up while PSphere is open.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${[1,3,6,12,24].map(h => `<button class="fchip ${T.interval===h?'on':''}" data-interval="${h}">${T.interval===h?ic('check'):''}${h===1?'1 hour':h+' hours'}</button>`).join('')}</div></div></div>
+      <div class="divider inset"></div>
+      ${tog('notifications_active','Stay ready to receive','Keeps PSphere running so your other devices can back up here any time. Shows a notification. Best on a device that stays at home.',T.stay,'stay')}
+    </div>
+    ${section('Linked devices')}
+    <div class="card">${devs.map((d,i) => `${i?'<div class="divider inset"></div>':''}${nav('devices',d.name,isOnline(d)?'On this Wi-Fi':'Not nearby',`data-device="${d.id}"`)}`).join('')}
+      ${devs.length ? '<div class="divider"></div>' : ''}${nav('devices','Link a device','Scan or show a code','data-go="link"')}</div>
+    ${section('About')}
+    <div class="card">
+      <div class="row16">${ic('info','icon-p')}<div class="t-body-l grow">Version</div><div class="t-body-m muted">1.1 (2)</div></div>
+      <div class="divider inset"></div>
+      <div class="row16">${ic('devices','icon-p')}<div class="t-body-l grow">Device ID</div><div class="t-body-m muted">7f3a9c2e41d8</div></div>
+    </div>
+  </div></div>`;
+}
+
+/* ---------- dialogs ---------- */
+
+function dialog() {
+  const d = DEVICES.find(x => x.id === (S.deviceId || 'lap'));
+  const f = FOLDERS.find(x => x.id === (S.folderId || 'cam'));
+  const box = (title, body, actions) => `<div class="scrim" data-close="1"><div class="dialog"><h3>${title}</h3>${body}<div class="actions">${actions}</div></div></div>`;
+  const cancel = `<button class="btn text" data-close="1">Cancel</button>`;
+  switch (S.dialog) {
+    case 'code': return box('Link with Laptop?', `<div class="t-body-m muted">Check that Laptop shows the same code.</div><div class="code">482 913</div>`,
+      cancel + `<button class="btn filled" data-act="linked">Codes match</button>`);
+    case 'unlink': return box(`Unlink ${d.name}?`, `<div class="t-body-m muted">This device stops backing up to ${d.name} and won't accept connections from it. Files already copied stay where they are. Unlink on ${d.name} too.</div>`,
+      cancel + `<button class="btn filled" style="background:var(--error);color:var(--onError)" data-close="1">Unlink</button>`);
+    case 'stop': return box(`Stop backing up “${esc(f.label)}”?`, `<div class="t-body-m muted">New files in this folder won't be backed up. Copies already on your other devices stay there, and nothing on this device is deleted.</div>`,
+      cancel + `<button class="btn filled" style="background:var(--error);color:var(--onError)" data-close="1">Stop backing up</button>`);
+    case 'rename': return box('Name this device', `<div class="field" style="background:var(--scHigh)"><label style="background:var(--scHigh)">Name</label><input id="renameInput" value="${esc(S.name)}" maxlength="40"></div>`,
+      cancel + `<button class="btn filled" data-act="rename">Save</button>`);
+  }
+  return '';
+}
+
+/* ---------- shell ---------- */
+
+const TABS = [['devices','Devices','devices'],['sending','Sending','cloud_upload'],['receiving','Receiving','cloud_download'],['settings','Settings','settings']];
+const TAB_OF = { devices:'devices', sending:'sending', receiving:'receiving', settings:'settings' };
+
+function render() {
+  const app = document.getElementById('app');
+  app.className = 'app ' + (S.dark ? 'dark' : 'light');
+  document.documentElement.dataset.theme = S.dark ? 'dark' : 'light';
+  document.getElementById('device').classList.toggle('tablet', S.tablet);
+  const body = { welcome, devices:devicesScreen, device:deviceScreen, link:linkScreen, sending:sendingScreen,
+    folder:() => folderScreen(false), addfolder:() => folderScreen(true), receiving:receivingScreen, settings:settingsScreen }[S.screen]();
+  const tab = TAB_OF[S.screen];
+  const item = ([id, label, icon]) => `<button class="${tab===id?'on':''}" data-go="${id}"><div class="pill">${ic(icon, tab===id?'fill':'')}</div>${label}</button>`;
+  const nav = tab ? (S.tablet ? '' : `<nav class="navbar">${TABS.map(item).join('')}</nav>`) : '';
+  const rail = tab && S.tablet ? `<nav class="rail">${TABS.map(item).join('')}</nav>` : '';
+  app.innerHTML = `<div class="statusbar"><span>9:41</span><span>${ic('wifi')} ${ic('battery_5_bar')}</span></div>
+    <div class="main">${rail}<div class="screen">${body}</div></div>${nav}${dialog()}`;
+  renderPanel();
+}
+
+function chips(el, items, current, onPick) {
+  const box = document.getElementById(el);
+  box.innerHTML = items.map(([id, label]) => `<button class="${current===id?'on':''}" data-id="${id}">${label}</button>`).join('');
+  box.onclick = e => { const b = e.target.closest('button'); if (b) { onPick(b.dataset.id); render(); } };
+}
+function renderPanel() {
+  chips('screens', SCREENS, S.screen === 'device' ? 'device' : S.screen, id => { S.screen = id; S.dialog = null; if (id === 'device') S.deviceId = 'lap'; if (id === 'folder') S.folderId = 'cam'; });
+  chips('situations', SITUATIONS, S.situation, id => { S.situation = id; });
+  chips('recv', RECV, S.recv, id => { S.recv = id; if (S.screen !== 'receiving') S.screen = 'receiving'; });
+  chips('look', [['light','Light'],['dark','Dark'],['phone','Phone width'],['tablet','Tablet width']],
+    null, id => { if (id==='light') S.dark=false; if (id==='dark') S.dark=true; if (id==='phone') S.tablet=false; if (id==='tablet') S.tablet=true; });
+  document.querySelectorAll('#look button').forEach(b => b.classList.toggle('on',
+    (b.dataset.id==='dark')===S.dark && (b.dataset.id==='dark'||b.dataset.id==='light') || (b.dataset.id==='tablet')===S.tablet && (b.dataset.id==='tablet'||b.dataset.id==='phone')));
+}
+
+document.getElementById('app').addEventListener('click', e => {
+  const t = e.target.closest('[data-go],[data-device],[data-folder],[data-dialog],[data-close],[data-act],[data-sit],[data-dest],[data-include],[data-recv],[data-set],[data-interval]');
+  if (!t) return;
+  if (t.classList.contains('scrim') && e.target !== t) return;
+  const d = t.dataset;
+  if (d.go) {
+    if (S.screen === 'welcome') { const v = document.getElementById('nameInput').value.trim(); if (v) S.name = v; }
+    if (S.screen === 'link') S.linked = null;
+    S.screen = d.go; S.dialog = null; S.edit = null;
+  }
+  else if (d.device) { S.deviceId = d.device; S.screen = 'device'; }
+  else if (d.folder) { S.folderId = d.folder; S.screen = 'folder'; S.edit = null; }
+  else if (d.dialog) S.dialog = d.dialog;
+  else if (d.close) S.dialog = null;
+  else if (d.sit) S.situation = d.sit;
+  else if (d.recv) S.recv = d.recv;
+  else if (d.dest) { const i = S.edit.dest.indexOf(d.dest); i < 0 ? S.edit.dest.push(d.dest) : S.edit.dest.splice(i, 1); }
+  else if (d.include) S.edit.include = d.include;
+  else if (d.set) S.set[d.set] = !S.set[d.set];
+  else if (d.interval) S.set.interval = +d.interval;
+  else if (d.act === 'show') S.edit.show = !S.edit.show;
+  else if (d.act === 'pick') { S.edit.loc = 'Internal storage/Pictures/Screenshots'; if (!S.edit.label.trim()) S.edit.label = 'Screenshots'; }
+  else if (d.act === 'linked') { S.dialog = null; S.linked = 'Laptop'; S.screen = 'link'; }
+  else if (d.act === 'rename') { const v = document.getElementById('renameInput').value.trim(); if (v) S.name = v; S.dialog = null; }
+  render();
+});
+document.getElementById('app').addEventListener('input', e => {
+  if (e.target.id === 'labelInput') {
+    S.edit.label = e.target.value;
+    const ok = S.edit.label.trim() && S.edit.loc;
+    document.querySelectorAll('#app [data-go="sending"]').forEach(b => { if (b.classList.contains('filled') || b.classList.contains('text')) b.disabled = !ok; });
+  }
+});
+
+render();
+</script>
+</body>
+</html>

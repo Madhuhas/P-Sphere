@@ -2,7 +2,7 @@
 
 > **In one line:** Google Photos, but your own devices are the cloud. Nothing leaves your home network.
 
-Status: **draft for review**. Nothing is built yet.
+Status: **approved** (2026-10-25). Steps 1 and 2 are built; see section 8.
 Scope: local backup between your own devices on the same Wi-Fi. No server and no internet.
 
 ---
@@ -214,7 +214,7 @@ One timeline on every device, showing the photos and videos from the backup fold
 - **`mobile/`**: the Android app. Its user interface plus Android parts such as folder picking, the background worker and discovery.
 - **`desktop-app/`** (new): the Windows app in Kotlin with Compose for Desktop.
   - JmDNS for discovery, a system-tray icon, and a Windows installer.
-  - The old Electron `desktop/` folder stays untouched until this replaces it.
+  - The old Electron `desktop/` app was moved to `old.zip` (outside the repo) on 2026-10-31.
 
 ### 7.8 Compatibility
 - Version 3 does not talk to version 2 or 1.1. Every device needs the new version.
