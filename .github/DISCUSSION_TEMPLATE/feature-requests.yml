@@ -1,0 +1,29 @@
+title: "[Feature] "
+labels: ["suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Others can vote for it with an upvote, so the most wanted ones rise to the top.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: The job you are trying to get done, or what bothers you today.
+      placeholder: When I ..., I would like PSphere to ...
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: How you picture it working. A rough sketch in words is fine.
+  - type: textarea
+    id: else
+    attributes:
+      label: Anything else
+      description: Other apps that do this well, or ways around it you use now.
+  - type: markdown
+    attributes:
+      value: |
+        PSphere keeps your files on your own devices, with no server, no account and no internet. Ideas that keep it that way are the easiest to take in.

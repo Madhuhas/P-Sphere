@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Suggest a feature
+    url: https://github.com/Madhuhas/P-Sphere/discussions/new?category=feature-requests
+    about: Ideas live in Discussions, where others can upvote them.
+  - name: Pick up some work
+    url: https://github.com/Madhuhas/P-Sphere/discussions/categories/open-for-contribution
+    about: Tasks anyone may take on, and how to start.
+  - name: Report a security problem (privately)
+    url: https://github.com/Madhuhas/P-Sphere/security/advisories/new
+    about: Please do not post security problems as issues. Report them privately here.
+  - name: How PSphere works
+    url: https://github.com/Madhuhas/P-Sphere/blob/HEAD/docs/p2p-v3.md
+    about: The spec - linking, backing up, relay and what is kept.

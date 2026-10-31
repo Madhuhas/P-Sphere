@@ -1,0 +1,15 @@
+# Weekly checks for outdated or vulnerable dependencies. Each update arrives as a pull request
+# that the build and tests run on; nothing is merged without review.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /shared
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+  - package-ecosystem: gradle
+    directory: /mobile
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }

@@ -1,0 +1,52 @@
+name: Bug report
+description: Something does not work as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **A security problem? Do not post it here** - use *Report a vulnerability* on the Security tab instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: I backed up Camera from my phone to the tablet and ...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Link the phone and the tablet
+        2. ...
+        3. See the error
+  - type: textarea
+    id: devices
+    attributes:
+      label: Devices
+      description: For each device involved, the make and model, the Android or Windows version, and the PSphere version (Settings > About).
+      placeholder: |
+        Phone: Pixel 7, Android 14, PSphere 2.0
+        Tablet: Galaxy Tab A8, Android 13, PSphere 2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: network
+    attributes:
+      label: How the devices were connected
+      options:
+        - Same home Wi-Fi
+        - Phone hotspot
+        - Office or public Wi-Fi
+        - Emulator with the test device
+        - Other (say below)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Errors or logs
+      description: For example from `adb logcat`. Remove anything private first, such as file names.
+      render: text
