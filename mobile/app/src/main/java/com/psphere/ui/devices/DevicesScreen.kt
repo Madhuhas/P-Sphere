@@ -38,7 +38,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -94,7 +93,6 @@ internal fun deviceRows(): List<DeviceRow> {
 @Composable
 fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenSending: () -> Unit) {
     val state by Engine.state.collectAsState()
-    val scope = rememberCoroutineScope()
     val overview by rememberEngineData(Overview()) {
         Overview(deviceRows(), Engine.node.ownRules().isNotEmpty(), loaded = true)
     }
@@ -115,7 +113,7 @@ fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenSend
             }
             ContentColumn(Modifier.verticalScroll(rememberScrollState())) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatusCard(state.activity, overview, onBackUp = { scope.launch { Engine.backUp() } }, onOpenSending = onOpenSending)
+                    StatusCard(state.activity, overview, onBackUp = { Engine.scope.launch { Engine.backUp() } }, onOpenSending = onOpenSending)
 
                     val notes = state.results.values.flatMap { r -> listOfNotNull(r.error) + r.notes }.distinct() + state.scanErrors
                     NotesCard(notes)

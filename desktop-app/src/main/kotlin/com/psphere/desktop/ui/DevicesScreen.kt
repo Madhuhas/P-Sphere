@@ -42,7 +42,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,7 +96,6 @@ internal fun deviceRows(): List<DeviceRow> {
 @Composable
 fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenReceiving: () -> Unit) {
     val state by Engine.state.collectAsState()
-    val scope = rememberCoroutineScope()
     val overview by rememberEngineData(Overview()) {
         val node = Engine.node
         val rows = deviceRows()
@@ -123,9 +121,12 @@ fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenRece
             return@Column
         }
         ScreenBody(spacing = 12.dp) {
-            StatusCard(state.activity, overview, onBackUp = { scope.launch { Engine.backUp() } }, onOpenReceiving = onOpenReceiving)
+            StatusCard(state.activity, overview, onBackUp = { Engine.scope.launch { Engine.backUp() } }, onOpenReceiving = onOpenReceiving)
             val notes = state.results.values.flatMap { r -> listOfNotNull(r.error) + r.notes }.distinct() + state.scanErrors
-            NotesCard(notes)
+            // The status card is about this laptop's own folders; still say why nothing can come in.
+            val noLocation = if (!overview.hasLocation && overview.hasFolders)
+                listOf("Backups from your other devices can't be saved on this laptop until you choose a folder in Receiving.") else emptyList()
+            NotesCard(noLocation + notes)
 
             SectionLabel("My devices")
             overview.rows.chunked(2).forEach { pair ->
@@ -151,7 +152,8 @@ private fun StatusCard(activity: Activity, overview: Overview, onBackUp: () -> U
     val waitingOffline = overview.rows.filter { it.waiting > 0 && !it.online }
     val waitingOnline = overview.rows.filter { it.waiting > 0 && it.online }
 
-    data class Look(val title: String, val detail: String, val icon: ImageVector, val bg: Color, val fg: Color)
+    data class Look(val title: String, val detail: String, val icon: ImageVector, val bg: Color, val fg: Color, val chooseLocation: Boolean = false)
+    // Files waiting to go out come first: a laptop that only sends doesn't need a backup location.
     val look = when {
         busy -> {
             val title = when (activity) {
@@ -161,18 +163,19 @@ private fun StatusCard(activity: Activity, overview: Overview, onBackUp: () -> U
             }
             Look(title, describeActivity(activity).orEmpty(), Icons.Default.Sync, cs.primaryContainer, cs.onPrimaryContainer)
         }
-        !overview.hasLocation -> Look(
-            "Choose where backups go",
-            "Pick a folder on this laptop, such as D:\\PSphere Backups, before your devices can back up here.",
-            Icons.Default.SaveAlt, ok.warningContainer, ok.onWarningContainer,
-        )
-        overview.paused -> Look("Receiving is paused", "Your devices wait until you turn it back on in Receiving.", Icons.Default.PauseCircle, cs.surfaceContainerHigh, cs.onSurface)
         waitingOnline.isNotEmpty() -> Look("Ready to back up", waitingOnline.joinToString(" · ") { "${plural(it.waiting, "file")} for ${it.device.name}" }, Icons.Default.CloudUpload, cs.surfaceContainerHigh, cs.onSurface)
         waitingOffline.isNotEmpty() -> Look(
             "Waiting for ${waitingOffline.joinToString(", ") { it.device.name }}",
             waitingOffline.joinToString(" · ") { "${plural(it.waiting, "file")} for ${it.device.name}" } + ". Backs up when it's on this Wi-Fi.",
             Icons.Default.HourglassBottom, cs.surfaceContainerHigh, cs.onSurface,
         )
+        // Only a laptop that sends nothing is held up by having nowhere to keep backups.
+        !overview.hasLocation && !overview.hasFolders -> Look(
+            "Choose where backups go",
+            "Pick a folder on this laptop, such as D:\\PSphere Backups, before your devices can back up here.",
+            Icons.Default.SaveAlt, ok.warningContainer, ok.onWarningContainer, chooseLocation = true,
+        )
+        overview.paused -> Look("Receiving is paused", "Your devices wait until you turn it back on in Receiving.", Icons.Default.PauseCircle, cs.surfaceContainerHigh, cs.onSurface)
         // A laptop that only keeps other devices' backups isn't asked to add folders of its own.
         !overview.hasFolders -> Look(
             "Ready to receive",
@@ -200,7 +203,7 @@ private fun StatusCard(activity: Activity, overview: Overview, onBackUp: () -> U
                     Text(look.title, style = MaterialTheme.typography.titleLarge)
                     if (look.detail.isNotBlank()) Text(look.detail, style = MaterialTheme.typography.bodyMedium, color = look.fg.copy(alpha = .85f))
                 }
-                if (!overview.hasLocation && !busy) {
+                if (look.chooseLocation) {
                     Button(onClick = onOpenReceiving) { Text("Choose a folder") }
                 } else {
                     Button(onClick = onBackUp, enabled = !busy) {
@@ -275,7 +278,6 @@ private data class Detail(
 @Composable
 fun DeviceScreen(deviceId: String, onBack: () -> Unit) {
     val state by Engine.state.collectAsState()
-    val scope = rememberCoroutineScope()
     var confirmUnlink by remember { mutableStateOf(false) }
     val detail by rememberEngineData(Detail()) {
         val node = Engine.node
@@ -309,7 +311,7 @@ fun DeviceScreen(deviceId: String, onBack: () -> Unit) {
             if (row != null) OnlineLine(row)
             val busy = state.activity != Activity.Idle
             Button(
-                onClick = { scope.launch { Engine.backUp(onlyDevice = deviceId) } },
+                onClick = { Engine.scope.launch { Engine.backUp(onlyDevice = deviceId) } },
                 enabled = !busy,
                 modifier = Modifier.padding(top = 8.dp).height(48.dp),
             ) {

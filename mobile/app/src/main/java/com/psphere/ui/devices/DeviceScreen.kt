@@ -38,7 +38,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,7 +65,6 @@ private data class Detail(
 @Composable
 fun DeviceScreen(deviceId: String, onBack: () -> Unit) {
     val state by Engine.state.collectAsState()
-    val scope = rememberCoroutineScope()
     var confirmUnlink by remember { mutableStateOf(false) }
     val detail by rememberEngineData(Detail()) {
         val node = Engine.node
@@ -104,7 +102,7 @@ fun DeviceScreen(deviceId: String, onBack: () -> Unit) {
                 if (row != null) OnlineLine(row)
                 val busy = state.activity != Activity.Idle
                 Button(
-                    onClick = { scope.launch { Engine.backUp(onlyDevice = deviceId) } },
+                    onClick = { Engine.scope.launch { Engine.backUp(onlyDevice = deviceId) } },
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(48.dp),
                 ) {

@@ -35,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -143,7 +142,6 @@ private fun SendingCard(row: SendingRow, onClick: () -> Unit) {
 @Composable
 fun FolderScreen(ruleId: String?, onBack: () -> Unit, onLinkDevice: () -> Unit) {
     val node = Engine.node
-    val scope = rememberCoroutineScope()
     val existing = remember(ruleId) { ruleId?.let { node.catalog.rule(node.id, it) } }
     val devices = remember { Engine.linked() }
     val cs = MaterialTheme.colorScheme
@@ -190,7 +188,7 @@ fun FolderScreen(ruleId: String?, onBack: () -> Unit, onLinkDevice: () -> Unit) 
             node.updateRule(existing.ruleId, label = label, destinations = destinations, include = include, showInLibrary = showInLibrary)
         }
         Engine.bump()
-        scope.launch { Engine.backUp(quiet = true) }
+        Engine.scope.launch { Engine.backUp(quiet = true) }
         onBack()
     }
 
