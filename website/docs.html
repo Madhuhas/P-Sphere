@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Documentation — P-Sphere</title>
-  <meta name="description" content="How to link your devices, choose folders and where backups go, and how P-Sphere works underneath.">
-  <meta name="theme-color" content="#0F1923">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231565C0'/%3E%3Cpath d='M11 8v16h3v-6h4.5c3 0 5-2 5-5s-2-5-5-5zm3 2.7h4.2c1.4 0 2.3.9 2.3 2.3s-.9 2.3-2.3 2.3H14z' fill='%23fff'/%3E%3C/svg%3E">
+  <title>Documentation — PSphere</title>
+  <meta name="description" content="How to link your devices, choose folders and where backups go, and how PSphere works underneath.">
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#06080D" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,7 +18,7 @@
 
 <header class="site-header">
   <div class="container">
-    <a href="index.html" class="brand" aria-label="P-Sphere home"><span class="brand-mark">P</span>P-Sphere <span class="brand-tag">Alpha</span></a>
+    <a href="index.html" class="brand" aria-label="PSphere home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 86"><g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M33 79 H90 A20 20 0 0 0 93 39 A30 30 0 0 0 36 30 A24.5 24.5 0 0 0 33 79 Z"/><path d="M49 79 V49 A12.5 12.5 0 1 1 61.5 61.5 H57"/></g></svg></span>PSphere <span class="brand-tag">Alpha</span></a>
     <nav class="nav" aria-label="Main">
       <a href="index.html#how">How it works</a>
       <a href="index.html#modes">Features</a>
@@ -34,7 +35,7 @@
   <div class="page-head">
     <div class="container">
       <p class="eyebrow">Documentation</p>
-      <h1>P-Sphere docs</h1>
+      <h1>PSphere docs</h1>
       <p>Everything from linking your first two devices to how backups work underneath.</p>
     </div>
   </div>
@@ -47,7 +48,7 @@
         <a href="#overview">Overview</a>
         <a href="#quick-start">Quick start</a>
         <a href="#linking">Linking devices</a>
-        <h4>Using P-Sphere</h4>
+        <h4>Using PSphere</h4>
         <a href="#devices">Devices</a>
         <a href="#sending">Sending: your folders</a>
         <a href="#receiving">Receiving: your backups</a>
@@ -75,26 +76,26 @@
     <article class="prose">
       <!-- ── Getting started ─────────────────────────────── -->
       <h2 id="overview"><a class="anchor" href="#overview">Overview</a></h2>
-      <p>P-Sphere backs up folders between your own devices: Android phones and tablets, and Windows laptops and PCs. Your devices are the cloud. They talk to each other directly over your Wi-Fi, so there's no server, no account and no internet involved.</p>
+      <p>PSphere backs up folders between your own devices: Android phones and tablets, and Windows laptops and PCs. Your devices are the cloud. They talk to each other directly over your Wi-Fi, so there's no server, no account and no internet involved.</p>
       <ul>
         <li><strong>Several folders per device</strong>, each going to the devices you choose. For example, Camera from your phone to the tablet and the laptop, and WhatsApp Images to the laptop only.</li>
         <li><strong>Every device sends and receives.</strong> Each receiving device chooses where backups are saved.</li>
         <li><strong>Backup, not mirror.</strong> Deleting a file on one device never deletes its copies.</li>
         <li><strong>Only your linked devices</strong> can connect, and everything they send each other is encrypted.</li>
       </ul>
-      <p class="note warn"><strong>P-Sphere is in early development.</strong> Keep another copy of photos you can't afford to lose until there's a stable release.</p>
+      <p class="note warn"><strong>PSphere is in early development.</strong> Keep another copy of photos you can't afford to lose until there's a stable release.</p>
 
       <h2 id="quick-start"><a class="anchor" href="#quick-start">Quick start</a></h2>
       <p class="lead">Back up your phone to your laptop in a few minutes.</p>
       <ol>
-        <li>Install P-Sphere on the phone and the laptop from the <a href="download.html">download page</a>, and give each one a name, like “Phone” and “Laptop”.</li>
+        <li>Install PSphere on the phone and the laptop from the <a href="download.html">download page</a>, and give each one a name, like “Phone” and “Laptop”.</li>
         <li>Connect both to the same Wi-Fi.</li>
         <li>On the laptop, open <strong>Devices → Link a device</strong>. A QR code appears.</li>
         <li>On the phone, open <strong>Devices → Link a device → Scan a code</strong> and point it at the laptop's screen.</li>
         <li>On the laptop, open <strong>Receiving</strong> and choose where backups go, for example <code>D:\PSphere Backups</code>.</li>
         <li>On the phone, open <strong>Sending → Add a folder</strong>, choose your Camera folder, tick <strong>Laptop</strong> and press <strong>Start backing up</strong>.</li>
       </ol>
-      <p>The first backup starts straight away. After that, P-Sphere backs up by itself whenever the two are on the same Wi-Fi.</p>
+      <p>The first backup starts straight away. After that, PSphere backs up by itself whenever the two are on the same Wi-Fi.</p>
 
       <h2 id="linking"><a class="anchor" href="#linking">Linking devices</a></h2>
       <p>Devices only back up with devices you've linked. You link each pair once: with a phone, a tablet and a laptop, that's up to three links (phone–tablet, phone–laptop, tablet–laptop).</p>
@@ -105,13 +106,13 @@
       <h3>Unlinking</h3>
       <p>Open the device under <strong>Devices</strong> and choose <strong>Unlink</strong>. It stops all backups with that device, and it can no longer connect. Files already copied stay where they are. Unlink on the other device too.</p>
 
-      <!-- ── Using P-Sphere ─────────────────────────────── -->
+      <!-- ── Using PSphere ─────────────────────────────── -->
       <h2 id="devices"><a class="anchor" href="#devices">Devices</a></h2>
       <p>The home screen. At the top, the status: <em>Everything is backed up</em>, <em>Backing up with Tablet · 45 of 120</em>, or <em>Waiting for Laptop</em> when a device that should get files is away. <strong>Back up now</strong> starts a backup straight away.</p>
       <p>Below, a card for each linked device shows whether it's on this Wi-Fi, how many files are waiting to go to it, and how many of its files this device keeps. Open a card to see each folder going to that device, each of its folders kept here, <strong>Back up with … now</strong> and <strong>Unlink</strong>.</p>
 
       <h2 id="sending"><a class="anchor" href="#sending">Sending: your folders</a></h2>
-      <p>The folders on this device that P-Sphere backs up, and where each one goes. <strong>Add a folder</strong> asks for:</p>
+      <p>The folders on this device that PSphere backs up, and where each one goes. <strong>Add a folder</strong> asks for:</p>
       <ul>
         <li><strong>Folder.</strong> Picked with the system's folder picker. On Android, the root of <code>Download</code> and the <code>Android/data</code> folders can't be chosen; Android doesn't allow it.</li>
         <li><strong>Name.</strong> Your other devices keep the backup in a folder with this name.</li>
@@ -124,11 +125,11 @@
       <h2 id="receiving"><a class="anchor" href="#receiving">Receiving: your backups</a></h2>
       <ul>
         <li><strong>Backup location.</strong> Where backups from your other devices are saved on this device. It must be chosen before other devices can back up here. Changing it doesn't move backups already saved; new backups go to the new folder.</li>
-        <li><strong>Space.</strong> Free space where backups are saved. P-Sphere always leaves 1 GB free and stops receiving when it would go below that. The sending device then says, for example, “Laptop is running out of space. Some files weren't backed up.”</li>
+        <li><strong>Space.</strong> Free space where backups are saved. PSphere always leaves 1 GB free and stops receiving when it would go below that. The sending device then says, for example, “Laptop is running out of space. Some files weren't backed up.”</li>
         <li><strong>Pause receiving.</strong> Your other devices wait until you turn it off.</li>
         <li><strong>Kept here.</strong> Every folder this device keeps, grouped by the device it came from. On Windows, <strong>Open folder</strong> shows it in File Explorer.</li>
       </ul>
-      <p>A folder you back up from this device can't also be the backup location, or be inside it: backups would be sent straight back out. P-Sphere tells you when you pick one.</p>
+      <p>A folder you back up from this device can't also be the backup location, or be inside it: backups would be sent straight back out. PSphere tells you when you pick one.</p>
 
       <h2 id="where"><a class="anchor" href="#where">Where backups go</a></h2>
       <p>Inside the backup location, each device gets its own folder, and each of its folders keeps its name and subfolders:</p>
@@ -143,7 +144,7 @@ Pictures/PSphere/Tablet/Documents/report.pdf</code></pre>
       <ul>
         <li><strong>Automatically</strong>, whenever two linked devices are on the same Wi-Fi and one has something the other should have.</li>
         <li><strong>On Android, in the background</strong>, every few hours (6 by default), on Wi-Fi.</li>
-        <li><strong>On Windows</strong>, while P-Sphere is open or in the tray.</li>
+        <li><strong>On Windows</strong>, while PSphere is open or in the tray.</li>
         <li><strong>By hand</strong>, with <strong>Back up now</strong>, for all devices or one.</li>
       </ul>
       <p>If a device is off or away, its files wait and the status says so, for example “Waiting for Laptop · 312 files”.</p>
@@ -153,7 +154,7 @@ Pictures/PSphere/Tablet/Documents/report.pdf</code></pre>
         <li><strong>Name</strong> of this device, as your other devices see it.</li>
         <li><strong>Only while charging</strong> (Android): background backups wait for the charger. <strong>Back up now</strong> always works.</li>
         <li><strong>Back up in the background every</strong> 1, 3, 6, 12 or 24 hours (Android).</li>
-        <li><strong>Stay ready to receive</strong> (Android): keeps P-Sphere running, with a notification, so other devices can back up here any time. Best on a tablet that stays at home.</li>
+        <li><strong>Stay ready to receive</strong> (Android): keeps PSphere running, with a notification, so other devices can back up here any time. Best on a tablet that stays at home.</li>
         <li><strong>Linked devices</strong> and <strong>About</strong> (version and device ID).</li>
       </ul>
 
@@ -166,17 +167,17 @@ Pictures/PSphere/Tablet/Documents/report.pdf</code></pre>
         <li><strong>Shows notifications</strong> when a backup finishes, for example “Backed up 120 files from Phone”, or when a device is running out of space.</li>
         <li><strong>Opens the running window</strong> if you start it again, instead of starting a second copy.</li>
       </ul>
-      <p>P-Sphere keeps its own data (device identity, links, settings) in <code>%LOCALAPPDATA%\PSphere</code>. Settings → About has an <strong>Open folder</strong> for it.</p>
+      <p>PSphere keeps its own data (device identity, links, settings) in <code>%LOCALAPPDATA%\PSphere</code>. Settings → About has an <strong>Open folder</strong> for it.</p>
 
       <h2 id="firewall"><a class="anchor" href="#firewall">Windows Firewall</a></h2>
-      <p>The first time P-Sphere runs, Windows asks whether to allow it on networks. Allow it on <strong>Private networks</strong>; that's what lets your phone find and reach the laptop. If you chose <em>Cancel</em> by mistake, open <strong>Windows Security → Firewall &amp; network protection → Allow an app through firewall</strong> and tick P-Sphere for Private.</p>
+      <p>The first time PSphere runs, Windows asks whether to allow it on networks. Allow it on <strong>Private networks</strong>; that's what lets your phone find and reach the laptop. If you chose <em>Cancel</em> by mistake, open <strong>Windows Security → Firewall &amp; network protection → Allow an app through firewall</strong> and tick PSphere for Private.</p>
       <p>Your home Wi-Fi must be set as a <em>private</em> network in Windows (<strong>Settings → Network &amp; internet → Wi-Fi → your network → Private network</strong>). On a public network, Windows blocks devices from finding each other.</p>
 
       <!-- ── How it works ─────────────────────────────── -->
       <h2 id="rules"><a class="anchor" href="#rules">The rules it follows</a></h2>
       <ol>
         <li><strong>Backup, not mirror.</strong> Deleting a file on its device never deletes a copy anywhere else.</li>
-        <li><strong>Only your devices.</strong> A device talks only to devices you've linked. Other P-Sphere devices on the same Wi-Fi are ignored.</li>
+        <li><strong>Only your devices.</strong> A device talks only to devices you've linked. Other PSphere devices on the same Wi-Fi are ignored.</li>
         <li><strong>Each folder has its own destinations.</strong> Nothing is sent to a device the folder's settings don't name.</li>
         <li><strong>The receiver decides where files go.</strong> A sender never chooses where a file lands.</li>
         <li><strong>Any copy can be the source.</strong> Files are identified by their contents (SHA-256), so a file is never stored twice, and any device holding it can pass it on.</li>
@@ -207,15 +208,15 @@ Pictures/PSphere/Tablet/Documents/report.pdf</code></pre>
       <h3>My devices don't find each other</h3>
       <ul>
         <li>Check they're on the <em>same</em> Wi-Fi network, not one on a guest network.</li>
-        <li>On Windows, allow P-Sphere through the firewall and make sure the Wi-Fi is a private network (see <a href="#firewall">Windows Firewall</a>).</li>
+        <li>On Windows, allow PSphere through the firewall and make sure the Wi-Fi is a private network (see <a href="#firewall">Windows Firewall</a>).</li>
         <li>Guest, office and public networks often stop devices from seeing each other (“client isolation”). Try your home router, or a phone's hotspot.</li>
         <li>Turn off VPN apps; many send local traffic away from the Wi-Fi.</li>
         <li>On a phone, pull down on the Devices screen to search again.</li>
       </ul>
       <h3>“Couldn't reach Tablet”</h3>
-      <p>The device was found but didn't answer. Open P-Sphere on it and try again. Some phone makers stop background apps aggressively: exclude P-Sphere from battery optimisation, or turn on <strong>Stay ready to receive</strong> on a device that should always accept backups.</p>
+      <p>The device was found but didn't answer. Open PSphere on it and try again. Some phone makers stop background apps aggressively: exclude PSphere from battery optimisation, or turn on <strong>Stay ready to receive</strong> on a device that should always accept backups.</p>
       <h3>“Has an older version of PSphere”</h3>
-      <p>Version 2.0 doesn't work with 1.x. Update P-Sphere on every device.</p>
+      <p>Version 2.0 doesn't work with 1.x. Update PSphere on every device.</p>
       <h3>“Can't open this folder”</h3>
       <p>The folder was moved, renamed or deleted, or it's on a drive that isn't plugged in. Open it in Sending and choose it again.</p>
       <h3>“Laptop is running out of space”</h3>
@@ -224,23 +225,23 @@ Pictures/PSphere/Tablet/Documents/report.pdf</code></pre>
       <p>The installer isn't code-signed yet, so Windows doesn't know the publisher. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</p>
 
       <h2 id="faq"><a class="anchor" href="#faq">FAQ</a></h2>
-      <h3>Does P-Sphere work without internet?</h3>
+      <h3>Does PSphere work without internet?</h3>
       <p>Yes. It only needs a local Wi-Fi network; whether that network is connected to the internet doesn't matter.</p>
       <h3>Do I need an account or a server?</h3>
-      <p>No. There's no P-Sphere account and no server, yours or ours.</p>
+      <p>No. There's no PSphere account and no server, yours or ours.</p>
       <h3>Does it back up videos and other files?</h3>
       <p>Yes. Choose <em>Photos and videos</em> or <em>All files</em> for each folder. Large videos take a while the first time, and continue where they stopped if interrupted.</p>
       <h3>Will deleting a photo on my phone delete the backups?</h3>
-      <p>No. P-Sphere is a backup, not a mirror.</p>
+      <p>No. PSphere is a backup, not a mirror.</p>
       <h3>Is there an iPhone or Mac version?</h3>
-      <p>Not in this version. P-Sphere runs on Android and Windows.</p>
+      <p>Not in this version. PSphere runs on Android and Windows.</p>
       <h3>How do I report a bug?</h3>
       <p>Open a <a href="https://github.com/Madhuhas/P-Sphere/issues/new?template=bug_report.yml">bug report</a> on GitHub. Say which devices were involved (make, model, Android or Windows version, and the version from Settings → About) and how they were connected.</p>
 
       <h2 id="build"><a class="anchor" href="#build">Build from source</a></h2>
-      <p>P-Sphere is open source under the GNU AGPL-3.0. You need JDK 17 or newer (the one in Android Studio works) and, for the Android app, the Android SDK.</p>
+      <p>PSphere is open source under the GNU AGPL-3.0. You need JDK 17 or newer (the one in Android Studio works) and, for the Android app, the Android SDK.</p>
 <pre><code>git clone https://github.com/Madhuhas/P-Sphere.git
-cd P-Sphere
+cd PSphere
 
 # Shared core: run the tests
 cd shared &amp;&amp; ./gradlew test
@@ -254,7 +255,7 @@ cd ../desktop-app &amp;&amp; ./gradlew run
       <p>The <a href="https://github.com/Madhuhas/P-Sphere/blob/HEAD/CONTRIBUTING.md">contributing guide</a> explains the project layout and how to test changes.</p>
 
       <h2 id="privacy"><a class="anchor" href="#privacy">Privacy</a></h2>
-      <p>P-Sphere has no analytics, crash reporting or advertising, and never contacts a server run by the P-Sphere authors. Your devices talk only to each other, on your own network. On Android, scanning a QR code uses Google Play services' code scanner, which runs on the phone; P-Sphere doesn't send it your files.</p>
+      <p>PSphere has no analytics, crash reporting or advertising, and never contacts a server run by the PSphere authors. Your devices talk only to each other, on your own network. On Android, scanning a QR code uses Google Play services' code scanner, which runs on the phone; PSphere doesn't send it your files.</p>
 
       <h2 id="changelog"><a class="anchor" href="#changelog">Changelog</a></h2>
       <p>Every change as it happens is in the <a href="index.html#updates">update log</a> on the home page.</p>
@@ -277,7 +278,7 @@ cd ../desktop-app &amp;&amp; ./gradlew run
   <div class="container">
     <div class="foot">
       <div>
-        <a href="index.html" class="brand"><span class="brand-mark">P</span>P-Sphere</a>
+        <a href="index.html" class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 86"><g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M33 79 H90 A20 20 0 0 0 93 39 A30 30 0 0 0 36 30 A24.5 24.5 0 0 0 33 79 Z"/><path d="M49 79 V49 A12.5 12.5 0 1 1 61.5 61.5 H57"/></g></svg></span>PSphere</a>
         <p>Backup between your own devices, for people who'd rather keep their photos at home.</p>
         <a class="built-with" href="https://kadhai.pages.dev">
           <picture>
