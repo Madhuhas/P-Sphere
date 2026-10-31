@@ -2,28 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>License — P-Sphere</title>
+  <meta name="description" content="Usage rights for P-Sphere software and associated materials.">
+  <meta name="theme-color" content="#0F1923">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231565C0'/%3E%3Cpath d='M11 8v16h3v-6h4.5c3 0 5-2 5-5s-2-5-5-5zm3 2.7h4.2c1.4 0 2.3.9 2.3 2.3s-.9 2.3-2.3 2.3H14z' fill='%23fff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <nav>
-    <a href="index.html" class="brand">P-Sphere <span class="alpha-badge">Alpha</span></a>
-    <div class="nav-links">
-      <a href="index.html#features">Features</a>
-      <a href="index.html#roadmap">Roadmap</a>
-      <a href="download.html">Download</a>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand" aria-label="P-Sphere home"><span class="brand-mark">P</span>P-Sphere <span class="brand-tag">Alpha</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#modes">Features</a>
       <a href="docs.html">Docs</a>
-    </div>
-    <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary btn-sm">Download APK</a>
-  </nav>
+      <a href="download.html">Download</a>
+    </nav>
+    <a href="download.html" class="btn btn-primary btn-sm nav-cta">Get the app</a>
+    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
 </header>
 
-<main>
-  <div class="page-hero">
+<main id="main">
+  <div class="page-head">
     <div class="container">
       <p class="eyebrow">Legal</p>
       <h1>License</h1>
@@ -31,142 +38,111 @@
     </div>
   </div>
 
-  <section>
-    <div class="container">
-      <div class="prose">
+  <div class="container legal">
+    <div class="prose">
+      <p class="note summary"><strong>Summary.</strong> P-Sphere is proprietary software. Personal use is free. Commercial use, redistribution, and modification require written permission.</p>
 
-        <div class="callout callout-info">
-          <strong>Summary.</strong> P-Sphere is proprietary software. Personal use is free. Commercial use, redistribution, and modification require written permission.
-        </div>
+      <h2>P-Sphere Proprietary License</h2>
+      <p>Copyright &copy; 2025 P-Sphere Authors. All rights reserved.</p>
 
-        <h2>P-Sphere Proprietary License</h2>
-        <p>Copyright &copy; 2025 P-Sphere Authors. All rights reserved.</p>
+      <h2>1. Grant of license</h2>
+      <p>Subject to these terms, you are granted a limited, non-exclusive, non-transferable, revocable license to download and install the P-Sphere Android application for personal, non-commercial use on devices you own or control, and to read publicly available documentation for the purpose of understanding and using the software. No other rights are granted.</p>
 
-        <h2>1. Grant of license</h2>
-        <p>Subject to these terms, you are granted a limited, non-exclusive, non-transferable, revocable license to download and install the P-Sphere Android application for <strong>personal, non-commercial use</strong> on devices you own or control, and to read publicly available documentation for the purpose of understanding and using the software. No other rights are granted.</p>
+      <h2>2. Restrictions</h2>
+      <p>Without prior written permission from P-Sphere, you may not:</p>
+      <ul>
+        <li><strong>Redistribute</strong> — copy, share, publish, mirror, or redistribute the software or any part of it in any form</li>
+        <li><strong>Modify</strong> — create derivative works, translate, adapt, or modify the source code</li>
+        <li><strong>Use commercially</strong> — use the software for commercial purposes or integrate it into a commercial product</li>
+        <li><strong>Sublicense or sell</strong> — sublicense, lease, rent, or sell access to the software</li>
+        <li><strong>Reverse engineer</strong> — decompile, disassemble, or extract source code beyond what is explicitly shared in the project repository</li>
+        <li><strong>Remove attribution</strong> — remove or alter copyright notices, license text, or attribution statements</li>
+      </ul>
 
-        <h2>2. Restrictions</h2>
-        <p>Without prior written permission from P-Sphere, you may not:</p>
-        <ul>
-          <li><strong>Redistribute</strong> — copy, share, publish, mirror, or redistribute the software or any part of it in any form</li>
-          <li><strong>Modify</strong> — create derivative works, translate, adapt, or modify the source code</li>
-          <li><strong>Use commercially</strong> — use the software for commercial purposes or integrate it into a commercial product</li>
-          <li><strong>Sublicense or sell</strong> — sublicense, lease, rent, or sell access to the software</li>
-          <li><strong>Reverse engineer</strong> — decompile, disassemble, or extract source code beyond what is explicitly shared in the project repository</li>
-          <li><strong>Remove attribution</strong> — remove or alter copyright notices, license text, or attribution statements</li>
-        </ul>
+      <h2>3. Source code availability</h2>
+      <p>Certain components of P-Sphere may be visible in the project repository for transparency and community feedback. Availability in the repository does not constitute an open-source license. The restrictions in Section 2 apply to all source code regardless of where it is hosted.</p>
 
-        <h2>3. Source code availability</h2>
-        <p>Certain components of P-Sphere may be visible in the project repository for transparency and community feedback. Availability in the repository does not constitute an open-source license. The restrictions in Section 2 apply to all source code regardless of where it is hosted.</p>
+      <h2>4. Ownership</h2>
+      <p>P-Sphere and all associated software, source code, documentation, assets, and intellectual property are owned exclusively by the P-Sphere authors. This license does not transfer ownership of any kind.</p>
 
-        <h2>4. Ownership</h2>
-        <p>P-Sphere and all associated software, source code, documentation, assets, and intellectual property are owned exclusively by the P-Sphere authors. This license does not transfer ownership of any kind.</p>
+      <h2>5. Your content</h2>
+      <p>Your photos and personal data remain entirely your own. We claim no rights over content you store in or process with P-Sphere.</p>
 
-        <h2>5. Your content</h2>
-        <p>Your photos and personal data remain entirely your own. We claim no rights over content you store in or process with P-Sphere.</p>
+      <h2>6. Disclaimer</h2>
+      <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. THE AUTHORS DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
 
-        <h2>6. Disclaimer</h2>
-        <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. THE AUTHORS DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
+      <h2>7. Limitation of liability</h2>
+      <p>IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 
-        <h2>7. Limitation of liability</h2>
-        <p>IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+      <h2>8. Termination</h2>
+      <p>This license terminates automatically if you violate any of its terms. Upon termination, you must stop using the software and delete all copies in your possession.</p>
 
-        <h2>8. Termination</h2>
-        <p>This license terminates automatically if you violate any of its terms. Upon termination, you must stop using the software and delete all copies in your possession.</p>
+      <h2>9. Future licensing</h2>
+      <p>We may release P-Sphere under an open-source license as the project matures. Any such change will be announced in the project repository and will not retroactively affect prior versions unless explicitly stated.</p>
 
-        <h2>9. Future licensing</h2>
-        <p>We may release P-Sphere under an open-source license as the project matures. Any such change will be announced in the project repository and will not retroactively affect prior versions unless explicitly stated.</p>
+      <h2>10. Contact</h2>
+      <p>For licensing inquiries or commercial use requests, open an issue on the project repository.</p>
 
-        <h2>10. Contact</h2>
-        <p>For licensing inquiries or commercial use requests, open an issue on the <a href="https://github.com/Madhuhas/P-Sphere">project repository</a>.</p>
-
-        <h2>Third-party licenses</h2>
-        <p>P-Sphere incorporates open-source libraries. The Android application uses Kotlin Standard Library, Android Jetpack, Coroutines, OkHttp, and Coil — all under the Apache 2.0 License. The Core server uses Express.js and BullMQ under MIT, and Prisma and Sharp under Apache 2.0. Full dependency lists and individual license files are available in the project repository.</p>
-
-        <div class="table-wrap" style="margin-top: 24px;">
-          <table>
-            <thead>
-              <tr>
-                <th>Library</th>
-                <th>License</th>
-                <th>Used in</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Android Jetpack (WorkManager, etc.)</td>
-                <td>Apache 2.0</td>
-                <td>Android app</td>
-              </tr>
-              <tr>
-                <td>Kotlin Standard Library</td>
-                <td>Apache 2.0</td>
-                <td>Android app</td>
-              </tr>
-              <tr>
-                <td>OkHttp</td>
-                <td>Apache 2.0</td>
-                <td>Android app</td>
-              </tr>
-              <tr>
-                <td>Coil</td>
-                <td>Apache 2.0</td>
-                <td>Android app</td>
-              </tr>
-              <tr>
-                <td>Express.js</td>
-                <td>MIT</td>
-                <td>Core server</td>
-              </tr>
-              <tr>
-                <td>BullMQ</td>
-                <td>MIT</td>
-                <td>Core server</td>
-              </tr>
-              <tr>
-                <td>Prisma</td>
-                <td>Apache 2.0</td>
-                <td>Core server</td>
-              </tr>
-              <tr>
-                <td>Sharp</td>
-                <td>Apache 2.0</td>
-                <td>Core server</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
+      <h2>Third-party licenses</h2>
+      <p>P-Sphere incorporates open-source libraries, each used under its own license. Full dependency lists are in each component's build files in the project repository.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Library</th><th scope="col">License</th><th scope="col">Used in</th></tr></thead>
+          <tbody>
+            <tr><td>Android Jetpack (Compose, WorkManager, DataStore, Navigation)</td><td>Apache 2.0</td><td>Android app</td></tr>
+            <tr><td>Kotlin Standard Library and Coroutines</td><td>Apache 2.0</td><td>Android app</td></tr>
+            <tr><td>Retrofit, OkHttp</td><td>Apache 2.0</td><td>Android app</td></tr>
+            <tr><td>Gson</td><td>Apache 2.0</td><td>Android app</td></tr>
+            <tr><td>Coil</td><td>Apache 2.0</td><td>Android app</td></tr>
+            <tr><td>Express, Helmet, cors, Multer</td><td>MIT</td><td>Core server</td></tr>
+            <tr><td>node-postgres (pg)</td><td>MIT</td><td>Core server, vision worker</td></tr>
+            <tr><td>BullMQ, ioredis</td><td>MIT</td><td>Core server, vision worker</td></tr>
+            <tr><td>jsonwebtoken, bcryptjs</td><td>MIT</td><td>Core server</td></tr>
+            <tr><td>exifr</td><td>MIT</td><td>Core server</td></tr>
+            <tr><td>Sharp</td><td>Apache 2.0</td><td>Core server, vision worker</td></tr>
+            <tr><td>ONNX Runtime</td><td>MIT</td><td>Vision worker</td></tr>
+            <tr><td>React, React Router</td><td>MIT</td><td>Web app, desktop app</td></tr>
+            <tr><td>TanStack Virtual</td><td>MIT</td><td>Web app</td></tr>
+            <tr><td>Axios</td><td>MIT</td><td>Web app, desktop app</td></tr>
+            <tr><td>Electron</td><td>MIT</td><td>Desktop app</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-  </section>
+  </div>
 </main>
 
 <footer>
-  <div class="foot-top">
-    <div class="foot-brand">
-      <p class="foot-logo">P-Sphere</p>
-      <p>A self-hosted, privacy-first photo library for Android. Your photos stay on your devices.</p>
+  <div class="container">
+    <div class="foot">
+      <div>
+        <a href="index.html" class="brand"><span class="brand-mark">P</span>P-Sphere</a>
+        <p>Self-hosted photo backup for people who'd rather keep their photos at home.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <a href="index.html#how">How it works</a>
+        <a href="index.html#modes">Features</a>
+        <a href="download.html">Download</a>
+      </div>
+      <div>
+        <h4>Docs</h4>
+        <a href="docs.html#quick-start">Quick start</a>
+        <a href="docs.html#self-hosting">Self-hosting</a>
+        <a href="docs.html#troubleshooting">Troubleshooting</a>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <a href="terms.html">Terms of Service</a>
+        <a href="license.html">License</a>
+      </div>
     </div>
-    <div class="foot-col">
-      <h4>Product</h4>
-      <a href="index.html#features">Features</a>
-      <a href="download.html">Download</a>
-      <a href="docs.html">Documentation</a>
-    </div>
-    <div class="foot-col">
-      <h4>Legal</h4>
-      <a href="terms.html">Terms of Service</a>
-      <a href="license.html">License</a>
-    </div>
-  </div>
-  <div class="foot-bottom">
-    <span>&copy; 2025 P-Sphere. All rights reserved.</span>
-    <div class="foot-links">
-      <a href="terms.html">Terms</a>
-      <a href="license.html">License</a>
+    <div class="foot-bottom">
+      <span>&copy; 2026 P-Sphere authors. All rights reserved.</span>
+      <a href="https://github.com/Madhuhas/P-Sphere">Source on GitHub</a>
     </div>
   </div>
 </footer>
+<script src="site.js"></script>
 </body>
 </html>

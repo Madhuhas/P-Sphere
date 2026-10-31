@@ -51,6 +51,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.psphere.ui.components.EmptyState
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -132,7 +133,7 @@ fun GalleryScreen(
                 ) {
                     Column {
                         LazyVerticalGrid(
-                            columns               = GridCells.Fixed(COLS),
+                            columns               = GridCells.Adaptive(minSize = 110.dp),
                             state                 = gridState,
                             horizontalArrangement = Arrangement.spacedBy(2.dp),
                             verticalArrangement   = Arrangement.spacedBy(2.dp),
@@ -141,7 +142,7 @@ fun GalleryScreen(
                             items(
                                 items = state.items,
                                 span  = { item -> when (item) {
-                                    is GridItem.Header -> GridItemSpan(COLS)
+                                    is GridItem.Header -> GridItemSpan(maxLineSpan)
                                     is GridItem.Photo  -> GridItemSpan(1)
                                 }},
                                 key = { item -> when (item) {
@@ -160,11 +161,11 @@ fun GalleryScreen(
                             }
 
                             if (!state.hasMore && state.allPhotos.isNotEmpty()) {
-                                item(span = { GridItemSpan(COLS) }) {
+                                item(span = { GridItemSpan(maxLineSpan) }) {
                                     Text(
                                         "All ${state.totalCount} photos loaded",
                                         style     = MaterialTheme.typography.bodySmall,
-                                        color     = Color.Gray,
+                                        color     = MaterialTheme.colorScheme.onSurfaceVariant,
                                         textAlign = TextAlign.Center,
                                         modifier  = Modifier.fillMaxWidth().padding(vertical = 20.dp),
                                     )
@@ -200,7 +201,7 @@ private fun PhotoCell(thumbUri: String, isVideo: Boolean = false, onClick: () ->
     ) {
         AsyncImage(
             model              = thumbUri,
-            contentDescription = null,
+            contentDescription = if (isVideo) "Video" else "Photo",
             contentScale       = ContentScale.Crop,
             modifier           = Modifier.fillMaxSize(),
         )
@@ -217,28 +218,20 @@ private fun PhotoCell(thumbUri: String, isVideo: Boolean = false, onClick: () ->
 
 @Composable
 private fun PermissionDeniedState(onOpenSettings: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().padding(40.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Icon(Icons.Default.LockOpen, null, tint = Color.Gray, modifier = Modifier.size(64.dp))
-        Spacer(Modifier.height(20.dp))
-        Text("Photos access required", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
-        Text("PSphere needs access to your photos to show your gallery and sync with nearby devices.", style = MaterialTheme.typography.bodySmall, color = Color.Gray, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onOpenSettings) { Text("Open App Settings") }
-    }
+    EmptyState(
+        icon  = Icons.Default.LockOpen,
+        title = "Allow access to photos",
+        body  = "PSphere needs to read your photos to show them here and back them up to nearby phones.",
+    ) { Button(onClick = onOpenSettings) { Text("Open app settings") } }
 }
 
 @Composable
 private fun EmptyGalleryState(onGoToSync: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().padding(40.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Icon(Icons.Default.PhotoLibrary, null, tint = Color.Gray, modifier = Modifier.size(64.dp))
-        Spacer(Modifier.height(20.dp))
-        Text("No photos yet", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
-        Text("Take a photo or sync with a nearby device to fill your gallery.", style = MaterialTheme.typography.bodySmall, color = Color.Gray, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onGoToSync) { Text("Go to Sync") }
-    }
+    EmptyState(
+        icon  = Icons.Default.PhotoLibrary,
+        title = "No photos yet",
+        body  = "Take a photo, or sync with a nearby phone to fill your gallery.",
+    ) { Button(onClick = onGoToSync) { Text("Go to Sync") } }
 }
 
 private fun checkMediaPermission(context: android.content.Context): Boolean {

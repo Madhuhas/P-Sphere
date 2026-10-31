@@ -26,7 +26,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -59,6 +60,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.psphere.ui.components.ContentColumn
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.psphere.BuildConfig
 
@@ -81,7 +83,8 @@ fun RegisterDeviceScreen(
 
     // Server section
     var serverExpanded by remember { mutableStateOf(false) }
-    var serverUrl      by remember { mutableStateOf(BuildConfig.BASE_URL) }
+    // 10.0.2.2 only reaches the host from the Android emulator, so only pre-fill it in debug builds.
+    var serverUrl      by remember { mutableStateOf(if (BuildConfig.DEBUG) BuildConfig.BASE_URL else "") }
 
     // Login / Register tab (0 = Login, 1 = Create Account)
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -108,7 +111,7 @@ fun RegisterDeviceScreen(
     val isLoading = state is RegisterState.CheckingHealth || state is RegisterState.Registering
 
     Scaffold(
-        topBar       = { TopAppBar(title = { Text("Welcome to PSphere") }) },
+        topBar       = { TopAppBar(title = { Text("Set up PSphere") }) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         if (isLoading) {
@@ -120,49 +123,53 @@ fun RegisterDeviceScreen(
                 CircularProgressIndicator()
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    if (state is RegisterState.CheckingHealth) "Reaching server…" else "Registering device…",
+                    if (state is RegisterState.CheckingHealth) "Contacting your server…" else "Adding this phone…",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
         } else {
+          ContentColumn(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 20.dp)
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Back up photos between your own devices. No cloud account needed.",
+                    style    = MaterialTheme.typography.bodyLarge,
+                    color    = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
+                )
 
-                // ── P2P mode card ─────────────────────────────────────────────
+                // ── Nearby (P2P) — the default path ───────────────────────────
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors   = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    elevation = CardDefaults.cardElevation(2.dp),
+                    colors   = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor   = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                    shape    = MaterialTheme.shapes.large,
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Icon(Icons.Default.Wifi, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(28.dp))
+                            Icon(Icons.Default.Wifi, null, modifier = Modifier.size(28.dp))
                             Column {
-                                Text("P2P Mode", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                Text("No account or server needed", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .8f))
+                                Text("Sync with nearby phones", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                                Text("Recommended · no setup", style = MaterialTheme.typography.labelLarge)
                             }
                         }
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            "Sync photos directly with other PSphere phones on the same Wi-Fi. Works completely offline.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .8f),
+                            "Phones running PSphere on the same Wi-Fi find each other and copy photos directly. Nothing leaves your network.",
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                         Spacer(Modifier.height(16.dp))
-                        Button(onClick = { viewModel.skipToP2p(context) }, modifier = Modifier.fillMaxWidth()) {
+                        Button(onClick = { viewModel.skipToP2p(context) }, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                             Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Use P2P Mode — No Server Required")
+                            Text("Start with nearby sync", style = MaterialTheme.typography.titleSmall)
                         }
                     }
                 }
@@ -178,12 +185,20 @@ fun RegisterDeviceScreen(
                             onClick  = { serverExpanded = !serverExpanded },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text(
-                                "Connect to a PSphere Core server",
-                                modifier  = Modifier.weight(1f),
-                                textAlign = TextAlign.Start,
-                                style     = MaterialTheme.typography.bodyMedium,
-                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    "Connect to a PSphere server",
+                                    textAlign = TextAlign.Start,
+                                    style     = MaterialTheme.typography.titleSmall,
+                                    color     = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    "Optional. Adds albums, AI search and home-server backup.",
+                                    textAlign = TextAlign.Start,
+                                    style     = MaterialTheme.typography.bodySmall,
+                                    color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                             Icon(
                                 if (serverExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
                                 contentDescription = if (serverExpanded) "Collapse" else "Expand",
@@ -195,7 +210,7 @@ fun RegisterDeviceScreen(
                                 modifier = Modifier.padding(bottom = 16.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                Divider()
+                                HorizontalDivider()
                                 Spacer(Modifier.height(4.dp))
 
                                 // Server URL
@@ -256,7 +271,7 @@ fun RegisterDeviceScreen(
                                         readOnly      = true,
                                         label         = { Text("Device type") },
                                         trailingIcon  = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) },
-                                        modifier      = Modifier.menuAnchor().fillMaxWidth(),
+                                        modifier      = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                                     )
                                     ExposedDropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
                                         DEVICE_TYPES.forEach { type ->
@@ -279,7 +294,7 @@ fun RegisterDeviceScreen(
                                     },
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
-                                    Text(if (selectedTab == 0) "Log In & Connect" else "Create Account & Connect")
+                                    Text(if (selectedTab == 0) "Log in and connect" else "Create account and connect")
                                 }
                             }
                         }
@@ -288,6 +303,7 @@ fun RegisterDeviceScreen(
 
                 Spacer(Modifier.height(24.dp))
             }
+          }
         }
     }
 }

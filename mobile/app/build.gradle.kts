@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -12,16 +14,36 @@ android {
         applicationId = "com.psphere"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        // 2.0: linked devices, per-folder destinations, encrypted protocol v3 (not compatible with 1.x).
+        versionCode = 3
+        versionName = "2.0"
 
         buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000\"")
+    }
+
+    // Release signing: put storeFile/storePassword/keyAlias/keyPassword in mobile/keystore.properties
+    // (never commit it). Without that file the release APK is signed with the local debug key so it
+    // can still be installed for testing; such an APK must not be published.
+    val keystoreProps = rootProject.file("keystore.properties").takeIf { it.exists() }?.let { f ->
+        Properties().apply { f.inputStream().use { load(it) } }
+    }
+    signingConfigs {
+        if (keystoreProps != null) {
+            create("release") {
+                storeFile     = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias      = keystoreProps.getProperty("keyAlias")
+                keyPassword   = keystoreProps.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 
@@ -60,5 +82,9 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.coil.compose)
+    implementation(libs.zxing.core)
+    implementation(libs.gms.code.scanner)
+    implementation(libs.androidx.exifinterface)
+    implementation("com.psphere:psphere-shared")
     debugImplementation(libs.androidx.ui.tooling)
 }

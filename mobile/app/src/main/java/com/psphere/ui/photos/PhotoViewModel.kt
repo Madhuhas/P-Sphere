@@ -20,7 +20,12 @@ data class PhotosState(
     val currentPage: Int = 1,
     val totalPages: Int = 1,
     val isLocalSource: Boolean = false,  // true when reading from MediaStore rather than Core API
-)
+    /** Set when the viewer is opened from an album or search results instead of the gallery. */
+    val customPhotos: List<PhotoDto>? = null,
+) {
+    /** Photos the viewer should page through right now. */
+    val viewerPhotos: List<PhotoDto> get() = customPhotos ?: photos
+}
 
 class PhotoViewModel : ViewModel() {
     private val _state = MutableStateFlow(PhotosState())
@@ -65,6 +70,11 @@ class PhotoViewModel : ViewModel() {
             }
         }
     }
+
+    /** Open the viewer on a list that isn't the gallery, e.g. an album or search results. */
+    fun showList(list: List<PhotoDto>) { _state.value = _state.value.copy(customPhotos = list) }
+
+    fun useGallery() { if (_state.value.customPhotos != null) _state.value = _state.value.copy(customPhotos = null) }
 
     fun refresh(context: Context) = load(context, 1)
 

@@ -24,11 +24,13 @@ class TokenDataStore(private val context: Context) {
         private val KEY_SERVER_URL   = stringPreferencesKey("server_url")
 
         // Sync settings
-        val KEY_WIFI_ONLY          = booleanPreferencesKey("sync_wifi_only")
-        val KEY_CHARGING_ONLY      = booleanPreferencesKey("sync_charging_only")
-        val KEY_SYNC_FOLDERS       = stringPreferencesKey("sync_folders")
-        val KEY_FREE_UP_SPACE      = booleanPreferencesKey("sync_free_space")
+        val KEY_WIFI_ONLY           = booleanPreferencesKey("sync_wifi_only")
+        val KEY_CHARGING_ONLY       = booleanPreferencesKey("sync_charging_only")
+        val KEY_SYNC_FOLDERS        = stringPreferencesKey("sync_folders")
+        val KEY_FREE_UP_SPACE       = booleanPreferencesKey("sync_free_space")
         val KEY_SYNC_INTERVAL_HOURS = longPreferencesKey("sync_interval_hours")
+        val KEY_SOURCE_FOLDER_PATH  = stringPreferencesKey("source_folder_path")
+        val KEY_TARGET_FOLDER_NAME  = stringPreferencesKey("target_folder_name")
     }
 
     // ── Auth ──────────────────────────────────────────────────────────────────
@@ -50,6 +52,8 @@ class TokenDataStore(private val context: Context) {
             ?.toSet()
             ?: emptySet()
     }
+    val sourceFolderPath:  Flow<String?>     = context.dataStore.data.map { it[KEY_SOURCE_FOLDER_PATH] }
+    val targetFolderName:  Flow<String>      = context.dataStore.data.map { it[KEY_TARGET_FOLDER_NAME] ?: "PSphere Backup" }
 
     suspend fun saveJwt(token: String) =
         context.dataStore.edit { it[KEY_JWT] = token }
@@ -87,6 +91,12 @@ class TokenDataStore(private val context: Context) {
     suspend fun setSyncIntervalHours(v: Long) = context.dataStore.edit { it[KEY_SYNC_INTERVAL_HOURS] = v }
     suspend fun setSyncFolders(paths: Set<String>) =
         context.dataStore.edit { it[KEY_SYNC_FOLDERS] = paths.joinToString(",") }
+
+    suspend fun setSourceFolderPath(path: String) =
+        context.dataStore.edit { it[KEY_SOURCE_FOLDER_PATH] = path }
+
+    suspend fun setTargetFolderName(name: String) =
+        context.dataStore.edit { it[KEY_TARGET_FOLDER_NAME] = name }
 
     suspend fun clear() = context.dataStore.edit { it.clear() }
 }

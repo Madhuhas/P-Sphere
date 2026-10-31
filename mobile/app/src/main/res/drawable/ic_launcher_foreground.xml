@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive icon foreground: white "P" with an orbit dot, kept inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,32 L40,76 L47,76 L47,60 L58,60 C66,60 71,54 71,46 C71,38 66,32 58,32 Z M47,39 L57,39 C61.5,39 64,42 64,46 C64,50 61.5,53 57,53 L47,53 Z"/>
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M73,70 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"/>
+</vector>

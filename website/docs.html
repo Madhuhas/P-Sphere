@@ -2,202 +2,481 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Docs — P-Sphere</title>
-  <meta name="description" content="P-Sphere documentation: setup, P2P sync, delta sync, and what's coming.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Documentation — P-Sphere</title>
+  <meta name="description" content="Set up P-Sphere: install the Android app, sync phones over Wi-Fi, self-host the server, and reference for settings, the sync protocol and the REST API.">
+  <meta name="theme-color" content="#0F1923">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231565C0'/%3E%3Cpath d='M11 8v16h3v-6h4.5c3 0 5-2 5-5s-2-5-5-5zm3 2.7h4.2c1.4 0 2.3.9 2.3 2.3s-.9 2.3-2.3 2.3H14z' fill='%23fff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <nav>
-    <a href="index.html" class="brand">P-Sphere <span class="alpha-badge">Alpha</span></a>
-    <div class="nav-links">
-      <a href="index.html#features">Features</a>
-      <a href="index.html#roadmap">Roadmap</a>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand" aria-label="P-Sphere home"><span class="brand-mark">P</span>P-Sphere <span class="brand-tag">Alpha</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#modes">Features</a>
+      <a href="docs.html" aria-current="page">Docs</a>
       <a href="download.html">Download</a>
-      <a href="docs.html" class="active">Docs</a>
-    </div>
-    <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases" class="btn btn-primary btn-sm">Download APK</a>
-  </nav>
+    </nav>
+    <a href="download.html" class="btn btn-primary btn-sm nav-cta">Get the app</a>
+    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
 </header>
 
-<div class="banner">
-  Documentation is a work in progress and may be incomplete during alpha.
-</div>
-
-<main>
-  <div class="page-hero">
+<main id="main">
+  <div class="page-head">
     <div class="container">
       <p class="eyebrow">Documentation</p>
-      <h1>P-Sphere Docs</h1>
-      <p>How the app works, how to get started, and what to expect.</p>
+      <h1>P-Sphere docs</h1>
+      <p>Everything from your first sync between two phones to running the server on your own hardware.</p>
     </div>
   </div>
 
-  <section style="background: var(--bg);">
-    <div class="container">
-      <div class="docs-layout">
-        <nav class="sidebar">
-          <div class="sidebar-group">
-            <span class="sidebar-label">Getting started</span>
-            <a href="#overview" class="active">Overview</a>
-            <a href="#install">Installing the app</a>
-            <a href="#permissions">Permissions</a>
-          </div>
-          <div class="sidebar-group">
-            <span class="sidebar-label">Core features</span>
-            <a href="#backup">Photo backup</a>
-            <a href="#p2p">P2P sync</a>
-            <a href="#delta-sync">Delta sync</a>
-          </div>
-          <div class="sidebar-group">
-            <span class="sidebar-label">Coming soon</span>
-            <a href="#server">Core server</a>
-            <a href="#web-ui">Web dashboard</a>
-            <a href="#ai">AI features</a>
-          </div>
-          <div class="sidebar-group">
-            <span class="sidebar-label">Reference</span>
-            <a href="#faq">FAQ</a>
-            <a href="#privacy">Privacy</a>
-          </div>
-        </nav>
-
-        <div class="prose" style="padding-bottom: 80px;">
-
-          <h2 id="overview">Overview</h2>
-          <p>P-Sphere is a self-hosted photo library. The goal is to give you everything a cloud photo service offers — backup, search, albums, AI — without your photos ever leaving devices you control.</p>
-          <p>Right now, the Android app is working. It backs up your camera roll and syncs photos between devices on your local Wi-Fi with no server required. The rest of the platform is in active development.</p>
-          <p><strong>What works today:</strong></p>
-          <ul>
-            <li>Automatic camera roll backup to another device on your network</li>
-            <li>P2P sync between Android phones on the same Wi-Fi</li>
-            <li>Hash-based delta sync — only new photos transfer</li>
-            <li>Background sync via Android WorkManager</li>
-          </ul>
-          <div class="callout callout-warning">
-            P-Sphere is <strong>alpha software</strong>. It is not production-ready. Always keep independent backups of your photos outside of P-Sphere.
-          </div>
-
-          <h2 id="install">Installing the app</h2>
-          <p>P-Sphere is not on the Google Play Store yet. You install it by sideloading the APK file directly. Full step-by-step instructions are on the <a href="download.html#install">download page</a>. In short:</p>
-          <ol>
-            <li>Download the APK from the <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases">releases page</a></li>
-            <li>Enable "Install unknown apps" for your browser or file manager</li>
-            <li>Tap the APK file and confirm installation</li>
-            <li>Open P-Sphere and grant the required permissions</li>
-          </ol>
-
-          <h2 id="permissions">Permissions</h2>
-          <p>P-Sphere requests two permissions:</p>
-          <ul>
-            <li><strong>Photos / Media access</strong> — Required. Needed to read your camera roll for backup and sync.</li>
-            <li><strong>Notifications</strong> — Optional. Used to show sync progress and completion notices.</li>
-          </ul>
-          <p>P-Sphere does not request location, contacts, microphone, or camera permissions. No data is sent to any external server.</p>
-
-          <h2 id="backup">Photo backup</h2>
-          <p>When another P-Sphere device is on your network — currently another phone, eventually the core server — the app backs up your camera roll automatically in the background.</p>
-          <ul>
-            <li>Runs on a configurable schedule, default every 6 hours</li>
-            <li>Only runs on Wi-Fi by default; mobile data can be enabled in settings</li>
-            <li>Skips backup when battery is low</li>
-            <li>Can be triggered manually from the app at any time</li>
-          </ul>
-
-          <h2 id="p2p">P2P sync</h2>
-          <p>P2P mode lets two Android phones running P-Sphere sync photos directly over the same Wi-Fi network. No server or internet connection is needed.</p>
-
-          <h3>How discovery works</h3>
-          <p>P-Sphere uses Android's Network Service Discovery (NSD / mDNS) to broadcast its presence on the local network. Any other P-Sphere device on the same network appears in the device list automatically. No IP addresses or pairing codes are required.</p>
-
-          <h3>How transfer works</h3>
-          <p>Once you initiate a sync, P-Sphere exchanges a list of SHA-256 photo hashes with the other device, identifies which photos each device is missing, then transfers only those files over a direct TCP connection. The first sync of a large library takes time; every sync after that takes seconds.</p>
-
-          <h3>Security</h3>
-          <p>Connections are local-network only and require explicit authorization on both devices the first time. P-Sphere does not expose any port to the internet.</p>
-
-          <h2 id="delta-sync">Delta sync</h2>
-          <p>Every photo is identified by its SHA-256 content hash, not its filename or date. This means renaming or moving a photo doesn't cause it to re-upload, duplicates are detected and skipped automatically, and if a photo already exists on the receiving device under a different name, it won't transfer again. Repeated syncs stay fast even for large libraries.</p>
-
-          <h2 id="server">Core server</h2>
-          <p><span class="badge-soon">In development</span></p>
-          <p>The core server is a self-hosted Node.js backend that acts as the permanent home for your photo library. Once available, it will store photos on disk and serve them to connected devices, run the AI pipeline in the background, serve the web dashboard, and manage device tokens and sync state.</p>
-          <p>You'll be able to run it on any always-on machine: a spare PC, a Raspberry Pi, a NAS, or a small VPS.</p>
-          <p><strong>Tech stack:</strong> Node.js 20, Express, PostgreSQL, Redis, BullMQ.</p>
-
-          <h2 id="web-ui">Web dashboard</h2>
-          <p><span class="badge-soon">In development</span></p>
-          <p>The web dashboard is a React app served by the core server. You'll be able to access it from any browser on your local network. Planned features include a photo timeline, album management, AI search, face cluster labelling, and sync status.</p>
-
-          <h2 id="ai">AI features</h2>
-          <p><span class="badge-soon">In development</span></p>
-          <p>All AI in P-Sphere runs locally. Nothing is sent to an external API.</p>
-          <ul>
-            <li><strong>Natural language search</strong> — powered by a local LLM via Ollama, LM Studio, or any OpenAI-compatible endpoint you run yourself</li>
-            <li><strong>Smart albums</strong> — clusters your photos into Trip, People, Pets, and Place albums</li>
-            <li><strong>Face detection</strong> — runs ONNX models offline, groups similar faces across your library</li>
-            <li><strong>Object tagging</strong> — identifies objects and scenes for richer search</li>
-          </ul>
-
-          <h2 id="faq">FAQ</h2>
-
-          <h3>Does P-Sphere work without the internet?</h3>
-          <p>Yes. The Android app and P2P sync work entirely over your local Wi-Fi network. No internet connection is required for any currently available feature.</p>
-
-          <h3>Do I need an account?</h3>
-          <p>Not currently. The Android app works without any account or registration. When the core server is released, you'll create a local account on your own server — there's no central account system.</p>
-
-          <h3>Is my data safe?</h3>
-          <p>P-Sphere stores photos on the devices involved in the sync. Data safety depends on the health of those devices. We strongly recommend keeping independent backups — P-Sphere is alpha software and data loss is possible.</p>
-
-          <h3>Can multiple people use P-Sphere on the same network?</h3>
-          <p>Each phone runs its own independent instance. Multi-user support with shared libraries and per-user accounts is planned for the core server release.</p>
-
-          <h3>Is the source code available?</h3>
-          <p>P-Sphere is currently proprietary software. License terms are on the <a href="license.html">License page</a>. We may release under an open-source license as the project matures.</p>
-
-          <h3>How do I report a bug?</h3>
-          <p>Open an issue on the <a href="https://github.com/Madhuhas/P-Sphere">GitHub repository</a>. Include your Android version, the app version, and a description of what happened.</p>
-
-          <h2 id="privacy">Privacy</h2>
-          <p>P-Sphere is designed so your photos never leave your devices. No external servers are involved in any currently available feature, the app collects no analytics or telemetry, no crash reports are sent automatically, and P2P sync happens directly between your devices over your local network. No account means nothing to track you with.</p>
-          <p>When the core server is released, that server will also be self-hosted on hardware you own. We will never operate cloud infrastructure on your behalf or have access to your photos.</p>
-
-        </div>
+  <div class="container docs">
+    <nav class="docs-nav" aria-label="Documentation">
+      <button class="docs-nav-toggle" type="button" aria-expanded="false">On this page <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="docs-nav-body">
+        <h4>Getting started</h4>
+        <a href="#overview">Overview</a>
+        <a href="#quick-start">Quick start</a>
+        <a href="#install">Install the app</a>
+        <a href="#permissions">Permissions</a>
+        <h4>Using the app</h4>
+        <a href="#sync-screen">The Sync screen</a>
+        <a href="#backup-folder">Backup folder</a>
+        <a href="#received">Where photos go</a>
+        <a href="#schedule">When sync runs</a>
+        <a href="#free-space">Free up space</a>
+        <a href="#server-features">Albums and search</a>
+        <h4>Nearby sync</h4>
+        <a href="#discovery">How phones find each other</a>
+        <a href="#protocol">Transfer protocol</a>
+        <a href="#security">Security model</a>
+        <h4>Self-hosting</h4>
+        <a href="#self-hosting">Requirements</a>
+        <a href="#database">Database</a>
+        <a href="#core">Core server</a>
+        <a href="#env">Environment variables</a>
+        <a href="#vision">Vision worker</a>
+        <a href="#web">Web app</a>
+        <a href="#service">Run as a service</a>
+        <a href="#connect">Connect the app</a>
+        <a href="#checklist">Production checklist</a>
+        <h4>Reference</h4>
+        <a href="#api">REST API</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#faq">FAQ</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#changelog">Changelog</a>
       </div>
-    </div>
-  </section>
+    </nav>
+
+    <article class="prose">
+      <!-- ── Getting started ─────────────────────────────── -->
+      <h2 id="overview"><a class="anchor" href="#overview">Overview</a></h2>
+      <p>P-Sphere is a self-hosted photo library. It does what a cloud photo service does (backup, albums, search) without your photos going to anyone else's servers.</p>
+      <p>It works at two levels:</p>
+      <ul>
+        <li><strong>Nearby sync.</strong> The Android app copies photos directly between phones on the same Wi-Fi. No account, server or internet connection is involved.</li>
+        <li><strong>Your own server (optional).</strong> A Node.js server you run at home keeps a permanent copy of your library and adds a web app, smart albums, face grouping and natural-language search through a local LLM.</li>
+      </ul>
+      <p class="note warn"><strong>P-Sphere is alpha software.</strong> Keep an independent backup of photos you can't afford to lose until there's a stable release.</p>
+
+      <h2 id="quick-start"><a class="anchor" href="#quick-start">Quick start</a></h2>
+      <p class="lead">Back up one phone to another in about five minutes.</p>
+      <ol>
+        <li>Install the app on both phones from the <a href="download.html">download page</a>.</li>
+        <li>Open P-Sphere on each phone, allow access to photos, and choose <strong>Start with nearby sync</strong>.</li>
+        <li>On each phone, go to <strong>Settings → Backup → Choose folder</strong> and pick the folder to back up, usually <code>DCIM/Camera</code>.</li>
+        <li>Connect both phones to the same Wi-Fi network. Each phone's <strong>Nearby phones</strong> card should list the other within a few seconds.</li>
+        <li>Tap <strong>Sync now</strong>. When the card turns green, each phone has the other's photos in <code>Pictures/PSphere Backup</code>.</li>
+      </ol>
+      <p>After that, P-Sphere syncs on its own every 6 hours on Wi-Fi. You can change this in Settings.</p>
+
+      <h2 id="install"><a class="anchor" href="#install">Install the app</a></h2>
+      <p>The app isn't on Google Play yet. Download the APK from <a href="https://github.com/Madhuhas/P-Sphere-resource-files/releases">GitHub Releases</a> and open it on the phone. Android asks you to allow installs from your browser or file manager the first time. The <a href="download.html#install">install guide</a> has each step.</p>
+      <p>To build the APK yourself, install JDK 17 and the Android SDK, then run:</p>
+<pre><code>cd mobile
+./gradlew assembleDebug        <span class="c"># app/build/outputs/apk/debug/app-debug.apk</span>
+./gradlew testDebugUnitTest    <span class="c"># runs the sync protocol tests</span></code></pre>
+
+      <h2 id="permissions"><a class="anchor" href="#permissions">Permissions</a></h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Permission</th><th scope="col">Why</th><th scope="col">Required</th></tr></thead>
+          <tbody>
+            <tr><td>Photos and videos</td><td>Read the backup folder and show your gallery</td><td>Yes</td></tr>
+            <tr><td>Nearby Wi-Fi / multicast</td><td>Find other phones on the network with mDNS</td><td>Yes (granted at install)</td></tr>
+            <tr><td>Notifications</td><td>Show sync progress and results</td><td>No</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>P-Sphere doesn't ask for location, contacts, camera or microphone access.</p>
+
+      <!-- ── Using the app ───────────────────────────────── -->
+      <h2 id="sync-screen"><a class="anchor" href="#sync-screen">The Sync screen</a></h2>
+      <p>The first tab shows everything about backup on one screen:</p>
+      <ul>
+        <li><strong>Status card.</strong> Shows whether this phone is up to date, syncing (with a file count), finished, or stopped with an error, with <strong>Sync now</strong> or <strong>Try again</strong>. If some phones synced and others didn't, it lists which.</li>
+        <li><strong>Backup folder.</strong> The folder being shared and where other phones save it. Tap it to change.</li>
+        <li><strong>Nearby phones.</strong> Phones running P-Sphere on this Wi-Fi. <strong>Search again</strong> clears the list and looks again, which helps after switching networks.</li>
+      </ul>
+      <p>Pull down on the screen to search for phones again. Pulling down doesn't start a sync.</p>
+
+      <h2 id="backup-folder"><a class="anchor" href="#backup-folder">Backup folder</a></h2>
+      <p>Only the folder you pick is shared, including its subfolders. Until you pick one, this phone shares nothing but can still receive photos from others.</p>
+      <ul>
+        <li>Only photos and videos are sent: JPEG, PNG, HEIC/HEIF, WebP, GIF, BMP, DNG, MP4, MOV, 3GP, MKV, WebM, M4V and AVI.</li>
+        <li>Hidden folders such as <code>.thumbnails</code> and <code>.trashed-*</code> files are skipped.</li>
+        <li>Files are matched by content (SHA-256), so renaming or moving a photo doesn't send it again.</li>
+      </ul>
+
+      <h2 id="received"><a class="anchor" href="#received">Where received photos go</a></h2>
+      <p>Photos from another phone are saved to <code>Pictures/&lt;folder name&gt;</code>. The <em>sending</em> phone chooses the folder name in <strong>Settings → Backup → Folder name on other phones</strong>; the default is <code>PSphere Backup</code>. Giving each phone its own name (for example “Ravi's phone”) keeps their photos apart.</p>
+      <p>Received photos are added to Android's media index straight away, so they appear in Google Photos and other gallery apps. If a different file with the same name already exists, P-Sphere keeps both and adds a short code to the new name.</p>
+      <p>Received photos also count as “owned” for later syncs, so they're never sent back and forth. With three phones, a photo reaches the third phone through whichever phone it meets first.</p>
+
+      <h2 id="schedule"><a class="anchor" href="#schedule">When sync runs</a></h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Setting</th><th scope="col">Default</th><th scope="col">Effect</th></tr></thead>
+          <tbody>
+            <tr><td>Wi-Fi only</td><td>On</td><td>Background sync waits for an unmetered network</td></tr>
+            <tr><td>Only while charging</td><td>Off</td><td>Background sync waits until the phone is plugged in</td></tr>
+            <tr><td>Sync automatically every</td><td>6 hours</td><td>1, 3, 6, 12 or 24 hours. Android may run it a little later to save battery</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Sync also waits while the battery is low. <strong>Sync now</strong> uses the same conditions, so on mobile data with “Wi-Fi only” on, it shows <em>Waiting for Wi-Fi</em>.</p>
+
+      <h2 id="free-space"><a class="anchor" href="#free-space">Free up space</a></h2>
+      <p>After a sync, <strong>Settings → Storage</strong> lists files from this phone that are now confirmed on another phone, and offers to delete the local copies.</p>
+      <p class="note">Android 11 and later only let an app delete photos it created. P-Sphere can always remove photos it received, but your own camera photos may need deleting from your Gallery app. Settings tells you how many files it actually deleted.</p>
+
+      <h2 id="server-features"><a class="anchor" href="#server-features">Albums and search</a></h2>
+      <p>The <strong>Albums</strong> and <strong>Search</strong> tabs appear once the phone is connected to your server (<strong>Settings → Server → Connect to a PSphere server</strong>).</p>
+      <ul>
+        <li><strong>Albums</strong> shows albums from the server. The sparkle button asks the server to build smart albums for trips, people, pets and places.</li>
+        <li><strong>Search</strong> takes a plain description such as “beach sunsets 2024”. The server's local LLM ranks matching photos. If the LLM is offline, results fall back to keyword matching and are labelled <em>Keyword match</em>.</li>
+      </ul>
+      <p>Signing out of the server switches the phone back to nearby sync. Photos already on the server stay there.</p>
+
+      <hr>
+
+      <!-- ── Nearby sync ─────────────────────────────────── -->
+      <h2 id="discovery"><a class="anchor" href="#discovery">How phones find each other</a></h2>
+      <p>Each phone runs a small TCP server on a random port and advertises it with DNS-SD (mDNS) as service type <code>_psphere._tcp</code>. The service name is <code>PSphere-&lt;model&gt;-&lt;id&gt;</code>, where <code>id</code> is six random characters created at install, so two phones of the same model don't collide. A TXT record carries the readable phone name and protocol version.</p>
+      <p>P-Sphere holds a Wi-Fi multicast lock while it runs, because some phones drop mDNS traffic without one. When Wi-Fi disconnects or reconnects, it clears the phone list and advertises and searches again.</p>
+
+      <h2 id="protocol"><a class="anchor" href="#protocol">Transfer protocol</a></h2>
+      <p>A sync session runs over one TCP connection. Messages are newline-delimited UTF-8 JSON; file contents follow their <code>FILE</code> header as raw bytes.</p>
+<pre><code>client → HELLO {v: 2, deviceId, name, folder, hashes: [...]}
+server ← HELLO {v: 2, deviceId, name, folder, hashes: [...]}
+client → NEED  {hashes}          <span class="c"># files the client wants</span>
+server ← NEED  {hashes}          <span class="c"># files the server wants</span>
+server → FILE  {hash, name, size} + bytes   … repeated
+client ← ACK   {hash, ok, reason?}
+server → END
+client → FILE … / server ← ACK …           <span class="c"># the other direction</span>
+client → END
+client → BYE / server ← BYE</code></pre>
+      <ul>
+        <li><strong>Each phase ends with <code>END</code>.</strong> A file deleted mid-sync is skipped instead of stalling the session.</li>
+        <li><strong>Receivers verify every file.</strong> Bytes are hashed while they arrive. A file whose SHA-256 doesn't match is discarded and the sender gets <code>ok: false</code>.</li>
+        <li><strong>Only requested files are accepted.</strong> Anything not in the receiver's <code>NEED</code> list is drained and refused.</li>
+        <li><strong>Downloads are written to a hidden <code>.part</code> file</strong> and renamed when complete, so a dropped connection never leaves a half-written photo.</li>
+        <li><strong>Concurrent sessions are deduplicated.</strong> If two phones offer the same photo at once, it's downloaded once.</li>
+        <li><strong>Version mismatch.</strong> A phone on protocol 1 is refused with “running an older version of PSphere”.</li>
+      </ul>
+      <p>Timeouts: 5 seconds to connect (with one retry), 30 seconds with no data before a session is abandoned.</p>
+
+      <h2 id="security"><a class="anchor" href="#security">Security model</a></h2>
+      <p>Nearby sync is designed for networks you control. Be aware of what it does and doesn't do in this alpha:</p>
+      <ul>
+        <li>Connections are never exposed to the internet; the server listens only on the local network.</li>
+        <li>File names and folder names sent by a peer are sanitised, so a peer can't write outside <code>Pictures/&lt;folder&gt;</code>.</li>
+        <li><strong>There's no pairing.</strong> Any phone running P-Sphere on the same Wi-Fi can request your shared folder.</li>
+        <li><strong>Transfers aren't encrypted.</strong> Someone on the same network could observe them.</li>
+      </ul>
+      <p class="note warn"><strong>Recommendation:</strong> use nearby sync on your home network. Avoid public, office or hotel Wi-Fi until pairing and encryption arrive.</p>
+
+      <hr>
+
+      <!-- ── Self-hosting ────────────────────────────────── -->
+      <h2 id="self-hosting"><a class="anchor" href="#self-hosting">Self-hosting: requirements</a></h2>
+      <p class="lead">Run everything on one always-on machine on your home network.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Tool</th><th scope="col">Version</th><th scope="col">Used for</th></tr></thead>
+          <tbody>
+            <tr><td>Node.js</td><td class="num">20+</td><td>Core server, vision worker, web app</td></tr>
+            <tr><td>PostgreSQL</td><td class="num">15+</td><td>Library database</td></tr>
+            <tr><td>Redis</td><td class="num">7+</td><td>Background job queue (BullMQ)</td></tr>
+            <tr><td>Ollama or LM Studio</td><td>Latest</td><td>Local LLM for search and summaries (optional)</td></tr>
+          </tbody>
+        </table>
+      </div>
+<pre><code>Home server (192.168.1.100)
+├── PostgreSQL     :5432
+├── Redis          :6379
+├── Core API       :3000
+├── Vision worker  (background process)
+└── Web app        :80   (nginx serving web/dist and proxying /api)</code></pre>
+
+      <h2 id="database"><a class="anchor" href="#database">Database</a></h2>
+<pre><code>psql -U postgres -c "CREATE DATABASE psphere;"
+psql -U postgres -c "CREATE USER psphere_user WITH PASSWORD 'choose-a-password';"
+psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE psphere TO psphere_user;"</code></pre>
+      <p>Tables are created automatically the first time the Core server starts.</p>
+
+      <h2 id="core"><a class="anchor" href="#core">Core server</a></h2>
+<pre><code>cd core
+cp .env.example .env     <span class="c"># then edit it, see below</span>
+npm install
+npm run build
+npm start                <span class="c"># or: npm run dev for hot reload</span>
+
+curl http://localhost:3000/api/health     <span class="c"># {"status":"ok"}</span></code></pre>
+
+      <h2 id="env"><a class="anchor" href="#env">Environment variables</a></h2>
+      <p>Set these in <code>core/.env</code>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Variable</th><th scope="col">Default</th><th scope="col">Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>PORT</code></td><td><code>3000</code></td><td>HTTP port</td></tr>
+            <tr><td><code>NODE_ENV</code></td><td><code>development</code></td><td>Set to <code>production</code> to enable startup checks</td></tr>
+            <tr><td><code>JWT_SECRET</code></td><td>none</td><td>Required. A long random string used to sign logins</td></tr>
+            <tr><td><code>JWT_EXPIRES_IN</code></td><td><code>7d</code></td><td>How long a login lasts</td></tr>
+            <tr><td><code>DB_HOST</code> / <code>DB_PORT</code></td><td><code>localhost</code> / <code>5432</code></td><td>PostgreSQL address</td></tr>
+            <tr><td><code>DB_NAME</code> / <code>DB_USER</code> / <code>DB_PASSWORD</code></td><td><code>psphere</code> / <code>postgres</code> / empty</td><td>PostgreSQL database and credentials</td></tr>
+            <tr><td><code>REDIS_HOST</code> / <code>REDIS_PORT</code></td><td><code>localhost</code> / <code>6379</code></td><td>Redis address</td></tr>
+            <tr><td><code>LLM_PROVIDER</code></td><td><code>ollama</code></td><td><code>ollama</code>, <code>lmstudio</code> or <code>openai-compat</code></td></tr>
+            <tr><td><code>LLM_BASE_URL</code></td><td><code>http://localhost:11434</code></td><td>LLM endpoint. LM Studio uses <code>http://localhost:1234/v1</code></td></tr>
+            <tr><td><code>LLM_MODEL</code></td><td><code>llama3</code></td><td>Model name, e.g. from <code>ollama list</code></td></tr>
+            <tr><td><code>LLM_API_KEY</code></td><td>empty</td><td>Only for <code>openai-compat</code> endpoints that need one</td></tr>
+            <tr><td><code>DATA_ROOT</code></td><td><code>./data</code></td><td>Where photos and thumbnails are stored. Point it at a large disk</td></tr>
+            <tr><td><code>CORS_ORIGIN</code></td><td>any</td><td>Set to the web app's address in production</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="vision"><a class="anchor" href="#vision">Vision worker</a></h2>
+      <p>The vision worker detects and groups faces and tags objects. It's optional; everything else works without it.</p>
+<pre><code>cd vision-worker
+cp .env.example .env     <span class="c"># same DB_* and REDIS_* values as the core server</span>
+npm install
+npm run build &amp;&amp; npm start</code></pre>
+      <p>Put the ONNX models in <code>vision-worker/models/</code>:</p>
+<pre><code>models/
+├── face_detection.onnx    <span class="c"># e.g. a YOLOv8-face model</span>
+├── face_embedding.onnx    <span class="c"># e.g. ArcFace, 512-dimension output</span>
+└── object_tagging.onnx    <span class="c"># e.g. MobileNetV3 trained on ImageNet</span></code></pre>
+
+      <h2 id="web"><a class="anchor" href="#web">Web app</a></h2>
+<pre><code>cd web
+npm install
+npm run build            <span class="c"># output in web/dist/</span></code></pre>
+      <p>Serve <code>web/dist</code> with nginx and proxy API calls to the Core server:</p>
+<pre><code>server {
+    listen 80;
+    server_name psphere.local;
+    root /opt/psphere/web/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    location /api/ {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        client_max_body_size 0;   <span class="c"># allow large video uploads</span>
+    }
+}</code></pre>
+
+      <h2 id="service"><a class="anchor" href="#service">Run as a service</a></h2>
+      <p>Create <code>/etc/systemd/system/psphere-core.service</code>:</p>
+<pre><code>[Unit]
+Description=PSphere Core API
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=simple
+User=psphere
+WorkingDirectory=/opt/psphere/core
+EnvironmentFile=/opt/psphere/core/.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+      <p>Create <code>psphere-vision.service</code> the same way for the vision worker, then enable both:</p>
+<pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now psphere-core psphere-vision</code></pre>
+      <p>If you prefer PM2: <code>pm2 start core/dist/index.js --name psphere-core</code>, then <code>pm2 save</code> and <code>pm2 startup</code>.</p>
+
+      <h2 id="connect"><a class="anchor" href="#connect">Connect the app</a></h2>
+      <ol>
+        <li>On the phone, open <strong>Settings → Server → Connect to a PSphere server</strong>, or expand <strong>Connect to a PSphere server</strong> on the setup screen.</li>
+        <li>Enter the server's LAN address, for example <code>http://192.168.1.100:3000</code>. Don't use <code>localhost</code>; that means the phone itself.</li>
+        <li>Choose <strong>Log in</strong> or <strong>Create account</strong>, enter your email and password, and name the device.</li>
+      </ol>
+      <p>Uploads to the server run alongside nearby sync, using the same backup folder and schedule.</p>
+
+      <h2 id="checklist"><a class="anchor" href="#checklist">Production checklist</a></h2>
+      <ul>
+        <li><code>JWT_SECRET</code> is a long random string and <code>NODE_ENV=production</code>.</li>
+        <li>PostgreSQL and Redis listen only on localhost or your LAN; ports 5432 and 6379 are firewalled from outside.</li>
+        <li>The Core server sits behind nginx, with HTTPS if it's reachable beyond your home network.</li>
+        <li><code>CORS_ORIGIN</code> is set to the web app's exact address.</li>
+        <li><code>DATA_ROOT</code> is on a disk with room to grow, and both it and the database are backed up.</li>
+        <li>systemd or PM2 restarts the services after a crash or reboot.</li>
+      </ul>
+
+      <hr>
+
+      <!-- ── Reference ───────────────────────────────────── -->
+      <h2 id="api"><a class="anchor" href="#api">REST API</a></h2>
+      <p>All routes are under <code>/api</code>. Everything except <code>/api/health</code> and <code>/api/auth/*</code> needs <code>Authorization: Bearer &lt;token&gt;</code>, including thumbnails.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Endpoint</th><th scope="col">Purpose</th></tr></thead>
+          <tbody>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/health</td><td>Liveness check</td></tr>
+            <tr><td class="endpoint"><span class="method m-post">POST</span>/api/auth/register</td><td>Create an account; returns a token</td></tr>
+            <tr><td class="endpoint"><span class="method m-post">POST</span>/api/auth/login</td><td>Log in; returns a token</td></tr>
+            <tr><td class="endpoint"><span class="method m-post">POST</span>/api/devices/register</td><td>Register this device; returns a device token</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/devices</td><td>List devices and when each was last seen</td></tr>
+            <tr><td class="endpoint"><span class="method m-patch">PATCH</span>/api/devices/:id</td><td>Rename a device or turn its sync on or off</td></tr>
+            <tr><td class="endpoint"><span class="method m-del">DELETE</span>/api/devices/:id</td><td>Remove a device and revoke its token</td></tr>
+            <tr><td class="endpoint"><span class="method m-post">POST</span>/api/sync/check</td><td>Send file hashes; returns the ones the server is missing</td></tr>
+            <tr><td class="endpoint"><span class="method m-post">POST</span>/api/sync/upload</td><td>Upload one file (multipart: <code>file</code>, <code>hash</code>, <code>path</code>, <code>modifiedAt</code>)</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/sync/conflicts</td><td>Files changed on more than one device</td></tr>
+            <tr><td class="endpoint"><span class="method m-post">POST</span>/api/sync/conflicts/:id/resolve</td><td>Choose which version to keep</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/photos/timeline</td><td>Photos newest first, paginated (<code>page</code>, <code>limit</code>)</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/photos/:id</td><td>One photo with its metadata</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/photos/thumb/:id/:size</td><td>Thumbnail, <code>sm</code> (256 px) or <code>lg</code> (1024 px)</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/photos/locations</td><td>GPS clusters</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/photos/duplicates</td><td>Near-duplicate groups</td></tr>
+            <tr><td class="endpoint"><span class="method m-del">DELETE</span>/api/photos/batch</td><td>Delete several photos</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/albums</td><td>List albums</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/albums/:id</td><td>Album with its photos</td></tr>
+            <tr><td class="endpoint"><span class="method m-post">POST</span>/api/albums/smart/generate</td><td>Build trip, people, pet and place albums</td></tr>
+            <tr><td class="endpoint"><span class="method m-patch">PATCH</span>/api/albums/:id/cover</td><td>Set an album's cover photo</td></tr>
+            <tr><td class="endpoint"><span class="method m-del">DELETE</span>/api/albums/:id</td><td>Delete an album (photos are kept)</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/faces/clusters</td><td>Groups of similar faces</td></tr>
+            <tr><td class="endpoint"><span class="method m-patch">PATCH</span>/api/faces/clusters/:id</td><td>Name a face group</td></tr>
+            <tr><td class="endpoint"><span class="method m-post">POST</span>/api/ai/search</td><td>Natural-language photo search</td></tr>
+            <tr><td class="endpoint"><span class="method m-post">POST</span>/api/ai/chat</td><td>Chat with the local LLM about your library</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/ai/summary</td><td>Written summary of the library</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/ai/cleanup</td><td>Suggestions for photos to delete</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/ai/status</td><td>Whether the LLM is reachable</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/stats/storage</td><td>Storage used per device and album</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/stats/sync-history</td><td>Recent sync runs</td></tr>
+            <tr><td class="endpoint"><span class="method m-get">GET</span>/api/settings</td><td>Server settings (AI, storage, vision)</td></tr>
+            <tr><td class="endpoint"><span class="method m-patch">PATCH</span>/api/settings</td><td>Change server settings</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="troubleshooting"><a class="anchor" href="#troubleshooting">Troubleshooting</a></h2>
+      <h3>Phones don't see each other</h3>
+      <ul>
+        <li>Check both phones are on the <em>same</em> Wi-Fi network, not one on 2.4 GHz guest Wi-Fi and one on the main network.</li>
+        <li>Open P-Sphere on both phones and tap <strong>Search again</strong>.</li>
+        <li>Guest, office and public networks often block mDNS or stop devices from seeing each other (“client isolation”). Try a home router or a phone hotspot.</li>
+        <li>Turn off VPN apps; many route local traffic away from Wi-Fi.</li>
+      </ul>
+      <h3>“Couldn't reach &lt;phone&gt;”</h3>
+      <p>The phone was found but didn't answer. Open P-Sphere on it (some phone makers stop background apps aggressively) and try again. If it keeps happening, exclude P-Sphere from battery optimisation on that phone.</p>
+      <h3>“&lt;phone&gt; is running an older version of PSphere”</h3>
+      <p>Update the app on every phone. Version 1.1 and later can't sync with 1.0.</p>
+      <h3>Sync is stuck on “Waiting for Wi-Fi”</h3>
+      <p>“Wi-Fi only” is on and the phone is on mobile data, or the battery is low. Connect to Wi-Fi, or turn “Wi-Fi only” off in Settings.</p>
+      <h3>The app can't reach my server</h3>
+      <ul>
+        <li>Use the server's LAN IP (<code>http://192.168.x.x:3000</code>), not <code>localhost</code>.</li>
+        <li>Open <code>http://&lt;server-ip&gt;:3000/api/health</code> in the phone's browser. If it doesn't load, check the server's firewall.</li>
+      </ul>
+      <h3>Server: <code>connect ECONNREFUSED ::1:5432</code></h3>
+      <p>PostgreSQL isn't running or listens on a different address. Check <code>sudo systemctl status postgresql</code> and <code>DB_HOST</code> in <code>.env</code>.</p>
+      <h3>Server: thumbnails aren't generated</h3>
+      <p><code>sharp</code> needs native binaries for your platform. Run <code>npm rebuild sharp</code> in <code>core/</code>.</p>
+      <h3>Search always says “Keyword match”</h3>
+      <p>The LLM isn't reachable. Check <code>curl http://localhost:11434/api/tags</code> for Ollama, and that <code>LLM_MODEL</code> matches a model in <code>ollama list</code>.</p>
+
+      <h2 id="faq"><a class="anchor" href="#faq">FAQ</a></h2>
+      <h3>Does P-Sphere work without internet?</h3>
+      <p>Yes. Nearby sync only needs a local Wi-Fi network; it doesn't matter whether that network is connected to the internet.</p>
+      <h3>Do I need an account?</h3>
+      <p>Not for nearby sync. If you run a server, you create an account on <em>your</em> server. There's no central P-Sphere account.</p>
+      <h3>Can several people share one server?</h3>
+      <p>Yes. Each account on the server has its own separate library. Shared albums between accounts aren't available yet.</p>
+      <h3>Does it back up videos?</h3>
+      <p>Yes, common video formats are included. Large videos take a while on the first sync.</p>
+      <h3>Will deleting a photo on one phone delete it on the others?</h3>
+      <p>No. Sync only adds missing files; it never deletes anything on another phone.</p>
+      <h3>How do I report a bug?</h3>
+      <p>Open an issue on <a href="https://github.com/Madhuhas/P-Sphere">GitHub</a> with your Android version, the app version (Settings → About) and what happened.</p>
+
+      <h2 id="privacy"><a class="anchor" href="#privacy">Privacy</a></h2>
+      <p>The app has no analytics, crash reporting or advertising SDKs, and doesn't contact any server run by the P-Sphere authors. Nearby sync stays on your local network. When you use your own server, photos go only to the address you enter. AI features run on that server through the LLM you configure.</p>
+
+      <h2 id="changelog"><a class="anchor" href="#changelog">Changelog</a></h2>
+      <h3>1.1 (alpha)</h3>
+      <ul>
+        <li>New nearby-sync protocol (v2): files are verified by checksum, sessions can't stall on deleted files, interrupted downloads are cleaned up, and concurrent syncs don't download twice.</li>
+        <li>The “Folder name on other phones” setting is now used; received photos go to <code>Pictures/&lt;name&gt;</code> and appear in gallery apps.</li>
+        <li>Two phones of the same model can now find each other.</li>
+        <li>Clear error messages when a phone can't be reached; partial failures are listed.</li>
+        <li>Discovery restarts automatically after Wi-Fi changes.</li>
+        <li>Server mode: thumbnails, album covers, search results and full-size photos now load; plain <code>http://</code> LAN servers work.</li>
+        <li>Redesigned interface with a complete colour theme, dark mode, tablet layout and a launcher icon.</li>
+      </ul>
+      <h3>1.0 (alpha)</h3>
+      <ul><li>First public build: nearby sync, gallery, Core server connection.</li></ul>
+    </article>
+  </div>
 </main>
 
 <footer>
-  <div class="foot-top">
-    <div class="foot-brand">
-      <p class="foot-logo">P-Sphere</p>
-      <p>A self-hosted, privacy-first photo library for Android. Your photos stay on your devices.</p>
+  <div class="container">
+    <div class="foot">
+      <div>
+        <a href="index.html" class="brand"><span class="brand-mark">P</span>P-Sphere</a>
+        <p>Self-hosted photo backup for people who'd rather keep their photos at home.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <a href="index.html#how">How it works</a>
+        <a href="index.html#modes">Features</a>
+        <a href="download.html">Download</a>
+      </div>
+      <div>
+        <h4>Docs</h4>
+        <a href="docs.html#quick-start">Quick start</a>
+        <a href="docs.html#self-hosting">Self-hosting</a>
+        <a href="docs.html#troubleshooting">Troubleshooting</a>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <a href="terms.html">Terms of Service</a>
+        <a href="license.html">License</a>
+      </div>
     </div>
-    <div class="foot-col">
-      <h4>Product</h4>
-      <a href="index.html#features">Features</a>
-      <a href="index.html#roadmap">Roadmap</a>
-      <a href="download.html">Download</a>
-      <a href="docs.html">Documentation</a>
-    </div>
-    <div class="foot-col">
-      <h4>Legal</h4>
-      <a href="terms.html">Terms of Service</a>
-      <a href="license.html">License</a>
-    </div>
-  </div>
-  <div class="foot-bottom">
-    <span>&copy; 2025 P-Sphere. All rights reserved.</span>
-    <div class="foot-links">
-      <a href="terms.html">Terms</a>
-      <a href="license.html">License</a>
+    <div class="foot-bottom">
+      <span>&copy; 2026 P-Sphere authors. All rights reserved.</span>
+      <a href="https://github.com/Madhuhas/P-Sphere">Source on GitHub</a>
     </div>
   </div>
 </footer>
+<script src="site.js"></script>
 </body>
 </html>

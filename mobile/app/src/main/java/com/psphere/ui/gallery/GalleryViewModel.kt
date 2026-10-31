@@ -139,10 +139,18 @@ class GalleryViewModel : ViewModel() {
 
     // ── Local source ──────────────────────────────────────────────────────────
 
+    private var activeFolderPath: String? = null
+
     private suspend fun loadFromLocal(context: Context) {
         try {
-            val total  = LocalPhotoRepository.getCount(context)
-            val locals = LocalPhotoRepository.getPage(context, PAGE_SIZE, 0)
+            val folderPath = TokenDataStore(context).sourceFolderPath.first()
+            activeFolderPath = folderPath
+            val locals = if (!folderPath.isNullOrBlank()) {
+                LocalPhotoRepository.getPageFromFolder(context, folderPath, PAGE_SIZE, 0)
+            } else {
+                LocalPhotoRepository.getPage(context, PAGE_SIZE, 0)
+            }
+            val total = if (!folderPath.isNullOrBlank()) locals.size else LocalPhotoRepository.getCount(context)
             val photos = locals.map { p ->
                 GalleryPhoto(id = p.id.toString(), thumbUri = p.uri.toString(), dateTaken = p.dateTaken, isVideo = p.isVideo)
             }
@@ -161,7 +169,12 @@ class GalleryViewModel : ViewModel() {
     private suspend fun loadMoreFromLocal(context: Context, current: GalleryState) {
         _state.value = current.copy(loadingMore = true)
         try {
-            val next = LocalPhotoRepository.getPage(context, PAGE_SIZE, current.allPhotos.size)
+            val folderPath = activeFolderPath
+            val next = if (!folderPath.isNullOrBlank()) {
+                LocalPhotoRepository.getPageFromFolder(context, folderPath, PAGE_SIZE, current.allPhotos.size)
+            } else {
+                LocalPhotoRepository.getPage(context, PAGE_SIZE, current.allPhotos.size)
+            }
             val newPhotos = next.map { p ->
                 GalleryPhoto(id = p.id.toString(), thumbUri = p.uri.toString(), dateTaken = p.dateTaken, isVideo = p.isVideo)
             }

@@ -14,4 +14,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "PSphere"
+
+// Shared sync engine (pure Kotlin), also used by the Windows app.
+includeBuild("../shared")
 include(":app")

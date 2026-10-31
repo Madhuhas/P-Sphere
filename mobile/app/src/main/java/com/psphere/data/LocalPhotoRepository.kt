@@ -138,6 +138,76 @@ object LocalPhotoRepository {
         }
     }
 
+    /**
+     * Returns photos from a specific folder path, newest first.
+     * Uses DATA column LIKE query — works on all API levels.
+     */
+    suspend fun getPageFromFolder(
+        context: Context,
+        folderPath: String,
+        limit: Int,
+        offset: Int = 0,
+    ): List<LocalPhoto> = withContext(Dispatchers.IO) {
+        val normalized = folderPath.trimEnd('/')
+        val selection = "${MediaStore.Images.Media.DATA} LIKE ?"
+        val selectionArgs = arrayOf("$normalized/%")
+
+        val images = queryMediaStoreFiltered(context, MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            IMAGE_PROJECTION, selection, selectionArgs, isVideo = false)
+        val videos = queryMediaStoreFiltered(context, MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+            VIDEO_PROJECTION,
+            "${MediaStore.Video.Media.DATA} LIKE ?",
+            selectionArgs,
+            isVideo = true)
+
+        (images + videos)
+            .sortedByDescending { it.dateTaken }
+            .drop(offset)
+            .take(limit)
+    }
+
+    private fun queryMediaStoreFiltered(
+        context: Context,
+        uri: android.net.Uri,
+        projection: Array<String>,
+        selection: String,
+        selectionArgs: Array<String>,
+        isVideo: Boolean,
+    ): List<LocalPhoto> {
+        val projWithData = projection + arrayOf(
+            if (isVideo) MediaStore.Video.Media.DATA else MediaStore.Images.Media.DATA
+        )
+        val sortCol = if (isVideo) MediaStore.Video.Media.DATE_TAKEN else MediaStore.Images.Media.DATE_TAKEN
+        val cursor = context.contentResolver.query(
+            uri, projWithData, selection, selectionArgs, "$sortCol DESC"
+        )
+        val baseUri = if (isVideo) MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                      else        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        return buildList {
+            cursor?.use { c ->
+                val idCol   = c.getColumnIndexOrThrow(if (isVideo) MediaStore.Video.Media._ID else MediaStore.Images.Media._ID)
+                val nameCol = c.getColumnIndexOrThrow(if (isVideo) MediaStore.Video.Media.DISPLAY_NAME else MediaStore.Images.Media.DISPLAY_NAME)
+                val dateCol = c.getColumnIndexOrThrow(if (isVideo) MediaStore.Video.Media.DATE_TAKEN else MediaStore.Images.Media.DATE_TAKEN)
+                val wCol    = c.getColumnIndexOrThrow(if (isVideo) MediaStore.Video.Media.WIDTH else MediaStore.Images.Media.WIDTH)
+                val hCol    = c.getColumnIndexOrThrow(if (isVideo) MediaStore.Video.Media.HEIGHT else MediaStore.Images.Media.HEIGHT)
+                val szCol   = c.getColumnIndexOrThrow(if (isVideo) MediaStore.Video.Media.SIZE else MediaStore.Images.Media.SIZE)
+                while (c.moveToNext()) {
+                    val id = c.getLong(idCol)
+                    add(LocalPhoto(
+                        id          = id,
+                        uri         = ContentUris.withAppendedId(baseUri, id),
+                        displayName = c.getString(nameCol) ?: "",
+                        dateTaken   = c.getLong(dateCol),
+                        width       = c.getInt(wCol),
+                        height      = c.getInt(hCol),
+                        size        = c.getLong(szCol),
+                        isVideo     = isVideo,
+                    ))
+                }
+            }
+        }
+    }
+
     // Kept for compatibility with SyncOrchestrator / SyncWorker
     suspend fun getPhotos(context: Context, limit: Int = 500): List<LocalPhoto> =
         getPage(context, limit, 0)

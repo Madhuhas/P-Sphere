@@ -49,6 +49,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
+import com.psphere.network.ServerImages
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -70,7 +71,7 @@ fun PhotoViewerScreen(
 ) {
     val context = LocalContext.current
     val state   by viewModel.state.collectAsState()
-    val photos  = state.photos
+    val photos  = state.viewerPhotos
     if (photos.isEmpty()) return
 
     val pagerState = rememberPagerState(initialPage = startIndex.coerceIn(0, photos.lastIndex), pageCount = { photos.size })
@@ -78,12 +79,9 @@ fun PhotoViewerScreen(
 
     Box(Modifier.fillMaxSize().background(Color.Black).systemBarsPadding()) {
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
-            val photo = photos[page]
-            val raw   = photo.thumb_url
-            val url   = when {
-                raw.startsWith("content://") || raw.startsWith("http") -> raw
-                else -> "${com.psphere.BuildConfig.BASE_URL}${raw.replace("/sm", "/lg")}"
-            }
+            // Full-size image from the server you're signed in to (the old code always used the
+            // build's default address, so full-size photos never loaded on a real phone).
+            val url = ServerImages.large(photos[page].thumb_url) ?: photos[page].thumb_url
             ZoomablePhoto(url = url, onTap = { showChrome = !showChrome })
         }
 
@@ -104,12 +102,8 @@ fun PhotoViewerScreen(
                 // Share button — handles both content:// and http:// URLs correctly
                 IconButton(
                     onClick  = {
-                        val photo    = photos[pagerState.currentPage]
-                        val raw      = photo.thumb_url
-                        val fullUrl  = when {
-                            raw.startsWith("content://") || raw.startsWith("http") -> raw
-                            else -> "${com.psphere.BuildConfig.BASE_URL}${raw.replace("/sm", "/lg")}"
-                        }
+                        val raw     = photos[pagerState.currentPage].thumb_url
+                        val fullUrl = ServerImages.large(raw) ?: raw
 
                         val intent = if (fullUrl.startsWith("content://")) {
                             // Local file — share as stream
@@ -169,15 +163,18 @@ private fun ZoomablePhoto(url: String, onTap: () -> Unit) {
             },
         contentAlignment = Alignment.Center,
     ) {
-        AsyncImage(
-            model              = "$url?retry=$retryKey",
-            contentDescription = null,
-            onState            = { s ->
-                isLoading = s is AsyncImagePainter.State.Loading
-                isError   = s is AsyncImagePainter.State.Error
-            },
-            modifier = Modifier.fillMaxSize().graphicsLayer(scaleX = scale, scaleY = scale, translationX = offset.x, translationY = offset.y),
-        )
+        // Retry by recreating the request; a "?retry=" query would break content:// photo URIs.
+        androidx.compose.runtime.key(retryKey) {
+            AsyncImage(
+                model              = url,
+                contentDescription = "Photo",
+                onState            = { s ->
+                    isLoading = s is AsyncImagePainter.State.Loading
+                    isError   = s is AsyncImagePainter.State.Error
+                },
+                modifier = Modifier.fillMaxSize().graphicsLayer(scaleX = scale, scaleY = scale, translationX = offset.x, translationY = offset.y),
+            )
+        }
 
         if (isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(36.dp))
         if (isError) {

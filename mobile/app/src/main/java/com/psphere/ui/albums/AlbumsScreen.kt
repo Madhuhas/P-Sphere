@@ -17,11 +17,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Flight
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.PhotoAlbum
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -30,8 +35,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -42,31 +48,37 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.psphere.network.AlbumDto
+import com.psphere.network.PhotoDto
+import com.psphere.network.ServerImages
+import com.psphere.ui.components.EmptyState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlbumsScreen(viewModel: AlbumsViewModel = viewModel()) {
+fun AlbumsScreen(
+    viewModel: AlbumsViewModel = viewModel(),
+    onOpenPhoto: (photos: List<PhotoDto>, index: Int) -> Unit = { _, _ -> },
+) {
     val context = LocalContext.current
     val state   by viewModel.state.collectAsState()
 
     LaunchedEffect(Unit) { if (state.albums.isEmpty()) viewModel.load(context) }
 
-    // ── Album detail overlay ──────────────────────────────────────────────────
     val openAlbum = state.openAlbum
     if (openAlbum != null) {
         AlbumDetailScreen(
-            album     = openAlbum,
-            photos    = state.albumPhotos,
-            loading   = state.albumPhotosLoading,
-            onBack    = { viewModel.closeAlbum() },
+            album       = openAlbum,
+            photos      = state.albumPhotos,
+            loading     = state.albumPhotosLoading,
+            onBack      = { viewModel.closeAlbum() },
+            onOpenPhoto = onOpenPhoto,
         )
         return
     }
@@ -77,77 +89,89 @@ fun AlbumsScreen(viewModel: AlbumsViewModel = viewModel()) {
                 title = { Text("Albums") },
                 actions = {
                     IconButton(
-                        onClick  = { viewModel.generateSmartAlbums(context) },
-                        enabled  = !state.generatingSmartAlbums,
+                        onClick = { viewModel.generateSmartAlbums(context) },
+                        enabled = !state.generatingSmartAlbums,
                     ) {
                         if (state.generatingSmartAlbums) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {
-                            Icon(Icons.Default.AutoAwesome, "Generate smart albums", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.AutoAwesome, "Create smart albums", tint = MaterialTheme.colorScheme.primary)
                         }
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
+        val inner = Modifier.fillMaxSize().padding(padding)
         when {
-            state.loading -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-
-            state.error.isNotEmpty() -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text(state.error, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center, modifier = Modifier.padding(24.dp))
-            }
-
-            state.albums.isEmpty() -> EmptyAlbumsState(
-                onGenerate = { viewModel.generateSmartAlbums(context) },
-                generating = state.generatingSmartAlbums,
-                modifier   = Modifier.fillMaxSize().padding(padding),
-            )
-
-            else -> PullToRefreshBox(
-                isRefreshing = false,
-                onRefresh    = { viewModel.refresh(context) },
-                modifier     = Modifier.fillMaxSize().padding(padding),
+            state.loading -> Box(inner, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            state.error.isNotEmpty() -> EmptyState(
+                icon     = Icons.Default.PhotoAlbum,
+                title    = "Albums aren't available",
+                body     = state.error,
+                modifier = inner,
+            ) { OutlinedButton(onClick = { viewModel.refresh(context) }) { Text("Try again") } }
+            state.albums.isEmpty() -> EmptyState(
+                icon     = Icons.Default.PhotoAlbum,
+                title    = "No albums yet",
+                body     = "PSphere can group your photos into trips, people, pets and places for you.",
+                modifier = inner,
             ) {
-                LazyVerticalGrid(
-                    columns               = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement   = Arrangement.spacedBy(8.dp),
-                    modifier              = Modifier.fillMaxSize().padding(horizontal = 12.dp),
-                ) {
-                    item(span = { GridItemSpan(2) }) { Spacer(Modifier.height(4.dp)) }
-
-                    items(state.albums, key = { it.id }) { album ->
-                        AlbumCard(
-                            album   = album,
-                            onClick = { viewModel.openAlbum(context, album) },
-                        )
+                Button(onClick = { viewModel.generateSmartAlbums(context) }, enabled = !state.generatingSmartAlbums) {
+                    if (state.generatingSmartAlbums) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    } else {
+                        Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.size(18.dp))
                     }
-
-                    item(span = { GridItemSpan(2) }) { Spacer(Modifier.height(12.dp)) }
+                    Spacer(Modifier.width(8.dp))
+                    Text("Create smart albums")
+                }
+            }
+            else -> PullToRefreshBox(isRefreshing = false, onRefresh = { viewModel.refresh(context) }, modifier = inner) {
+                LazyVerticalGrid(
+                    columns               = GridCells.Adaptive(minSize = 140.dp),  // two columns even on 360dp phones
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement   = Arrangement.spacedBy(12.dp),
+                    modifier              = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                ) {
+                    item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(4.dp)) }
+                    items(state.albums, key = { it.id }) { album ->
+                        AlbumCard(album = album, onClick = { viewModel.openAlbum(context, album) })
+                    }
+                    item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(12.dp)) }
                 }
             }
         }
     }
 }
 
+private fun albumType(type: String): Pair<ImageVector, String>? = when (type) {
+    "trip"   -> Icons.Default.Flight to "Trip"
+    "people" -> Icons.Default.People to "People"
+    "pets"   -> Icons.Default.Pets to "Pets"
+    "place"  -> Icons.Default.Place to "Place"
+    "smart"  -> Icons.Default.AutoAwesome to "Smart"
+    else     -> null
+}
+
 @Composable
 private fun AlbumCard(album: AlbumDto, onClick: () -> Unit) {
     Card(
-        modifier  = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(2.dp),
+        onClick  = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors   = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1.4f)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .aspectRatio(1.3f)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
-                if (album.cover_url != null) {
+                val cover = ServerImages.absolute(album.cover_url)
+                if (cover != null) {
                     AsyncImage(
-                        model              = album.cover_url,
+                        model              = cover,
                         contentDescription = null,
                         contentScale       = ContentScale.Crop,
                         modifier           = Modifier.fillMaxSize(),
@@ -156,60 +180,35 @@ private fun AlbumCard(album: AlbumDto, onClick: () -> Unit) {
                     Icon(
                         Icons.Default.PhotoAlbum,
                         contentDescription = null,
-                        tint     = Color.Gray,
+                        tint     = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(40.dp).align(Alignment.Center),
                     )
                 }
-                // Type badge
-                val typeLabel = when (album.type) {
-                    "trip"   -> "✈ Trip"
-                    "people" -> "👤 People"
-                    "pets"   -> "🐾 Pets"
-                    "place"  -> "📍 Place"
-                    "smart"  -> "✨ Smart"
-                    else     -> null
-                }
-                if (typeLabel != null) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(6.dp)
-                            .background(Color.Black.copy(alpha = .55f), MaterialTheme.shapes.small)
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                albumType(album.type)?.let { (icon, label) ->
+                    Surface(
+                        shape    = MaterialTheme.shapes.small,
+                        color    = Color.Black.copy(alpha = .55f),
+                        modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
                     ) {
-                        Text(typeLabel, style = MaterialTheme.typography.labelSmall, color = Color.White)
+                        Row(
+                            modifier              = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            verticalAlignment     = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(icon, null, tint = Color.White, modifier = Modifier.size(14.dp))
+                            Text(label, style = MaterialTheme.typography.labelSmall, color = Color.White)
+                        }
                     }
                 }
             }
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(album.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("${album.photo_count} photo${if (album.photo_count != 1) "s" else ""}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(album.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    "${album.photo_count} photo${if (album.photo_count != 1) "s" else ""}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-        }
-    }
-}
-
-@Composable
-private fun EmptyAlbumsState(onGenerate: () -> Unit, generating: Boolean, modifier: Modifier = Modifier) {
-    Column(
-        modifier            = modifier.padding(40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(Icons.Default.PhotoAlbum, null, tint = Color.Gray, modifier = Modifier.size(64.dp))
-        Spacer(Modifier.height(20.dp))
-        Text("No albums yet", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
-        Text("Tap the ✨ button to auto-generate albums from your photos using AI.", style = MaterialTheme.typography.bodySmall, color = Color.Gray, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onGenerate, enabled = !generating) {
-            if (generating) {
-                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                Spacer(Modifier.width(8.dp))
-            }
-            Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text("Generate Smart Albums")
         }
     }
 }
@@ -218,42 +217,44 @@ private fun EmptyAlbumsState(onGenerate: () -> Unit, generating: Boolean, modifi
 @Composable
 private fun AlbumDetailScreen(
     album: AlbumDto,
-    photos: List<com.psphere.network.PhotoDto>,
+    photos: List<PhotoDto>,
     loading: Boolean,
     onBack: () -> Unit,
+    onOpenPhoto: (List<PhotoDto>, Int) -> Unit,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title       = { Text(album.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                    }
-                }
+                title          = { Text(album.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
             )
-        }
+        },
     ) { padding ->
+        val inner = Modifier.fillMaxSize().padding(padding)
         when {
-            loading -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            photos.isEmpty() -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No photos in this album", color = Color.Gray)
-            }
+            loading -> Box(inner, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            photos.isEmpty() -> EmptyState(
+                icon     = Icons.Default.PhotoAlbum,
+                title    = "This album is empty",
+                body     = "There are no photos in this album yet.",
+                modifier = inner,
+            )
             else -> LazyVerticalGrid(
-                columns               = GridCells.Fixed(3),
+                columns               = GridCells.Adaptive(minSize = 110.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalArrangement   = Arrangement.spacedBy(2.dp),
-                modifier              = Modifier.fillMaxSize().padding(padding),
+                modifier              = inner,
             ) {
-                items(photos, key = { it.id }) { photo ->
+                itemsIndexed(photos, key = { _, p -> p.id }) { index, photo ->
                     Box(
                         modifier = Modifier
                             .aspectRatio(1f)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .clickable(onClickLabel = "Open photo") { onOpenPhoto(photos, index) },
                     ) {
                         AsyncImage(
-                            model              = photo.thumb_url,
-                            contentDescription = null,
+                            model              = ServerImages.absolute(photo.thumb_url),
+                            contentDescription = "Photo",
                             contentScale       = ContentScale.Crop,
                             modifier           = Modifier.fillMaxSize(),
                         )

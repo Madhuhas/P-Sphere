@@ -7,8 +7,11 @@ dist/
 
 # Android / Gradle
 mobile/build/
+mobile/app/build/
 mobile/.gradle/
+mobile/.kotlin/
 mobile/local.properties
+mobile/keystore.properties
 *.keystore
 *.jks
 mobile/app/release/
@@ -28,3 +31,8 @@ desktop.ini
 # Logs
 *.log
 npm-debug.log*
+
+# Shared core (standalone Gradle build)
+shared/build/
+shared/.gradle/
+shared/.kotlin/
