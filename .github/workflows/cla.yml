@@ -1,7 +1,7 @@
 # Asks each new contributor to sign CLA.md once, by posting one sentence on their pull request.
 # Signatures are stored in signatures/version1/cla.json on the branch below (created on the first
 # signature; do not create it by hand). The bot adds ordinary commits there, so the branch may block
-# force-pushes and deletion (the "Keep main's history" ruleset does), but must not require pull requests
+# force-pushes and deletion (the "Keep the default branch's history" ruleset does), but must not require pull requests
 # or status checks, or the bot cannot write.
 name: CLA
 
@@ -28,7 +28,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           path-to-signatures: signatures/version1/cla.json
-          path-to-document: ${{ github.server_url }}/${{ github.repository }}/blob/main/CLA.md
-          branch: main
+          path-to-document: ${{ github.server_url }}/${{ github.repository }}/blob/HEAD/CLA.md
+          branch: p2p-v3
           allowlist: bot*
-          custom-notsigned-prcomment: 'Thank you for your contribution. Before it can be merged, please read the [Contributor License Agreement](${{ github.server_url }}/${{ github.repository }}/blob/main/CLA.md) and sign it by posting the comment below. You keep the copyright in your work, and the project promises it will always stay open source. You only need to do this once.'
+          custom-notsigned-prcomment: 'Thank you for your contribution. Before it can be merged, please read the [Contributor License Agreement](${{ github.server_url }}/${{ github.repository }}/blob/HEAD/CLA.md) and sign it by posting the comment below. You keep the copyright in your work, and the project promises it will always stay open source. You only need to do this once.'
