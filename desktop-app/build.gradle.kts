@@ -27,7 +27,7 @@ dependencies {
     implementation(compose.materialIconsExtended)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.1")
     // Finding linked devices on the network (mDNS), like Android's NSD.
-    implementation("org.jmdns:jmdns:3.5.9")
+    implementation("org.jmdns:jmdns:3.6.4")
     implementation("org.slf4j:slf4j-nop:2.0.16")
     // The QR code shown on Link a device.
     implementation("com.google.zxing:core:3.5.3")
