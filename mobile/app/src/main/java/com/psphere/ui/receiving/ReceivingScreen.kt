@@ -29,12 +29,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.psphere.backup.Engine
+import com.psphere.backup.SafFolder
 import com.psphere.core.node.KeptGroup
 import com.psphere.ui.components.ContentColumn
 import com.psphere.ui.components.SectionLabel
@@ -71,7 +75,15 @@ fun ReceivingScreen() {
             previewBytes = node.previews.totalBytes(),
         )
     }
+    var pickError by remember { mutableStateOf<String?>(null) }
     val pick = rememberFolderPicker { uri ->
+        // Backups saved inside a folder this device sends would be sent back out to other devices.
+        val clash = Engine.node.ownRules().firstOrNull { (_, local) -> SafFolder.overlaps(uri.toString(), local.location) }
+        if (clash != null) {
+            pickError = "You back up “${clash.first.label}” from this folder, so backups can't be saved here. Choose a different folder."
+            return@rememberFolderPicker
+        }
+        pickError = null
         scope.launch(Dispatchers.IO) { Engine.node.setBackupLocation(uri.toString()); Engine.bump() }
     }
     val cs = MaterialTheme.colorScheme
@@ -98,6 +110,7 @@ fun ReceivingScreen() {
                                 )
                             }
                         }
+                        pickError?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.error) }
                         OutlinedButton(onClick = pick, modifier = Modifier.fillMaxWidth()) {
                             Text(if (data.location == null) "Choose folder" else "Change folder")
                         }

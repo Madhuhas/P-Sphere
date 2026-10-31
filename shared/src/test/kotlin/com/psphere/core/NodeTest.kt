@@ -214,6 +214,34 @@ class NodeTest {
         assertEquals(0, phone.node.scan().changed)
     }
 
+    @Test fun newFilesAreSentWhenTheOtherDeviceStartsTheSync() {
+        phone.linkTo(laptop)
+        val backups = laptop.receiveInto()
+        val camera = phone.folder("Camera").apply { write("a.jpg", "A") }
+        phone.backUp("Camera", camera, listOf(laptop))
+        phone.node.scan()
+
+        // The phone hasn't scanned since b.jpg appeared; the laptop starts the sync.
+        camera.write("b.jpg", "B")
+        val r = laptop.syncWith(phone)
+        assertNull(r.error)
+        assertEquals(2, r.received)
+        assertEquals("B", backups.text("Phone/Camera/b.jpg"))
+    }
+
+    @Test fun aScanThatRunsOutOfTimeMarksNothingDeleted() {
+        val camera = phone.folder("Camera").apply { write("a.jpg", "A") }
+        phone.backUp("Camera", camera, emptyList())
+        phone.node.scan()
+        camera.write("b.jpg", "B")
+
+        val partial = phone.node.scan(budgetMs = 0)
+        assertEquals(0, partial.changed)
+        assertEquals(0, partial.deleted)
+        assertEquals(1, phone.node.catalog.items(phone.id).count { it.state == ItemState.PRESENT })
+        assertEquals(1, phone.node.scan().changed)
+    }
+
     // ── Problems ─────────────────────────────────────────────────────────────
 
     @Test fun anInterruptedFileResumesWhereItStopped() {

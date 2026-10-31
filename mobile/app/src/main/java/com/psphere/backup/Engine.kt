@@ -2,6 +2,8 @@ package com.psphere.backup
 
 import android.content.Context
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import com.psphere.core.node.CodeConfirmer
@@ -82,6 +84,22 @@ object Engine {
 
     val isStarted: Boolean get() = ::node.isInitialized
 
+    /** True once [start] has finished. Screens read [node], so nothing is shown before this. */
+    private val _ready = MutableStateFlow(false)
+    val ready: StateFlow<Boolean> = _ready
+
+    /**
+     * Starts the engine without blocking the caller. Loading the catalog, creating the identity
+     * and opening the server can take seconds, which on the main thread freezes the app.
+     */
+    fun startInBackground(context: Context) {
+        scope.launch {
+            // A failed start would otherwise leave the splash screen up forever; crash visibly instead.
+            runCatching { start(context) }.onFailure { e -> Handler(Looper.getMainLooper()).post { throw e } }
+        }
+    }
+
+    /** Starts the engine on the calling thread. Blocks; never call it on the main thread. */
     @Synchronized
     fun start(context: Context) {
         if (isStarted) return
@@ -107,6 +125,7 @@ object Engine {
                 if (onlineLinked().isNotEmpty()) backUp(quiet = true)
             }
         }
+        _ready.value = true
     }
 
     private fun defaultDeviceName(ctx: Context): String =

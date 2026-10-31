@@ -119,10 +119,12 @@ class ReadyService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Engine.start(applicationContext)
-        val n = Notifications.build(this, "Ready to back up", "Your other devices can back up to ${Engine.node.deviceName} on this Wi-Fi")
+        // Runs on the main thread: show the notification now and start the engine in the background.
+        val name = if (Engine.ready.value) Engine.node.deviceName else "this device"
+        val n = Notifications.build(this, "Ready to back up", "Your other devices can back up to $name on this Wi-Fi")
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0
         ServiceCompat.startForeground(this, Notifications.ID_READY, n, type)
+        Engine.startInBackground(applicationContext)
         return START_STICKY
     }
 

@@ -11,7 +11,7 @@ class PSphereApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Notifications.ensureChannel(this)
-        Engine.start(this)
+        Engine.startInBackground(this)
         BackupScheduler.schedule(this)
         if (Prefs.stayReady(this)) runCatching { ReadyService.start(this) }
     }

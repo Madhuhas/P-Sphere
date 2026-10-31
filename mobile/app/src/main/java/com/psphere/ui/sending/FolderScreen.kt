@@ -70,11 +70,23 @@ fun FolderScreen(ruleId: String?, onBack: () -> Unit, onLinkDevice: () -> Unit) 
     var include by remember { mutableStateOf(existing?.include ?: Include.MEDIA) }
     var showInLibrary by remember { mutableStateOf(existing?.showInLibrary ?: true) }
     var confirmRemove by remember { mutableStateOf(false) }
+    var pickError by remember { mutableStateOf<String?>(null) }
+    // The name the folder itself suggests; replaced when the folder changes, unless the user renamed it.
+    var suggestedLabel by remember { mutableStateOf(locationText?.substringAfterLast('/')) }
 
     val pick = rememberFolderPicker { uri ->
+        // Sending the Receiving folder (or a folder around it) would send other devices' backups back out.
+        val backups = node.state.backupLocation
+        if (backups != null && SafFolder.overlaps(uri.toString(), backups)) {
+            pickError = "Backups from your other devices are saved in this folder (see Receiving). Choose a different folder."
+            return@rememberFolderPicker
+        }
+        pickError = null
         location = uri
         locationText = SafFolder.describe(uri)
-        if (label.isBlank()) label = folderLabelFromUri(uri)
+        val suggested = folderLabelFromUri(uri)
+        if (label.isBlank() || label == suggestedLabel) label = suggested
+        suggestedLabel = suggested
     }
     val canSave = label.isNotBlank() && (existing != null || location != null)
 
@@ -127,6 +139,7 @@ fun FolderScreen(ruleId: String?, onBack: () -> Unit, onLinkDevice: () -> Unit) 
                                 modifier = Modifier.weight(1f),
                             )
                         }
+                        pickError?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = cs.error) }
                         OutlinedButton(onClick = pick, modifier = Modifier.fillMaxWidth()) {
                             Text(if (locationText == null) "Choose folder" else "Change folder")
                         }

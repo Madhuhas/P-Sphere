@@ -199,5 +199,19 @@ class SafFolder(context: Context, val treeUri: Uri) : Folder {
         }
 
         fun describe(uri: Uri): String = runCatching { describe(DocumentsContract.getTreeDocumentId(uri)) }.getOrDefault(uri.toString())
+
+        /**
+         * True if two folder locations (tree URIs) are the same folder or one is inside the other,
+         * e.g. "primary:Pictures" and "primary:Pictures/PSphere".
+         */
+        fun overlaps(a: String, b: String): Boolean {
+            val ua = Uri.parse(a); val ub = Uri.parse(b)
+            if (ua.authority != ub.authority) return false
+            val x = runCatching { DocumentsContract.getTreeDocumentId(ua) }.getOrNull() ?: return false
+            val y = runCatching { DocumentsContract.getTreeDocumentId(ub) }.getOrNull() ?: return false
+            // A volume root's ID ends in ':' ("primary:"); its children are "primary:DCIM".
+            fun inside(child: String, parent: String) = child.startsWith(if (parent.endsWith(":")) parent else "$parent/")
+            return x == y || inside(x, y) || inside(y, x)
+        }
     }
 }

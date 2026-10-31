@@ -111,6 +111,7 @@ class Node(
 
     @Volatile private var kept: KeptStore? = null
     private val peerLocks = ConcurrentHashMap<String, ReentrantLock>()
+    private val scanLock = ReentrantLock()
 
     /** Called (on any thread) whenever something the UI shows may have changed. */
     @Volatile var onChange: (() -> Unit)? = null
@@ -291,17 +292,31 @@ class Node(
 
     // ── Scanning ─────────────────────────────────────────────────────────────
 
-    /** Updates the catalog from this device's backup folders. Only changed files are re-read. */
-    fun scan(onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }): ScanResult {
+    /**
+     * Updates the catalog from this device's backup folders. Only changed files are re-read.
+     * With [budgetMs], stops reading new files once the time is up; what was read is kept, and
+     * nothing is marked deleted, since files not yet looked at may still be there.
+     */
+    fun scan(budgetMs: Long? = null, onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }): ScanResult {
+        scanLock.lock()
+        try { return scanLocked(budgetMs, onProgress) } finally { scanLock.unlock() }
+    }
+
+    private fun scanLocked(budgetMs: Long?, onProgress: (done: Int, total: Int) -> Unit): ScanResult {
+        val deadline = budgetMs?.let { System.nanoTime() + it * 1_000_000 }
+        fun outOfTime() = deadline != null && System.nanoTime() > deadline
         var files = 0; var changed = 0; var deleted = 0
         val errors = ArrayList<String>()
         for ((rule, local) in ownRules()) {
+            if (outOfTime()) break
             val folder = platform.openFolder(local.location)
             if (folder == null) { errors += "Can't open the folder for “${rule.label}”. Choose it again in Sending."; continue }
             val listed = try { folder.list() } catch (e: Exception) { errors += "Can't read “${rule.label}”: ${e.message}"; continue }
             val wanted = listed.filter { rule.include == Include.ALL || Media.of(it.relPath) != Media.OTHER }
             val seen = HashSet<String>()
+            var complete = true
             wanted.forEachIndexed { i, f ->
+                if (!complete) return@forEachIndexed
                 onProgress(i, wanted.size)
                 seen += f.relPath
                 files++
@@ -310,6 +325,7 @@ class Node(
                     refreshHold(existing.hash)
                     return@forEachIndexed
                 }
+                if (outOfTime()) { complete = false; return@forEachIndexed }
                 val hash = runCatching { folder.openRead(f.relPath).use(::sha256Hex) }.getOrElse {
                     errors += "Couldn't read ${f.relPath}: ${it.message}"
                     return@forEachIndexed
@@ -323,6 +339,7 @@ class Node(
                 changed++
             }
             onProgress(wanted.size, wanted.size)
+            if (!complete) break
             catalog.items(id).filter { it.ruleId == rule.ruleId && it.relPath !in seen && it.state == ItemState.PRESENT }.forEach {
                 catalog.putOwn(it.copy(state = ItemState.DELETED))
                 refreshHold(it.hash)
@@ -523,6 +540,11 @@ class Node(
      * refusing here would make both fail. Running both is safe because downloads are claimed per file.
      */
     private fun serveSync(wire: Wire, dev: LinkedDevice, peerVector: Map<String, Long>) {
+        // Pick up files added since this device last looked, so the other device gets them now.
+        // Time-limited because it is waiting for a reply; skipped if a scan is already running.
+        if (scanLock.tryLock()) {
+            try { runCatching { scanLocked(SERVE_SCAN_BUDGET_MS) { _, _ -> } } } finally { scanLock.unlock() }
+        }
         try {
             Session(this, wire, dev, initiator = false, onProgress = {}, firstPeerVector = peerVector).run()
             markSynced(dev.id)
@@ -833,6 +855,8 @@ class Node(
 
     companion object {
         const val SESSION_TIMEOUT_MS = 60_000
+        /** Well under [SESSION_TIMEOUT_MS], which the other device waits for the first reply. */
+        const val SERVE_SCAN_BUDGET_MS = 20_000L
         const val PAIRING_TIMEOUT_MS = 180_000
         const val PAIRING_WINDOW_MS = 10 * 60_000L
     }
