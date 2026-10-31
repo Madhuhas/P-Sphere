@@ -217,7 +217,7 @@ object Engine {
     /** Only syncs that moved files, or that went wrong, are worth interrupting someone for. */
     private fun noticeFor(r: SyncResult): Notice? = when {
         r.error != null -> null
-        r.notes.any { "full" in it.lowercase() } -> Notice("Not enough space", r.notes.first { "full" in it.lowercase() }, warning = true)
+        r.notes.any { "out of space" in it } -> Notice("Running out of space", r.notes.first { "out of space" in it }, warning = true)
         r.received > 0 && r.sent > 0 -> Notice("Backed up with ${r.peerName}", "Received ${filesText(r.received)}, sent ${filesText(r.sent)}.")
         r.received > 0 -> Notice("Backed up ${filesText(r.received)} from ${r.peerName}", "They're in ${node.backupFolder()?.displayName ?: "your backup location"}.")
         r.sent > 0 -> Notice("Sent ${filesText(r.sent)} to ${r.peerName}", "${r.peerName} is up to date.")
