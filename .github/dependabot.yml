@@ -13,3 +13,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
+  - package-ecosystem: gradle
+    directory: /desktop-app
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5

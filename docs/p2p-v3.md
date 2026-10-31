@@ -2,7 +2,7 @@
 
 > **In one line:** Google Photos, but your own devices are the cloud. Nothing leaves your home network.
 
-Status: **approved** (2026-10-25). Steps 1 and 2 are built; see section 8.
+Status: **approved** (2026-10-25). Steps 1, 2 and 3 are built; see section 8.
 Scope: local backup between your own devices on the same Wi-Fi. No server and no internet.
 
 ---

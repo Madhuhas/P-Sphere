@@ -6,7 +6,7 @@
 
 **Website:** [psphere.pages.dev](https://psphere.pages.dev) · **Community:** [discussions](https://github.com/Madhuhas/P-Sphere/discussions)
 
-> **Early development.** The Android app works and has been tested on an emulator; the Windows app is not built yet. Expect rough edges, and please report what breaks.
+> **Early development.** The Android and Windows apps work and have been tested with a simulated device; they haven't been tried on real phones yet. Expect rough edges, and please report what breaks.
 
 Google Photos, but your own devices are the cloud. PSphere backs up folders between your phone, tablet and Windows laptop over your home Wi-Fi. There's no server, no account and no internet involved.
 
@@ -23,7 +23,7 @@ The full design is in [docs/p2p-v3.md](docs/p2p-v3.md).
 |---|---|---|
 | 1 | Shared core: protocol, encryption, rules, relay, resume, catalog | Done, 38 tests |
 | 2 | Android app: linking, Sending, Receiving, Devices | Built and tested on an emulator; real-device testing next |
-| 3 | Windows app | Not started |
+| 3 | Windows app: the same screens, tray icon, start with Windows, installer | Built and tested against the test device; real-device testing next |
 | 4 | Photos library across devices, Free up space, polish | Not started |
 
 ## Project layout
@@ -31,6 +31,8 @@ The full design is in [docs/p2p-v3.md](docs/p2p-v3.md).
 ```
 shared/          Pure-Kotlin core used by every app (package com.psphere.core)
 mobile/          Android app (Kotlin, Jetpack Compose, package com.psphere)
+desktop-app/     Windows app (Kotlin, Compose for Desktop, package com.psphere.desktop)
+  preview/windows.html  Clickable mock of the Windows screens
   preview/v3.html  Clickable mock of the Android screens
 docs/p2p-v3.md   The spec
 .github/         Issue and discussion forms, tests (Actions), Dependabot
@@ -51,6 +53,18 @@ cd shared
 # Android app: debug APK at mobile/app/build/outputs/apk/debug/app-debug.apk
 cd mobile
 ./gradlew assembleDebug
+
+# Windows app: run it from the source code
+cd desktop-app
+./gradlew run                      # add -PdataDir=<folder> to keep your real data untouched
+```
+
+To package the Windows app you need a full JDK 17 or newer (Android Studio's lacks `jpackage`):
+
+```sh
+cd desktop-app
+./gradlew createDistributable      # PSphere.exe in build/compose/binaries/main/app/PSphere
+./gradlew packageMsi               # the installer, in build/compose/binaries/main/msi
 ```
 
 On Windows, Gradle sometimes fails with "Unable to delete directory …/build/…". Running `attrib -r "build\*" /s /d` (or `app\build\*` in `mobile/`) fixes it.

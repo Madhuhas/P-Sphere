@@ -36,3 +36,8 @@ npm-debug.log*
 shared/build/
 shared/.gradle/
 shared/.kotlin/
+
+# Windows app (standalone Gradle build)
+desktop-app/build/
+desktop-app/.gradle/
+desktop-app/.kotlin/

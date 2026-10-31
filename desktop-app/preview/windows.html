@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PSphere Windows Preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&family=Roboto+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0">
+<style>
+/* Page chrome (outside the window) */
+:root { --page-bg:#eef0f5; --page-fg:#1b1d22; --page-muted:#5d616b; --page-card:#fff; --page-line:#d9dce3; --page-accent:#1565C0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page-bg:#0b0d11; --page-fg:#e1e2e8; --page-muted:#9a9ea8; --page-card:#16191e; --page-line:#2a2e35; --page-accent:#A9C7FF; } }
+:root[data-theme="dark"] { --page-bg:#0b0d11; --page-fg:#e1e2e8; --page-muted:#9a9ea8; --page-card:#16191e; --page-line:#2a2e35; --page-accent:#A9C7FF; }
+
+/* App colour scheme: the same as the Android app (mobile/…/ui/theme/Theme.kt) */
+.app-theme.light { --primary:#1565C0; --onPrimary:#fff; --primaryContainer:#D6E3FF; --onPrimaryContainer:#001B3E;
+  --secondaryContainer:#D7E3F8; --onSecondaryContainer:#101C2B; --surface:#F8F9FE; --onSurface:#191C20;
+  --onSurfaceVariant:#43474E; --outline:#73777F; --outlineVariant:#C3C6CF; --error:#BA1A1A; --onError:#fff;
+  --scLow:#F2F3F9; --sc:#ECEEF4; --scHigh:#E6E8EE; --scHighest:#E1E2E8;
+  --success:#1B6D2F; --successContainer:#D3F5D6; --onSuccessContainer:#002109;
+  --warning:#8A5100; --warningContainer:#FFDDB8; --onWarningContainer:#2C1600; }
+.app-theme.dark { --primary:#A9C7FF; --onPrimary:#003063; --primaryContainer:#00468C; --onPrimaryContainer:#D6E3FF;
+  --secondaryContainer:#3B4858; --onSecondaryContainer:#D7E3F8; --surface:#111318; --onSurface:#E1E2E8;
+  --onSurfaceVariant:#C3C6CF; --outline:#8D9199; --outlineVariant:#43474E; --error:#FFB4AB; --onError:#690005;
+  --scLow:#191C20; --sc:#1D2024; --scHigh:#282A2F; --scHighest:#33353A;
+  --success:#8BD89A; --successContainer:#0B5321; --onSuccessContainer:#A6F4B4;
+  --warning:#FFB866; --warningContainer:#693C00; --onWarningContainer:#FFDDB8; }
+
+* { box-sizing:border-box; }
+body { margin:0; background:var(--page-bg); color:var(--page-fg); font-family:Roboto, system-ui, sans-serif; }
+.layout { display:flex; gap:24px; justify-content:center; align-items:flex-start; padding:24px 16px 48px; flex-wrap:wrap; }
+.panel { width:300px; max-width:100%; background:var(--page-card); border:1px solid var(--page-line); border-radius:16px; padding:18px; position:sticky; top:16px; }
+.panel h1 { font-size:18px; margin:0 0 4px; }
+.panel p.sub { margin:0 0 14px; color:var(--page-muted); font-size:13px; line-height:1.45; }
+.panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--page-muted); margin:16px 0 8px; font-weight:500; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chips button { font:inherit; font-size:13px; border:1px solid var(--page-line); background:transparent; color:var(--page-fg); padding:5px 10px; border-radius:8px; cursor:pointer; }
+.chips button.on { background:var(--page-accent); border-color:var(--page-accent); color:var(--page-bg); }
+.note { font-size:12px; color:var(--page-muted); line-height:1.45; margin-top:14px; }
+.stage-wrap { max-width:100%; overflow-x:auto; }
+
+/* The desktop: wallpaper, window and taskbar */
+.desktop { width:1120px; height:800px; border-radius:12px; overflow:hidden; position:relative; display:flex; flex-direction:column;
+  background:linear-gradient(135deg, #3a5a8c 0%, #6d86b3 45%, #a7b6d4 100%); box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.desktop.small { width:820px; }
+.desk-area { flex:1; position:relative; display:flex; align-items:center; justify-content:center; min-height:0; }
+.window { width:1040px; height:690px; border-radius:8px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.35); display:flex; flex-direction:column; }
+.desktop.small .window { width:760px; }
+.titlebar { height:32px; flex:none; display:flex; align-items:center; background:var(--sc); color:var(--onSurface); font-size:12px; user-select:none; }
+.titlebar .appicon { width:16px; height:16px; border-radius:4px; background:#1565C0; color:#fff; font:600 10px/16px Roboto, sans-serif; text-align:center; margin:0 10px 0 12px; }
+.titlebar .grow { flex:1; }
+.titlebar button { width:46px; height:32px; border:none; background:transparent; color:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.titlebar button:hover { background:color-mix(in srgb, var(--onSurface) 10%, transparent); }
+.titlebar button.close:hover { background:#c42b1c; color:#fff; }
+.titlebar .ms { font-size:16px; }
+
+.taskbar { height:48px; flex:none; background:rgba(32,32,36,.92); color:#fff; display:flex; align-items:center; padding:0 12px; gap:6px; font-size:12px; }
+.taskbar .grow { flex:1; }
+.taskbar .tb { width:40px; height:40px; border-radius:6px; display:flex; align-items:center; justify-content:center; position:relative; cursor:pointer; border:none; background:transparent; color:#fff; }
+.taskbar .tb:hover, .taskbar .tb.on { background:rgba(255,255,255,.1); }
+.taskbar .tb.running::after { content:''; position:absolute; bottom:2px; width:16px; height:3px; border-radius:2px; background:#A9C7FF; }
+.taskbar .clock { text-align:right; line-height:1.3; padding:0 8px; }
+.trayicon { width:24px; height:24px; border-radius:6px; background:#1565C0; color:#fff; font:600 12px/24px Roboto, sans-serif; text-align:center; position:relative; }
+.trayicon .dot { position:absolute; right:-3px; bottom:-3px; width:11px; height:11px; border-radius:50%; border:2px solid #202024; }
+.tip { position:absolute; bottom:56px; right:120px; background:#2b2b2f; color:#fff; font-size:12px; padding:6px 10px; border-radius:6px; border:1px solid #444; white-space:nowrap; }
+
+.traymenu { position:absolute; bottom:56px; right:96px; width:260px; background:#2b2b2f; color:#fff; border:1px solid #444; border-radius:8px; padding:4px; font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:20; }
+.traymenu .head { padding:10px 12px 8px; }
+.traymenu .head .s { color:#bbb; font-size:12px; margin-top:2px; }
+.traymenu button { display:flex; align-items:center; gap:10px; width:100%; text-align:left; font:inherit; color:inherit; background:transparent; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; }
+.traymenu button:hover { background:rgba(255,255,255,.08); }
+.traymenu .ms { font-size:18px; width:18px; }
+.traymenu .sep { height:1px; background:#444; margin:4px 0; }
+
+.toast { position:absolute; right:12px; bottom:60px; width:360px; background:#2b2b2f; color:#fff; border:1px solid #444; border-radius:8px; padding:12px 14px; font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:15; }
+.toast .from { display:flex; align-items:center; gap:8px; color:#ccc; font-size:12px; margin-bottom:8px; }
+.toast .from .trayicon { width:16px; height:16px; font-size:9px; line-height:16px; border-radius:4px; }
+.toast .t { font-weight:600; margin-bottom:2px; }
+.toast .b { color:#ddd; }
+.toast .x { position:absolute; top:8px; right:8px; border:none; background:transparent; color:#bbb; cursor:pointer; }
+
+/* App layout inside the window */
+.app { flex:1; min-height:0; display:flex; background:var(--surface); color:var(--onSurface); font-size:14px; position:relative; }
+.drawer { width:232px; flex:none; background:var(--sc); display:flex; flex-direction:column; padding:12px; gap:2px; }
+.desktop.small .drawer { width:80px; padding:12px 8px; align-items:center; }
+.drawer .me { padding:8px 12px 16px; }
+.desktop.small .drawer .me { display:none; }
+.drawer button { font:inherit; font-size:14px; font-weight:500; height:48px; border:none; border-radius:24px; background:transparent; color:var(--onSurfaceVariant); display:flex; align-items:center; gap:12px; padding:0 16px; cursor:pointer; width:100%; }
+.drawer button:hover { background:color-mix(in srgb, var(--onSurface) 6%, transparent); }
+.drawer button.on { background:var(--secondaryContainer); color:var(--onSecondaryContainer); }
+.desktop.small .drawer button { width:56px; padding:0; justify-content:center; }
+.desktop.small .drawer button span.l { display:none; }
+.drawer .foot { margin-top:auto; padding:8px 12px; }
+.desktop.small .drawer .foot { display:none; }
+.screen { flex:1; display:flex; flex-direction:column; min-width:0; }
+.topbar { height:64px; flex:none; display:flex; align-items:center; gap:4px; padding:0 16px 0 28px; font-size:22px; }
+.topbar.back { padding-left:12px; }
+.topbar .t { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.scroll { flex:1; overflow-y:auto; scrollbar-width:thin; }
+.col { max-width:760px; padding:4px 28px 28px; display:flex; flex-direction:column; gap:12px; }
+.col.tight { gap:8px; }
+.grid2 { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+.desktop.small .grid2 { grid-template-columns:minmax(0, 1fr); }
+
+.ms { font-family:'Material Symbols Outlined'; font-weight:normal; font-style:normal; font-size:24px; line-height:1; display:inline-block; -webkit-font-smoothing:antialiased; font-variation-settings:'FILL' 0; user-select:none; }
+.ms.fill { font-variation-settings:'FILL' 1; }
+
+.t-display { font-size:36px; line-height:44px; font-weight:600; }
+.t-title-l { font-size:22px; line-height:28px; }
+.t-title-m { font-size:16px; line-height:24px; font-weight:500; }
+.t-title-s { font-size:14px; line-height:20px; font-weight:500; }
+.t-body-l { font-size:16px; line-height:24px; }
+.t-body-m { font-size:14px; line-height:20px; }
+.t-body-s { font-size:12px; line-height:16px; }
+.t-label-l { font-size:14px; line-height:20px; font-weight:500; }
+.mono { font-family:'Roboto Mono', monospace; font-size:13px; }
+.muted { color:var(--onSurfaceVariant); }
+.err { color:var(--error); }
+.ok { color:var(--success); }
+
+.section { color:var(--primary); font-size:14px; font-weight:500; padding:10px 4px 2px; }
+.card { background:var(--scLow); border-radius:12px; overflow:hidden; }
+.card.click { cursor:pointer; }
+.card.click:hover { filter:brightness(.98); }
+.pad { padding:16px; }
+.row { display:flex; align-items:center; gap:14px; }
+.row.top { align-items:flex-start; }
+.row16 { display:flex; align-items:center; gap:16px; padding:16px; }
+.grow { flex:1; min-width:0; }
+.stack2 { display:flex; flex-direction:column; gap:2px; }
+.stack12 { display:flex; flex-direction:column; gap:12px; }
+.divider { height:1px; background:var(--outlineVariant); }
+.divider.inset { margin-left:56px; }
+.badge { border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; }
+.icon-p { color:var(--primary); }
+.chev { color:var(--onSurfaceVariant); }
+
+.btn { font:inherit; font-size:14px; font-weight:500; border:none; border-radius:100px; height:40px; padding:0 24px; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; white-space:nowrap; }
+.btn .ms { font-size:18px; }
+.btn.full { width:100%; }
+.btn.h48 { height:48px; }
+.btn.filled { background:var(--primary); color:var(--onPrimary); }
+.btn.filled:disabled { background:color-mix(in srgb, var(--onSurface) 12%, transparent); color:color-mix(in srgb, var(--onSurface) 38%, transparent); cursor:default; }
+.btn.tonal { background:var(--secondaryContainer); color:var(--onSecondaryContainer); padding:0 16px; }
+.btn.tonal:disabled { background:color-mix(in srgb, var(--onSurface) 12%, transparent); color:color-mix(in srgb, var(--onSurface) 38%, transparent); }
+.btn.outlined { background:transparent; color:var(--primary); border:1px solid var(--outline); }
+.btn.outlined.danger { color:var(--error); }
+.btn.text { background:transparent; color:var(--primary); padding:0 12px; }
+.btn.text.danger { color:var(--error); }
+.btn.text:disabled { color:color-mix(in srgb, var(--onSurface) 38%, transparent); }
+.iconbtn { width:48px; height:48px; border:none; background:transparent; color:var(--onSurface); border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.btnrow { display:flex; gap:8px; flex-wrap:wrap; }
+
+.field { position:relative; border:1px solid var(--outline); border-radius:4px; padding:16px 16px 14px; }
+.field label { position:absolute; top:-9px; left:12px; padding:0 4px; font-size:12px; color:var(--primary); }
+.field input { font:inherit; font-size:16px; border:none; outline:none; background:transparent; color:var(--onSurface); width:100%; }
+.support { font-size:12px; color:var(--onSurfaceVariant); padding:4px 16px 0; }
+
+.switch { width:52px; height:32px; border-radius:16px; flex:none; position:relative; border:2px solid var(--outline); background:var(--scHighest); transition:.15s; }
+.switch::after { content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:var(--outline); top:6px; left:6px; transition:.15s; }
+.switch.on { background:var(--primary); border-color:var(--primary); }
+.switch.on::after { width:24px; height:24px; top:2px; left:22px; background:var(--onPrimary); }
+.check { width:18px; height:18px; border:2px solid var(--onSurfaceVariant); border-radius:2px; margin:15px; flex:none; display:flex; align-items:center; justify-content:center; }
+.check.on { background:var(--primary); border-color:var(--primary); color:var(--onPrimary); }
+.check .ms { font-size:16px; font-weight:700; }
+.radio { width:20px; height:20px; border:2px solid var(--onSurfaceVariant); border-radius:50%; margin:14px; flex:none; position:relative; }
+.radio.on { border-color:var(--primary); }
+.radio.on::after { content:''; position:absolute; inset:3px; border-radius:50%; background:var(--primary); }
+.toggle-row { cursor:pointer; }
+
+.progress { height:4px; border-radius:2px; overflow:hidden; position:relative; }
+.progress > div { height:100%; border-radius:2px; }
+.spinner { width:24px; height:24px; border-radius:50%; border:2.5px solid currentColor; border-right-color:transparent; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.scrim { position:absolute; inset:0; background:rgba(0,0,0,.32); display:flex; align-items:center; justify-content:center; padding:24px; z-index:5; }
+.dialog { background:var(--scHigh); border-radius:28px; padding:24px; width:100%; max-width:400px; }
+.dialog h3 { margin:0 0 16px; font-size:24px; line-height:32px; font-weight:400; }
+.dialog .actions { display:flex; justify-content:flex-end; gap:8px; margin-top:24px; }
+.code { font-family:'Roboto Mono', monospace; font-size:36px; letter-spacing:4px; text-align:center; margin-top:12px; }
+
+/* Windows' own folder picker (drawn by Windows, not by PSphere) */
+.picker { background:#fff; color:#1b1b1b; width:560px; border-radius:8px; box-shadow:0 12px 40px rgba(0,0,0,.4); font:13px 'Segoe UI', system-ui, sans-serif; overflow:hidden; }
+.picker .pt { padding:8px 12px; border-bottom:1px solid #e5e5e5; display:flex; justify-content:space-between; }
+.picker .pb { display:flex; height:240px; }
+.picker .side { width:170px; border-right:1px solid #e5e5e5; padding:8px 0; }
+.picker .side div, .picker .list div { padding:5px 14px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+.picker .side div.on, .picker .list div.on { background:#cce4f7; }
+.picker .list { flex:1; padding:8px 0; }
+.picker .pf { padding:10px 12px; border-top:1px solid #e5e5e5; display:flex; gap:8px; align-items:center; }
+.picker .pf .path { flex:1; border:1px solid #ccc; border-radius:4px; padding:5px 8px; }
+.picker .pf button { font:inherit; padding:5px 16px; border-radius:4px; border:1px solid #ccc; background:#fbfbfb; cursor:pointer; }
+.picker .pf button.primary { background:#005fb8; border-color:#005fb8; color:#fff; }
+.picker .ms { font-size:18px; color:#d9a400; }
+
+.qrwrap { display:flex; gap:24px; align-items:center; }
+.qr { background:#fff; border-radius:12px; padding:12px; flex:none; }
+.qr svg { display:block; width:220px; height:220px; }
+.steps { margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px; }
+.empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 32px; text-align:center; }
+.empty .body { max-width:420px; margin-top:8px; }
+.bar { height:8px; border-radius:4px; background:var(--scHighest); overflow:hidden; }
+.bar > div { height:100%; background:var(--primary); }
+.bar.low > div { background:var(--error); }
+.hidden-note { color:#fff; text-align:center; font-size:14px; opacity:.9; max-width:360px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="panel">
+    <h1>PSphere for Windows: preview</h1>
+    <p class="sub">A clickable mock of the planned Windows app, before any of it is built. It uses the Android app's colours and wording. Nothing is really sent or received.</p>
+
+    <h2>Screen</h2>
+    <div class="chips" id="screens"></div>
+
+    <h2>Situation</h2>
+    <div class="chips" id="situations"></div>
+
+    <h2>Receiving</h2>
+    <div class="chips" id="recv"></div>
+
+    <h2>Windows</h2>
+    <div class="chips" id="win"></div>
+
+    <h2>Look</h2>
+    <div class="chips" id="look"></div>
+
+    <p class="note">Mock data: this device is <b>Laptop</b>, linked with <b>Phone</b> (on this Wi-Fi) and <b>Tablet</b> (away). Click the <b>P</b> icon in the taskbar's tray for its menu, and the window's <b>×</b> to see what closing does. The QR code is a decoration, not a real code.</p>
+  </aside>
+
+  <div class="stage-wrap"><div class="desktop" id="desktop"></div></div>
+</div>
+
+<script>
+const S = {
+  screen: 'devices', dark: matchMedia('(prefers-color-scheme: dark)').matches, small: false,
+  situation: 'busy', recv: 'normal', dialog: null, folderId: null, deviceId: null,
+  linked: null, name: 'Laptop', hidden: false, tray: false, toast: null, closedOnce: false, tip: false,
+};
+
+const DEVICES = [
+  { id:'ph',  name:'Phone',  online:true,  last:'just now' },
+  { id:'tab', name:'Tablet', online:false, last:'2 days ago' },
+];
+const FOLDERS = [
+  { id:'doc', label:'Documents', loc:'C:\\Users\\me\\Documents', dest:['tab'], include:'all', files:1204, size:'3.4 GB', show:false, waiting:{ tab:18 } },
+  { id:'scr', label:'Screenshots', loc:'C:\\Users\\me\\Pictures\\Screenshots', dest:['ph','tab'], include:'media', files:312, size:'402.7 MB', show:true, waiting:{ ph:0, tab:6 } },
+];
+const KEPT = [
+  { origin:'ph',  originName:'Phone',  label:'Camera',          files:1284, size:'6.2 GB' },
+  { origin:'ph',  originName:'Phone',  label:'WhatsApp Images', files:3410, size:'1.8 GB' },
+  { origin:'tab', originName:'Tablet', label:'Downloads',       files:58,   size:'230.4 MB' },
+];
+const LOC = 'D:\\PSphere Backups';
+
+const SCREENS = [['welcome','First start'],['devices','Devices'],['device','Device (Phone)'],['link','Link a device'],['sending','Sending'],['folder','Edit folder'],['addfolder','Add a folder'],['receiving','Receiving'],['settings','Settings']];
+const SITUATIONS = [['busy','Receiving from Phone'],['ready','Ready to back up'],['waiting','Waiting for Tablet'],['done','Everything backed up'],['nofolders','Only receives'],['nodevices','Nothing linked'],['error','Has a problem']];
+const RECV = [['normal','Normal'],['unset','No folder chosen'],['low','Nearly full'],['paused','Paused']];
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ic = (n, cls='', style='') => `<span class="ms ${cls}" style="${style}">${n}</span>`;
+const plural = (n, w) => `${n.toLocaleString('en-US')} ${w}${n !== 1 ? 's' : ''}`;
+const badge = (icon, bg, fg, size=40) => `<div class="badge" style="width:${size}px;height:${size}px;background:${bg};color:${fg}">${ic(icon,'',`font-size:${Math.round(size*.55)}px`)}</div>`;
+const section = t => `<div class="section">${esc(t)}</div>`;
+const sw = on => `<div class="switch ${on?'on':''}"></div>`;
+
+function linked() { return S.situation === 'nodevices' ? [] : DEVICES; }
+function folders() { return ['nofolders','nodevices'].includes(S.situation) ? [] : FOLDERS; }
+function kept() { return S.situation === 'nodevices' ? [] : KEPT; }
+function isOnline(d) { return S.situation === 'ready' ? true : d.online; }
+function waitingFor(id) {
+  if (S.situation === 'done') return 0;
+  return folders().filter(f => f.dest.includes(id)).reduce((s, f) => s + (f.waiting[id] || 0), 0);
+}
+function onlineLine(d) {
+  if (isOnline(d)) return `<div class="t-label-l ok">On this Wi-Fi</div>`;
+  return `<div class="t-label-l muted">Not nearby · last seen ${d.last}</div>`;
+}
+function status() {
+  const busy = S.situation === 'busy';
+  const rows = linked().map(d => ({ d, waiting: waitingFor(d.id), online: isOnline(d) }));
+  const on = rows.filter(r => r.waiting > 0 && r.online), off = rows.filter(r => r.waiting > 0 && !r.online);
+  const list = rs => rs.map(r => `${plural(r.waiting,'file')} for ${r.d.name}`).join(' · ');
+  if (!linked().length) return { t:'Link your other devices', d:'Your phone or tablet can then back up to this laptop.', i:'devices', tone:'warn' };
+  if (S.recv === 'unset') return { t:'Choose where backups go', d:'Pick a folder on this laptop, such as D:\\PSphere Backups, before your devices can back up here.', i:'save_alt', tone:'warn', go:'receiving', btn:'Choose a folder' };
+  if (busy) return { t:'Receiving from Phone', d:'Camera · 45 of 120 files', i:'sync', tone:'busy' };
+  if (S.recv === 'paused') return { t:'Receiving is paused', d:'Your devices wait until you turn it back on in Receiving.', i:'pause_circle', tone:'neutral' };
+  if (S.situation === 'error') return { t:'Something needs a look', d:'See the notes below.', i:'warning', tone:'warn' };
+  if (on.length) return { t:'Ready to back up', d:list(on), i:'cloud_upload', tone:'neutral' };
+  if (off.length) return { t:`Waiting for ${off.map(r=>r.d.name).join(', ')}`, d:list(off) + ". Backs up when it's on this Wi-Fi.", i:'hourglass_bottom', tone:'neutral' };
+  if (!folders().length) return { t:'Ready to receive', d:`Keeping ${plural(kept().reduce((s,k)=>s+k.files,0),'file')} (8.2 GB) from Phone and Tablet`, i:'cloud_download', tone:'ok' };
+  return { t:'Everything is backed up', d:'Last backup 2 minutes ago', i:'check_circle', tone:'ok' };
+}
+
+/* ---------- screens ---------- */
+
+function topbar(title, { back=false, action='' } = {}) {
+  return `<div class="topbar ${back?'back':''}">${back ? `<button class="iconbtn" data-go="${back}">${ic('arrow_back')}</button>` : ''}<div class="t">${esc(title)}</div>${action}</div>`;
+}
+
+function welcome() {
+  const point = (i, t, b) => `<div class="row top" style="gap:16px">${ic(i,'icon-p')}<div><div class="t-title-m">${t}</div><div class="t-body-m muted">${b}</div></div></div>`;
+  return `<div class="scroll"><div class="col" style="padding:40px 48px;gap:20px;max-width:640px">
+    <div class="t-display">PSphere</div>
+    <div class="t-title-m muted" style="font-weight:400">Your own Google Photos, where your devices are the cloud. This laptop can keep backups of your phone and tablet, and back up its own folders to them.</div>
+    ${point('devices','Link your devices','Your phone or tablet scans a code shown here.')}
+    ${point('save_alt','Choose where backups go','Any folder or drive on this laptop.')}
+    ${point('lock','Private','Only your linked devices can connect, and everything is encrypted. Nothing goes to the internet.')}
+    <div style="margin-top:4px"><div class="field"><label style="background:var(--surface)">Name for this device</label><input id="nameInput" value="${esc(S.name)}" maxlength="40"></div>
+      <div class="support">Your other devices see this name, e.g. “Laptop” or “Home PC”.</div></div>
+    <div><button class="btn filled h48" data-go="devices">Continue</button></div>
+  </div></div>`;
+}
+
+function statusCard() {
+  const L = status();
+  const tones = { busy:['var(--primaryContainer)','var(--onPrimaryContainer)'], ok:['var(--successContainer)','var(--onSuccessContainer)'],
+    warn:['var(--warningContainer)','var(--onWarningContainer)'], neutral:['var(--scHigh)','var(--onSurface)'] };
+  const [bg, fg] = tones[L.tone];
+  const busy = L.tone === 'busy';
+  const lead = busy
+    ? `<div class="badge" style="width:48px;height:48px;border-radius:28px;background:color-mix(in srgb, ${fg} 8%, transparent)"><div class="spinner"></div></div>`
+    : badge(L.i, `color-mix(in srgb, ${fg} 10%, transparent)`, fg, 48);
+  const bar = busy ? `<div class="progress" style="margin-top:16px;background:color-mix(in srgb, ${fg} 15%, transparent)"><div style="width:37%;background:${fg}"></div></div>` : '';
+  let btn;
+  if (!linked().length) btn = `<button class="btn filled" data-go="link">${ic('add')}Link a device</button>`;
+  else if (L.go) btn = `<button class="btn filled" data-go="${L.go}">${L.btn}</button>`;
+  else btn = `<button class="btn filled" ${busy?'disabled':''} data-sit="busy">${ic('sync')}${busy?'Backing up…':'Back up now'}</button>`;
+  return `<div style="background:${bg};color:${fg};border-radius:20px;padding:20px">
+    <div class="row">${lead}<div class="grow"><div class="t-title-l">${esc(L.t)}</div><div class="t-body-m" style="opacity:.85">${esc(L.d)}</div></div>${btn}</div>${bar}</div>`;
+}
+
+function notes(list) {
+  if (!list.length) return '';
+  return `<div style="background:var(--warningContainer);color:var(--onWarningContainer);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px">
+    ${list.map(n => `<div class="row top" style="gap:10px">${ic('warning','','font-size:18px;margin-top:1px')}<div class="t-body-m">${esc(n)}</div></div>`).join('')}</div>`;
+}
+const PROBLEMS = ['Tablet: not enough space for 6 files. It stops receiving when 2.0 GB is left.', "Can't open “Documents” (C:\\Users\\me\\Documents). Choose the folder again in Sending."];
+
+function devicesScreen() {
+  if (!linked().length) {
+    return topbar(S.name) + `<div class="scroll"><div class="empty">
+      ${badge('devices','var(--scHigh)','var(--onSurfaceVariant)',72)}
+      <div class="t-title-l" style="margin-top:20px">Link your phone or tablet</div>
+      <div class="t-body-m muted body">Open PSphere on your phone or tablet, go to Link a device, and scan the code this laptop shows. Linked devices back up to each other on your Wi-Fi.</div>
+      <button class="btn filled" style="margin-top:24px" data-go="link">Show the code</button></div></div>`;
+  }
+  const cards = linked().map(d => {
+    const w = waitingFor(d.id), isDest = folders().some(f => f.dest.includes(d.id));
+    const k = kept().filter(x => x.origin === d.id);
+    const busyHere = S.situation === 'busy' && d.id === 'ph';
+    return `<div class="card click" data-device="${d.id}"><div class="row pad">
+      ${badge(d.id==='ph'?'smartphone':'tablet','var(--primaryContainer)','var(--onPrimaryContainer)')}
+      <div class="grow stack2"><div class="t-title-m">${d.name}</div>${onlineLine(d)}
+        ${busyHere ? `<div class="t-body-m">Receiving: 45 of 120 files</div>` : ''}
+        ${k.length ? `<div class="t-body-m muted">Keeping: ${plural(k.reduce((s,x)=>s+x.files,0),'file')} · ${d.id==='ph'?'8.0 GB':'230.4 MB'}</div>` : ''}
+        ${isDest ? `<div class="t-body-m muted">${w > 0 ? `Sending: ${plural(w,'file')} waiting` : 'Sending: up to date'}</div>` : ''}
+      </div>${ic('chevron_right','chev')}</div></div>`;
+  }).join('');
+  return topbar(S.name) + `<div class="scroll"><div class="col">
+    ${statusCard()}
+    ${notes(S.situation === 'error' ? PROBLEMS : [])}
+    ${section('My devices')}<div class="grid2">${cards}</div>
+    <div><button class="btn outlined" data-go="link">${ic('add')}Link a device</button></div>
+  </div></div>`;
+}
+
+function deviceScreen() {
+  const d = DEVICES.find(x => x.id === (S.deviceId || 'ph'));
+  const busy = S.situation === 'busy';
+  const sending = folders().filter(f => f.dest.includes(d.id));
+  const keeping = kept().filter(k => k.origin === d.id);
+  const join = arr => arr.join('<div class="divider inset"></div>');
+  const open = path => `<button class="btn text" data-dialog="explorer" data-path="${esc(path)}">${ic('open_in_new')}Open folder</button>`;
+  return topbar(d.name, { back:'devices' }) + `<div class="scroll"><div class="col tight">
+    ${onlineLine(d)}
+    <div style="margin-top:8px"><button class="btn filled h48" ${busy||!isOnline(d)?'disabled':''} data-sit="busy">${ic('sync')}${busy && d.id==='ph' ? 'Receiving from Phone · 45 of 120' : `Back up with ${d.name} now`}</button></div>
+    ${!isOnline(d) ? `<div class="t-body-m muted">Backs up by itself when ${d.name} is on this Wi-Fi with PSphere open.</div>` : ''}
+    ${section(`Keeping from ${d.name}`)}
+    <div class="card">${keeping.length ? join(keeping.map(k => `<div class="row16">${ic('folder','icon-p')}<div class="grow"><div class="t-body-l">${esc(k.label)}</div><div class="t-body-m muted">${plural(k.files,'file')} · ${k.size} · <span class="mono">${esc(LOC)}\\${d.name}\\${esc(k.label)}</span></div></div>${open(`${LOC}\\${d.name}\\${k.label}`)}</div>`))
+      : `<div class="pad t-body-m muted">Nothing from ${d.name} is stored here yet. Choose folders to send here in PSphere on ${d.name}.</div>`}</div>
+    ${section(`Sending to ${d.name}`)}
+    <div class="card">${sending.length ? join(sending.map(f => { const w = S.situation==='done' ? 0 : (f.waiting[d.id]||0); return `<div class="row16">${ic('folder_open','icon-p')}<div class="grow"><div class="t-body-l">${esc(f.label)}</div><div class="t-body-m muted">${w>0 ? `${plural(w,'file')} waiting` : 'Up to date'}</div></div></div>`; }))
+      : `<div class="pad t-body-m muted">None of this laptop's folders go to ${d.name}. Choose destinations in Sending.</div>`}</div>
+    <div style="height:16px"></div>
+    <div><button class="btn outlined danger" data-dialog="unlink">${ic('link_off')}Unlink ${d.name}</button></div>
+  </div></div>`;
+}
+
+function qrSvg() {
+  // Decorative: finder patterns plus a fixed pseudo-random grid.
+  const n = 29, cells = [];
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const finder = (x, y) => x < 7 && y < 7;
+  const isFinder = (x, y) => finder(x, y) || finder(n-1-x, y) || finder(x, n-1-y);
+  const finderOn = (x, y) => { const fx = x < 7 ? x : n-1-x, fy = y < 7 ? y : n-1-y; const m = Math.max(Math.abs(fx-3), Math.abs(fy-3)); return m !== 2; };
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const on = isFinder(x, y) ? finderOn(x, y) : (x === 7 || y === 7 || x === n-8 || y === n-8) && (isFinder(x+1,y)||isFinder(x-1,y)||isFinder(x,y+1)||isFinder(x,y-1)) ? false : rnd() > .52;
+    if (on) cells.push(`<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`);
+  }
+  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" fill="#000">${cells.join('')}</svg>`;
+}
+
+function linkScreen() {
+  const near = [{ name:'Galaxy A54', status:'Ready to link', ok:true }, { name:"Mum's tablet", status:'Has an older version of PSphere. Update it first.', ok:false }];
+  const banner = S.linked ? `<div style="background:var(--successContainer);color:var(--onSuccessContainer);border-radius:12px"><div class="row pad" style="gap:12px">${ic('check_circle')}<div class="grow"><div class="t-title-m">Linked with ${S.linked}</div><div class="t-body-m">On ${S.linked}, choose folders to back up to ${esc(S.name)} in Sending.</div></div><button class="btn text" style="color:inherit" data-go="devices">Done</button></div></div>` : '';
+  return topbar('Link a device', { back:'devices' }) + `<div class="scroll"><div class="col tight">
+    ${banner}
+    ${section('Scan this code with your phone or tablet')}
+    <div class="card pad"><div class="qrwrap"><div class="qr">${qrSvg()}</div>
+      <div class="stack12"><ol class="steps t-body-m"><li>Open PSphere on your phone or tablet.</li><li>Go to <b>Devices › Link a device</b>.</li><li>Tap <b>Scan a code</b> and point it at this screen.</li></ol>
+      <div class="t-body-s muted">The code works once, for 10 minutes. This laptop has no camera, so it always shows the code.</div></div></div></div>
+    ${section("Can't scan? Link with a 6-digit code")}
+    <div class="card">${near.map((d, i) => `${i ? '<div class="divider" style="margin-left:70px"></div>' : ''}<div class="row" style="padding:10px 16px">
+        ${badge('smartphone','var(--secondaryContainer)','var(--onSecondaryContainer)')}
+        <div class="grow"><div class="t-body-l">${esc(d.name)}</div><div class="t-body-s muted">${esc(d.status)}</div></div>
+        <button class="btn tonal" ${d.ok?'':'disabled'} data-dialog="code">Link</button></div>`).join('')}
+      <div class="divider"></div><div class="pad t-body-s muted">Devices appear here when they're on this Wi-Fi with “Link a device” open.</div></div>
+  </div></div>`;
+}
+
+function sendingScreen() {
+  if (!folders().length) {
+    return topbar('Sending') + `<div class="scroll"><div class="empty">
+      ${badge('folder_open','var(--scHigh)','var(--onSurfaceVariant)',72)}
+      <div class="t-title-l" style="margin-top:20px">Back up this laptop's folders too</div>
+      <div class="t-body-m muted body">Optional. This laptop already keeps backups from your other devices (see Receiving). Add a folder, like Documents, to also send it to your phone or tablet.</div>
+      <button class="btn filled" style="margin-top:24px" data-go="addfolder">Add a folder</button></div></div>`;
+  }
+  const cards = folders().map(f => {
+    const broken = S.situation === 'error' && f.id === 'doc';
+    const w = S.situation === 'done' ? 0 : Object.values(f.waiting).reduce((a,b)=>a+b,0);
+    const dest = f.dest.map(id => DEVICES.find(d => d.id === id).name).sort();
+    return `<div class="card click" data-folder="${f.id}"><div class="row pad">
+      ${badge('folder_open','var(--secondaryContainer)','var(--onSecondaryContainer)')}
+      <div class="grow stack2"><div class="t-title-m">${esc(f.label)}</div>
+        ${broken ? `<div class="row" style="gap:6px">${ic('warning','err','font-size:16px')}<div class="t-body-m err">Can't open this folder. Click to choose it again.</div></div>` : `<div class="mono muted">${esc(f.loc)}</div>`}
+        <div class="t-body-m">To ${dest.join(', ')}</div>
+        <div class="t-body-s muted">${plural(f.files,'file')} · ${f.size}${f.include==='media'?' · photos and videos':''}${w>0?` · ${w} waiting`:''}</div>
+      </div>${ic('chevron_right','chev')}</div></div>`;
+  }).join('');
+  return topbar('Sending') + `<div class="scroll"><div class="col">
+    <div class="t-body-m muted">Folders on this laptop and where they're backed up. Deleting files here never deletes the backups.</div>
+    ${cards}
+    <div><button class="btn outlined" data-go="addfolder">${ic('add')}Add a folder</button></div>
+  </div></div>`;
+}
+
+function folderScreen(isNew) {
+  const f = isNew ? { label:'', loc:null, dest: linked().map(d=>d.id), include:'all', show:true }
+                  : (FOLDERS.find(x => x.id === (S.folderId || 'doc')));
+  S.edit = S.edit && S.edit.key === (isNew ? 'new' : f.id) ? S.edit : { key: isNew ? 'new' : f.id, label:f.label, loc:f.loc, dest:[...f.dest], include:f.include, show:f.show };
+  const E = S.edit;
+  const canSave = E.label.trim() && E.loc;
+  const devs = linked();
+  return topbar(isNew ? 'Add a folder' : f.label, { back:'sending', action:`<button class="btn text" ${canSave?'':'disabled'} data-go="sending">Save</button>` }) + `<div class="scroll"><div class="col tight">
+    ${section('Folder')}
+    <div class="card pad stack12">
+      <div class="row" style="gap:16px">${ic('folder_open','icon-p')}<div class="grow ${E.loc?'mono':'t-body-l err'}">${E.loc ? esc(E.loc) : 'No folder chosen'}</div>
+        <button class="btn outlined" data-dialog="picker" data-for="folder">${E.loc ? 'Change…' : 'Choose folder…'}</button></div>
+      <div><div class="field"><label style="background:var(--scLow)">Name</label><input id="labelInput" value="${esc(E.label)}" maxlength="60"></div>
+        <div class="support">Your other devices keep it in a folder with this name.</div></div>
+    </div>
+    ${section('Back up to')}
+    <div class="card">${devs.map((d, i) => `${i?'<div class="divider inset"></div>':''}<div class="row toggle-row" style="padding:4px 8px;gap:0" data-dest="${d.id}"><div class="check ${E.dest.includes(d.id)?'on':''}">${E.dest.includes(d.id)?ic('check'):''}</div><div class="t-body-l">${d.name}</div></div>`).join('')}</div>
+    ${section('What to include')}
+    <div class="card">
+      <div class="row toggle-row" style="padding:8px;gap:0" data-include="media"><div class="radio ${E.include==='media'?'on':''}"></div><div><div class="t-body-l">Photos and videos</div><div class="t-body-m muted">Skips other files, like documents</div></div></div>
+      <div class="divider inset"></div>
+      <div class="row toggle-row" style="padding:8px;gap:0" data-include="all"><div class="radio ${E.include==='all'?'on':''}"></div><div><div class="t-body-l">All files</div><div class="t-body-m muted">Everything in the folder and its subfolders</div></div></div>
+    </div>
+    ${section('Photos')}
+    <div class="card"><div class="row16 toggle-row" data-act="show"><div class="grow"><div class="t-body-l">Show on my other devices</div><div class="t-body-m muted">Photos from this folder appear in Photos on your linked devices. Turn off for private folders.</div></div>${sw(E.show)}</div></div>
+    <div style="height:8px"></div>
+    <div class="btnrow"><button class="btn filled h48" ${canSave?'':'disabled'} data-go="sending">${isNew ? 'Start backing up' : 'Save'}</button>
+    ${isNew ? '' : `<button class="btn text danger h48" data-dialog="stop">Stop backing up this folder</button>`}</div>
+  </div></div>`;
+}
+
+function receivingScreen() {
+  const unset = S.recv === 'unset', low = S.recv === 'low', paused = S.recv === 'paused';
+  const free = low ? '3.1 GB' : '412.6 GB', used = low ? 99.7 : 55.7;
+  const groups = kept();
+  const byDev = [...new Set(groups.map(g => g.originName))];
+  const open = path => `<button class="btn text" data-dialog="explorer" data-path="${esc(path)}">${ic('open_in_new')}Open folder</button>`;
+  return topbar('Receiving') + `<div class="scroll"><div class="col tight">
+    <div class="t-body-m muted">Backups your other devices send to ${esc(S.name)}.</div>
+    ${section('Backup location')}
+    <div class="card pad stack12">
+      <div class="row" style="gap:16px">${ic('save_alt','icon-p')}<div class="grow"><div class="${unset?'t-body-l err':'mono'}">${unset ? 'Not chosen' : esc(LOC)}</div>
+        <div class="t-body-m muted">${unset ? 'Choose a folder or drive, such as D:\\PSphere Backups, before your devices can back up here.' : 'Inside it, each device gets its own folder, like Phone\\Camera.'}</div></div></div>
+      <div class="btnrow"><button class="btn outlined" data-dialog="picker" data-for="recv">${unset ? 'Choose folder…' : 'Change…'}</button>${unset ? '' : open(LOC)}</div>
+    </div>
+    ${unset ? '' : `${section('Space')}
+    <div class="card">
+      <div class="row16">${ic('hard_drive', low ? 'err' : 'icon-p')}<div class="grow stack12"><div><div class="t-body-l">${free} free on drive D:</div>
+        <div class="t-body-m ${low?'err':'muted'}">${low ? 'Nearly full. PSphere stops receiving when 2.0 GB is left.' : 'PSphere always leaves 2.0 GB free. Previews use 84.2 MB.'}</div></div>
+        <div class="bar ${low?'low':''}"><div style="width:${used}%"></div></div></div></div>
+      <div class="divider"></div>
+      <div class="row16 toggle-row" data-recv="${paused?'normal':'paused'}"><div class="grow"><div class="t-body-l">Pause receiving</div><div class="t-body-m muted">Your devices wait until you turn this off.</div></div>${sw(paused)}</div>
+    </div>`}
+    ${section('Kept here')}
+    <div class="card">${groups.length ? byDev.map((dev, i) => `${i ? '<div class="divider"></div>' : ''}<div class="t-title-s" style="padding:14px 16px 0">From ${dev}</div>` +
+        groups.filter(g => g.originName === dev).map(g => `<div class="row16">${ic('folder','icon-p','font-size:22px')}<div class="grow"><div class="t-body-l">${g.label}</div><div class="t-body-m muted">${plural(g.files,'file')} · ${g.size}</div></div>${unset ? '' : open(`${LOC}\\${dev}\\${g.label}`)}</div>`).join('')).join('')
+      : `<div class="pad t-body-m muted">Nothing yet. Backups appear here once another device sends folders to ${esc(S.name)}.</div>`}</div>
+    ${paused ? `<div class="t-body-m" style="color:var(--warning)">Receiving is paused.</div>` : ''}
+  </div></div>`;
+}
+
+function settingsScreen() {
+  S.set = S.set || { startup:true, tray:true };
+  const T = S.set;
+  const nav = (i, t, s, attr='') => `<div class="row16 toggle-row" ${attr}>${ic(i,'icon-p')}<div class="grow"><div class="t-body-l">${esc(t)}</div><div class="t-body-m muted">${esc(s)}</div></div>${ic('chevron_right','chev')}</div>`;
+  const tog = (i, t, s, on, key) => `<div class="row16 toggle-row" data-set="${key}">${ic(i,'icon-p')}<div class="grow"><div class="t-body-l">${t}</div><div class="t-body-m muted">${s}</div></div>${sw(on)}</div>`;
+  const devs = linked();
+  return topbar('Settings') + `<div class="scroll"><div class="col tight">
+    ${section('This device')}
+    <div class="card">${nav('edit','Name',S.name,'data-dialog="rename"')}</div>
+    ${section('When to back up')}
+    <div class="card">
+      ${tog('power_settings_new','Start PSphere when Windows starts','It opens in the tray, so your devices can back up here without you opening it.',T.startup,'startup')}
+      <div class="divider inset"></div>
+      ${tog('select_window','Keep running in the tray when closed','Closing the window leaves PSphere in the tray, still receiving backups. Quit it from the tray icon.',T.tray,'tray')}
+      <div class="divider inset"></div>
+      <div class="row16">${ic('wifi','icon-p')}<div class="grow"><div class="t-body-l">Backs up automatically</div><div class="t-body-m muted">Whenever a linked device is on the same Wi-Fi and PSphere is running. Use “Back up now” to start it yourself.</div></div></div>
+    </div>
+    ${section('Linked devices')}
+    <div class="card">${devs.map((d,i) => `${i?'<div class="divider inset"></div>':''}${nav(d.id==='ph'?'smartphone':'tablet',d.name,isOnline(d)?'On this Wi-Fi':'Not nearby',`data-device="${d.id}"`)}`).join('')}
+      ${devs.length ? '<div class="divider"></div>' : ''}${nav('qr_code_2','Link a device','Show a code to scan','data-go="link"')}</div>
+    ${section('About')}
+    <div class="card">
+      <div class="row16">${ic('info','icon-p')}<div class="t-body-l grow">Version</div><div class="t-body-m muted">2.0 (3)</div></div>
+      <div class="divider inset"></div>
+      <div class="row16">${ic('devices','icon-p')}<div class="t-body-l grow">Device ID</div><div class="t-body-m muted mono">b41e07c9a3f2</div></div>
+      <div class="divider inset"></div>
+      <div class="row16">${ic('folder_data','icon-p')}<div class="t-body-l grow">PSphere's own data</div><button class="btn text" data-dialog="explorer" data-path="C:\\Users\\me\\AppData\\Local\\PSphere">${ic('open_in_new')}Open folder</button></div>
+    </div>
+  </div></div>`;
+}
+
+/* ---------- dialogs ---------- */
+
+function dialog() {
+  const d = DEVICES.find(x => x.id === (S.deviceId || 'ph'));
+  const f = FOLDERS.find(x => x.id === (S.folderId || 'doc'));
+  const box = (title, body, actions) => `<div class="scrim" data-close="1"><div class="dialog"><h3>${title}</h3>${body}<div class="actions">${actions}</div></div></div>`;
+  const cancel = `<button class="btn text" data-close="1">Cancel</button>`;
+  switch (S.dialog) {
+    case 'code': return box('Link with Galaxy A54?', `<div class="t-body-m muted">Check that Galaxy A54 shows the same code, then press Codes match on both.</div><div class="code">482 913</div>`,
+      cancel + `<button class="btn filled" data-act="linked">Codes match</button>`);
+    case 'unlink': return box(`Unlink ${d.name}?`, `<div class="t-body-m muted">This laptop stops backing up with ${d.name} and won't accept connections from it. Backups already in ${esc(LOC)}\\${d.name} stay there. Unlink on ${d.name} too.</div>`,
+      cancel + `<button class="btn filled" style="background:var(--error);color:var(--onError)" data-close="1">Unlink</button>`);
+    case 'stop': return box(`Stop backing up “${esc(f.label)}”?`, `<div class="t-body-m muted">New files in this folder won't be backed up. Copies already on your other devices stay there, and nothing on this laptop is deleted.</div>`,
+      cancel + `<button class="btn filled" style="background:var(--error);color:var(--onError)" data-close="1">Stop backing up</button>`);
+    case 'rename': return box('Name this device', `<div class="field"><label style="background:var(--scHigh)">Name</label><input id="renameInput" value="${esc(S.name)}" maxlength="40"></div>`,
+      cancel + `<button class="btn filled" data-act="rename">Save</button>`);
+    case 'explorer': return box('Opens in File Explorer', `<div class="t-body-m muted">In the real app this opens the folder in File Explorer:</div><div class="mono" style="margin-top:10px;word-break:break-all">${esc(S.path || LOC)}</div>`,
+      `<button class="btn filled" data-close="1">OK</button>`);
+    case 'picker': {
+      const forRecv = S.pickFor === 'recv';
+      const side = ['This PC','Local Disk (C:)','Data (D:)','Desktop','Documents','Pictures'];
+      const list = forRecv ? ['PSphere Backups','Games','Movies'] : ['Screenshots','Camera Roll','Saved Pictures'];
+      return `<div class="scrim" data-close="1"><div class="picker">
+        <div class="pt"><span>Select Folder</span><span>✕</span></div>
+        <div class="pb"><div class="side">${side.map(s => `<div class="${(forRecv?'Data (D:)':'Pictures')===s?'on':''}">${s}</div>`).join('')}</div>
+          <div class="list">${list.map((l,i) => `<div class="${i===0?'on':''}"><span class="ms">folder</span>${l}</div>`).join('')}</div></div>
+        <div class="pf"><div class="path">${forRecv ? 'D:\\PSphere Backups' : 'C:\\Users\\me\\Pictures\\Screenshots'}</div><button class="primary" data-act="picked">Select Folder</button><button data-close="1">Cancel</button></div>
+      </div></div>`;
+    }
+  }
+  return '';
+}
+
+/* ---------- shell: window, taskbar, tray ---------- */
+
+const TABS = [['devices','Devices','devices'],['sending','Sending','cloud_upload'],['receiving','Receiving','cloud_download'],['settings','Settings','settings']];
+const TAB_OF = { devices:'devices', device:'devices', link:'devices', sending:'sending', folder:'sending', addfolder:'sending', receiving:'receiving', settings:'settings' };
+
+function trayDot() {
+  const L = status();
+  return { busy:'#A9C7FF', ok:'#8BD89A', warn:'#FFB866', neutral:'#9a9ea8' }[L.tone];
+}
+
+function windowHtml() {
+  const body = { welcome, devices:devicesScreen, device:deviceScreen, link:linkScreen, sending:sendingScreen,
+    folder:() => folderScreen(false), addfolder:() => folderScreen(true), receiving:receivingScreen, settings:settingsScreen }[S.screen]();
+  const tab = TAB_OF[S.screen];
+  const item = ([id, label, icon]) => `<button class="${tab===id?'on':''}" data-go="${id}" title="${label}">${ic(icon, tab===id?'fill':'')}<span class="l">${label}</span></button>`;
+  const drawer = S.screen === 'welcome' ? '' : `<nav class="drawer"><div class="me"><div class="t-title-m">${esc(S.name)}</div><div class="t-body-s muted">PSphere</div></div>${TABS.map(item).join('')}
+    <div class="foot t-body-s muted">${ic('lock','','font-size:14px;vertical-align:-2px')} Local only · encrypted</div></nav>`;
+  return `<div class="window app-theme ${S.dark ? 'dark' : 'light'}">
+    <div class="titlebar"><div class="appicon">P</div><div class="grow">PSphere</div>
+      <button data-act="minimise" title="Minimise">${ic('remove')}</button><button title="Maximise">${ic('crop_square')}</button><button class="close" data-act="close" title="Close">${ic('close')}</button></div>
+    <div class="app">${drawer}<div class="screen">${body}</div>${dialog()}</div>
+  </div>`;
+}
+
+function trayMenu() {
+  if (!S.tray) return '';
+  const L = status(), paused = S.recv === 'paused';
+  return `<div class="traymenu"><div class="head"><div>PSphere · ${esc(S.name)}</div><div class="s">${esc(L.t)}</div></div><div class="sep"></div>
+    <button data-act="open">${ic('open_in_new')}Open PSphere</button>
+    <button data-act="backup">${ic('sync')}Back up now</button>
+    <button data-act="pause">${ic(paused?'play_arrow':'pause')}${paused?'Resume receiving':'Pause receiving'}</button>
+    <div class="sep"></div>
+    <button data-act="quit">${ic('power_settings_new')}Quit PSphere</button></div>`;
+}
+
+function toastHtml() {
+  if (!S.toast) return '';
+  const T = {
+    closed: ['PSphere is still running', 'It keeps receiving backups in the tray. To stop it, right-click the P icon and choose Quit.'],
+    done:   ['Backed up 120 files from Phone', 'Camera is up to date on this laptop.'],
+    full:   ['Drive D: is nearly full', 'PSphere stopped receiving. Free up space or choose another backup location.'],
+    quit:   ['PSphere has quit', 'Your devices can\'t back up here until you open it again.'],
+  }[S.toast];
+  return `<div class="toast"><button class="x" data-act="toastx">${ic('close','','font-size:16px')}</button><div class="from"><div class="trayicon">P</div>PSphere</div><div class="t">${T[0]}</div><div class="b">${T[1]}</div></div>`;
+}
+
+function render() {
+  document.documentElement.dataset.theme = S.dark ? 'dark' : 'light';
+  const desk = document.getElementById('desktop');
+  desk.classList.toggle('small', S.small);
+  const quit = S.toast === 'quit';
+  const area = S.min
+    ? `<div class="hidden-note">Minimised. Click PSphere in the taskbar to bring it back.</div>`
+    : S.hidden
+    ? `<div class="hidden-note">${quit ? 'PSphere is not running.' : 'The window is closed, but PSphere is still running in the tray (bottom right) and keeps receiving backups.'}<br><br><button class="btn filled" style="--primary:#1565C0;--onPrimary:#fff" data-act="${quit?'relaunch':'open'}">${quit ? 'Start PSphere' : 'Open it again'}</button></div>`
+    : windowHtml();
+  desk.innerHTML = `<div class="desk-area">${area}</div>
+    ${S.tip && !S.tray ? `<div class="tip">PSphere · ${esc(status().t)}</div>` : ''}
+    ${trayMenu()}${toastHtml()}
+    <div class="taskbar"><div class="grow"></div>
+      <button class="tb">${ic('grid_view')}</button><button class="tb">${ic('folder')}</button><button class="tb">${ic('public')}</button>
+      ${S.hidden ? '' : `<button class="tb running on" data-act="open"><div class="trayicon">P</div></button>`}
+      <div class="grow"></div>
+      ${quit ? '' : `<button class="tb ${S.tray?'on':''}" data-act="tray" title=""><div class="trayicon">P<div class="dot" style="background:${trayDot()}"></div></div></button>`}
+      ${ic('wifi','','font-size:18px')}${ic('volume_up','','font-size:18px')}<div class="clock">9:41 PM<br>31/10/2026</div></div>`;
+  renderPanel();
+}
+
+function chips(el, items, current, onPick) {
+  const box = document.getElementById(el);
+  box.innerHTML = items.map(([id, label]) => `<button class="${(Array.isArray(current) ? current.includes(id) : current===id)?'on':''}" data-id="${id}">${label}</button>`).join('');
+  box.onclick = e => { const b = e.target.closest('button'); if (b) { onPick(b.dataset.id); render(); } };
+}
+function renderPanel() {
+  chips('screens', SCREENS, S.screen, id => { S.screen = id; S.dialog = null; S.hidden = false; S.min = false; S.edit = null; if (S.toast === 'quit') S.toast = null; if (id === 'device') S.deviceId = 'ph'; if (id === 'folder') S.folderId = 'doc'; });
+  chips('situations', SITUATIONS, S.situation, id => { S.situation = id; });
+  chips('recv', RECV, S.recv, id => { S.recv = id; if (!S.hidden && S.screen !== 'receiving') S.screen = 'receiving'; });
+  chips('win', [['tray','Tray menu'],['done','“Backed up” notice'],['full','“Nearly full” notice'],['close','Close the window']],
+    [S.tray && 'tray', S.toast].filter(Boolean),
+    id => { if (id === 'tray') S.tray = !S.tray; else if (id === 'close') closeWindow(); else S.toast = S.toast === id ? null : id; });
+  chips('look', [['light','Light'],['dark','Dark'],['large','Large window'],['small','Small window']],
+    [S.dark ? 'dark' : 'light', S.small ? 'small' : 'large'],
+    id => { if (id==='light') S.dark=false; if (id==='dark') S.dark=true; if (id==='large') S.small=false; if (id==='small') S.small=true; });
+}
+
+function closeWindow() {
+  S.dialog = null; S.tray = false; S.min = false;
+  if (S.set && S.set.tray === false) { S.hidden = true; S.toast = 'quit'; return; }
+  S.hidden = true; S.toast = S.closedOnce ? null : 'closed'; S.closedOnce = true;
+}
+
+const desk = document.getElementById('desktop');
+desk.addEventListener('mouseover', e => { const on = !!e.target.closest('[data-act="tray"]'); if (on !== S.tip) { S.tip = on; render(); } });
+desk.addEventListener('click', e => {
+  const t = e.target.closest('[data-go],[data-device],[data-folder],[data-dialog],[data-close],[data-act],[data-sit],[data-dest],[data-include],[data-recv],[data-set]');
+  if (!t) { if (S.tray && !e.target.closest('.traymenu')) { S.tray = false; render(); } return; }
+  if (t.classList.contains('scrim') && e.target !== t) return;
+  const d = t.dataset;
+  if (d.act !== 'tray') S.tray = false;
+  if (d.go) {
+    if (S.screen === 'welcome') { const v = document.getElementById('nameInput').value.trim(); if (v) S.name = v; }
+    if (S.screen === 'link') S.linked = null;
+    S.screen = d.go; S.dialog = null; S.edit = null;
+  }
+  else if (d.device) { S.deviceId = d.device; S.screen = 'device'; }
+  else if (d.folder) { S.folderId = d.folder; S.screen = 'folder'; S.edit = null; }
+  else if (d.dialog) { S.dialog = d.dialog; if (d.path) S.path = d.path; if (d.for) S.pickFor = d.for; }
+  else if (d.close) S.dialog = null;
+  else if (d.sit) S.situation = d.sit;
+  else if (d.recv) S.recv = d.recv;
+  else if (d.dest) { const i = S.edit.dest.indexOf(d.dest); i < 0 ? S.edit.dest.push(d.dest) : S.edit.dest.splice(i, 1); }
+  else if (d.include) S.edit.include = d.include;
+  else if (d.set) S.set[d.set] = !S.set[d.set];
+  else if (d.act === 'show') S.edit.show = !S.edit.show;
+  else if (d.act === 'picked') {
+    if (S.pickFor === 'recv') S.recv = 'normal';
+    else { S.edit.loc = 'C:\\Users\\me\\Pictures\\Screenshots'; if (!S.edit.label.trim()) S.edit.label = 'Screenshots'; }
+    S.dialog = null;
+  }
+  else if (d.act === 'linked') { S.dialog = null; S.linked = 'Galaxy A54'; S.screen = 'link'; }
+  else if (d.act === 'rename') { const v = document.getElementById('renameInput').value.trim(); if (v) S.name = v; S.dialog = null; }
+  else if (d.act === 'close') closeWindow();
+  else if (d.act === 'minimise') S.min = true;
+  else if (d.act === 'open') { S.hidden = false; S.min = false; if (S.toast === 'closed') S.toast = null; }
+  else if (d.act === 'relaunch') { S.hidden = false; S.min = false; S.toast = null; }
+  else if (d.act === 'tray') S.tray = !S.tray;
+  else if (d.act === 'backup') S.situation = 'busy';
+  else if (d.act === 'pause') S.recv = S.recv === 'paused' ? 'normal' : 'paused';
+  else if (d.act === 'quit') { S.hidden = true; S.toast = 'quit'; }
+  else if (d.act === 'toastx') S.toast = null;
+  render();
+});
+desk.addEventListener('input', e => {
+  if (e.target.id === 'labelInput') {
+    S.edit.label = e.target.value;
+    const ok = S.edit.label.trim() && S.edit.loc;
+    document.querySelectorAll('#desktop [data-go="sending"]').forEach(b => { if (b.classList.contains('filled') || b.classList.contains('text')) b.disabled = !ok; });
+  }
+});
+
+// Optional start state from the address, e.g. windows.html?screen=receiving&recv=low&dark=1
+const Q = new URLSearchParams(location.search);
+if (Q.get('screen')) S.screen = Q.get('screen');
+if (Q.get('sit')) S.situation = Q.get('sit');
+if (Q.get('recv')) S.recv = Q.get('recv');
+if (Q.get('dialog')) { S.dialog = Q.get('dialog'); S.pickFor = Q.get('for') || 'recv'; }
+if (Q.has('dark')) S.dark = Q.get('dark') === '1';
+if (Q.has('small')) S.small = true;
+if (Q.has('tray')) S.tray = true;
+if (Q.get('toast')) S.toast = Q.get('toast');
+if (Q.has('closed')) closeWindow();
+render();
+</script>
+</body>
+</html>

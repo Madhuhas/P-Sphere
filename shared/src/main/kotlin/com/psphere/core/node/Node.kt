@@ -117,6 +117,10 @@ class Node(
     @Volatile var onChange: (() -> Unit)? = null
     /** Asks the user to compare a code when another device links without a QR code. */
     @Volatile var codeConfirmer: CodeConfirmer? = null
+    /** Progress of a sync another device started with this one (on that connection's thread). */
+    @Volatile var onIncomingProgress: ((SyncProgress) -> Unit)? = null
+    /** Called when a sync another device started has ended, with its result. */
+    @Volatile var onIncomingDone: ((SyncResult) -> Unit)? = null
 
     @Volatile private var pairing: PairingWindow? = null
     private class PairingWindow(val token: String, val expiresAt: Long, val allowCode: Boolean)
@@ -545,11 +549,13 @@ class Node(
         if (scanLock.tryLock()) {
             try { runCatching { scanLocked(SERVE_SCAN_BUDGET_MS) { _, _ -> } } } finally { scanLock.unlock() }
         }
+        var result = SyncResult(dev.id, dev.name, error = "${dev.name} disconnected")
         try {
-            Session(this, wire, dev, initiator = false, onProgress = {}, firstPeerVector = peerVector).run()
+            result = Session(this, wire, dev, initiator = false, onProgress = { p -> onIncomingProgress?.invoke(p) }, firstPeerVector = peerVector).run()
             markSynced(dev.id)
         } finally {
             flushKept()
+            onIncomingDone?.invoke(result)
             onChange?.invoke()
         }
     }

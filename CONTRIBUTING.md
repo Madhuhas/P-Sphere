@@ -120,6 +120,7 @@ cd ../mobile
 | --- | --- |
 | `shared/` | The pure-Kotlin core used by every app (package `com.psphere.core`): protocol, encryption, linking, rules, relay, resume and the catalog. A standalone Gradle build with its own tests. |
 | `mobile/` | The Android app (Kotlin, Jetpack Compose, package `com.psphere`). Includes `shared/` as a composite build. |
+| `desktop-app/` | The Windows app (Kotlin, Compose for Desktop, package `com.psphere.desktop`). Also includes `shared/`. Run it with `./gradlew run`. |
 | `docs/p2p-v3.md` | The spec: what PSphere does and how it works underneath. |
 | `website/` | The website's source. The published site, [psphere.pages.dev](https://psphere.pages.dev), is built from [PSphere-Website](https://github.com/Madhuhas/PSphere-Website). |
 
@@ -167,7 +168,7 @@ Before you open it:
 - [ ] It does one thing, and that thing was agreed on (or is a bug fix, typo or test).
 - [ ] It keeps every rule in [What a change must keep](#what-a-change-must-keep).
 - [ ] `./gradlew test` passes in `shared/`, and new behaviour has a test.
-- [ ] `./gradlew assembleDebug` passes in `mobile/`.
+- [ ] `./gradlew assembleDebug` passes in `mobile/`, and `./gradlew build` in `desktop-app/`.
 - [ ] Interface changes are checked on a device or emulator, in a light and a dark theme.
 - [ ] Your branch is up to date with the default branch (rebase rather than merge).
 - [ ] No leftover debugging code, commented-out blocks or unrelated changes.
