@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 // Pure-Kotlin core shared by the Android app (mobile/) and the Windows app (desktop-app/).
 // No Android or desktop APIs here, and no third-party runtime dependencies.
 plugins {
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.4.21"
     `java-library`
 }
 
