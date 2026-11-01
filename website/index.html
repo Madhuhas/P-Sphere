@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>PSphere — Your devices are the cloud</title>
-  <meta name="description" content="PSphere backs up folders between your phone, tablet and Windows laptop over your home Wi-Fi. No server, no account, nothing leaves your home. Free and open source.">
-  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#06080D" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="PSphere backs up your phone, tablet and Windows laptop to each other over your home Wi-Fi. No server, no account, nothing leaves your home. Free and open source.">
+  <meta name="theme-color" content="#F7F8FA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0C0D10" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;800&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,265 +18,141 @@
 
 <header class="site-header">
   <div class="container">
-    <a href="index.html" class="brand" aria-label="PSphere home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 86"><g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M33 79 H90 A20 20 0 0 0 93 39 A30 30 0 0 0 36 30 A24.5 24.5 0 0 0 33 79 Z"/><path d="M49 79 V49 A12.5 12.5 0 1 1 61.5 61.5 H57"/></g></svg></span>PSphere <span class="brand-tag">Alpha</span></a>
+    <a href="index.html" class="brand" aria-label="PSphere home"><span class="brand-mark" aria-hidden="true">(p)</span>PSphere <span class="brand-tag">2.0</span></a>
     <nav class="nav" aria-label="Main">
-      <a href="index.html#how" >How it works</a>
-      <a href="index.html#modes">Features</a>
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#features">Features</a>
       <a href="index.html#updates">Updates</a>
       <a href="docs.html">Docs</a>
-      <a href="download.html">Download</a>
     </nav>
-    <a href="download.html" class="btn btn-primary btn-sm nav-cta">Get the app</a>
+    <a href="download.html" class="btn btn-primary btn-sm nav-cta">Download</a>
     <button class="nav-toggle" aria-label="Open menu" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
 </header>
 
 <main id="main">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <defs>
-      <symbol id="mark" viewBox="0 0 120 86"><g fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M33 79 H90 A20 20 0 0 0 93 39 A30 30 0 0 0 36 30 A24.5 24.5 0 0 0 33 79 Z"/><path d="M49 79 V49 A12.5 12.5 0 1 1 61.5 61.5 H57"/></g></symbol>
-      <symbol id="i-devices" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="10" rx="2"/><path d="M5 18h8"/><rect x="18" y="8" width="4" height="11" rx="1"/></g></symbol>
-      <symbol id="i-up" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V9m0 0-3 3m3-3 3 3"/><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-1 7.9"/></g></symbol>
-      <symbol id="i-down" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v7m0 0-3-3m3 3 3-3"/><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-1 7.9"/></g></symbol>
-      <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-2.8-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3.3 14H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 3.3V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 2.8 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.8H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.1z"/></g></symbol>
-      <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></g></symbol>
-      <symbol id="i-tablet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M11 17.5h2"/></g></symbol>
-      <symbol id="i-laptop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></g></symbol>
-      <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
-      <symbol id="i-sync" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.6L4 8m0-4v4h4M4 13a8 8 0 0 0 14.3 4.6L20 16m0 4v-4h-4"/></g></symbol>
-      <linearGradient id="grad" x1="0" x2="1"><stop offset="0" stop-color="#5B8CFF"/><stop offset=".55" stop-color="#8B6CFF"/><stop offset="1" stop-color="#2DD4EE"/></linearGradient>
-    </defs>
+    <symbol id="i-dl" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></g></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.6a10 10 0 0 1 14 0M8.5 16.4a5 5 0 0 1 7 0"/><circle cx="12" cy="20" r=".8" fill="currentColor"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v6c0 4.4 3.2 8.2 7.5 9 4.3-.8 7.5-4.6 7.5-9V6z"/><path d="m9 12 2 2 4-4"/></g></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></g></symbol>
   </svg>
 
   <section class="hero">
     <div class="container">
-      <a class="announce" href="download.html"><b>New</b>Windows app · first release coming soon</a>
-      <h1>Your devices are<br>the <span class="grad-text">cloud</span>.</h1>
-      <p class="hero-sub">PSphere backs up your phone, tablet and Windows laptop to each other over your home Wi-Fi. No server, no account, no subscription. Your photos never leave home.</p>
-      <div class="hero-actions">
-        <a href="download.html" class="btn btn-primary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
-          Download for free
-        </a>
-        <a href="#how" class="btn btn-secondary">See how it works</a>
-      </div>
-      <ul class="hero-facts">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>No account needed</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Works without internet</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Android 8.0+ and Windows 10+</li>
-      </ul>
-
-      <div class="stage" aria-hidden="true">
-        <div class="laptop">
-          <div class="screen">
-            <div class="app">
-              <div class="win-title"><svg viewBox="0 0 120 86"><use href="#mark"/></svg>PSphere<span class="dots">— ▢ ✕</span></div>
-              <div class="app-body">
-                <div class="side">
-                  <div class="me"><span class="brand-mark"><svg viewBox="0 0 120 86"><use href="#mark"/></svg></span><div><b>Laptop</b><small>PSphere</small></div></div>
-                  <div class="nav-i on"><svg><use href="#i-devices"/></svg>Devices</div>
-                  <div class="nav-i"><svg><use href="#i-up"/></svg>Sending</div>
-                  <div class="nav-i"><svg><use href="#i-down"/></svg>Receiving</div>
-                  <div class="nav-i"><svg><use href="#i-gear"/></svg>Settings</div>
-                  <div class="foot-note"><svg><use href="#i-lock"/></svg>Local only · encrypted</div>
-                </div>
-                <div class="main">
-                  <h2>Laptop</h2>
-                  <div class="status">
-                    <div class="row">
-                      <svg class="ring" viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" stroke="rgba(255,255,255,.12)" stroke-width="5" fill="none"/><circle cx="26" cy="26" r="22" stroke="url(#grad)" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="52" transform="rotate(-90 26 26)"/><text x="26" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="Inter, sans-serif">62%</text></svg>
-                      <div><div class="t">Receiving from Phone</div><div class="d">Camera · 74 of 120 photos</div></div>
-                      <span class="go"><svg><use href="#i-sync"/></svg>Backing up</span>
-                    </div>
-                    <div class="bar"><i></i></div>
-                  </div>
-                  <div class="lbl">My devices</div>
-                  <div class="devs">
-                    <div class="dev"><div class="ic"><svg><use href="#i-phone"/></svg></div><div><b>Phone</b><span class="on">On this Wi-Fi</span><small>Keeping 4,694 photos · 8.0 GB</small></div></div>
-                    <div class="dev"><div class="ic"><svg><use href="#i-tablet"/></svg></div><div><b>Tablet</b><span class="off">Away · last backup 2 h ago</span><small>Keeping 412 photos · 1.9 GB</small></div></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Backup between your own devices</p>
+          <h1>Your devices are the cloud.</h1>
+          <p class="hero-sub">PSphere backs up your phone, tablet and Windows laptop to each other over your home Wi-Fi. No server, no account, no subscription. Your photos never leave home.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/Madhuhas/P-Sphere/releases/download/v2.0/PSphere-2.0.0.apk"><svg><use href="#i-dl"/></svg>Android <small>2 MB</small></a>
+            <a class="btn btn-secondary" href="https://github.com/Madhuhas/P-Sphere/releases/download/v2.0/PSphere-2.0.0.msi"><svg><use href="#i-dl"/></svg>Windows <small>96 MB</small></a>
           </div>
-          <div class="base"></div>
+          <ul class="hero-facts">
+            <li>No account</li>
+            <li>Works without internet</li>
+            <li>Free and open source</li>
+          </ul>
+          <p class="hero-version">Version 2.0, early development · <a href="download.html">Install guide</a> · <a href="https://github.com/Madhuhas/P-Sphere/releases" rel="noopener">All releases</a></p>
         </div>
-
         <div class="phone">
-          <div class="ph">
-            <div class="sb"><span>9:41</span><span>Wi-Fi ▮▮▮</span></div>
-            <div class="hd"><b>Phone</b></div>
-            <div class="bd">
-              <div class="status">
-                <div class="row">
-                  <svg class="ring" viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" stroke="rgba(61,220,151,.25)" stroke-width="5" fill="none"/><circle cx="26" cy="26" r="22" stroke="#3DDC97" stroke-width="5" fill="none"/><path d="m18 26 6 6 11-12" stroke="#3DDC97" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  <div><div class="t">All backed up</div><div class="d">Just now</div></div>
-                </div>
-                <div class="big"><svg><use href="#i-sync"/></svg>Back up now</div>
-              </div>
-              <div class="lbl">My devices</div>
-              <div class="dev"><div class="ic"><svg><use href="#i-laptop"/></svg></div><div><b>Laptop</b><span class="on">On this Wi-Fi</span><small>2 folders · up to date</small></div></div>
-              <div class="dev"><div class="ic"><svg><use href="#i-tablet"/></svg></div><div><b>Tablet</b><span class="off">Away · 2 h ago</span><small>Camera · 12 waiting</small></div></div>
-            </div>
-            <div class="tabs">
-              <span class="on"><i><svg><use href="#i-devices"/></svg></i>Devices</span><span><i><svg><use href="#i-up"/></svg></i>Sending</span><span><i><svg><use href="#i-down"/></svg></i>Receiving</span><span><i><svg><use href="#i-gear"/></svg></i>Settings</span>
-            </div>
-          </div>
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="img/phone-devices-dark.webp">
+            <img src="img/phone-devices-light.webp" width="540" height="1115" alt="PSphere on a phone: everything is backed up, with a Galaxy Tab and a Laptop linked.">
+          </picture>
         </div>
+      </div>
+      <div class="hero-window">
+        <div class="window"><img src="img/win-devices-dark.webp" width="1084" height="430" alt="The PSphere Windows app keeping 26 files from a Pixel 8 and a Galaxy Tab." loading="lazy"></div>
+        <p class="shot-caption">The Windows app, keeping backups from a phone and a tablet. Real screens from version 2.0.</p>
       </div>
     </div>
   </section>
 
   <section id="how" class="band">
     <div class="container">
-      <div class="section-head center">
-        <p class="eyebrow grad-text">How it works</p>
-        <h2>Every device backs up every other.</h2>
-        <p>Link them once. After that, whenever two of them are on the same Wi-Fi, they quietly send each other what's missing.</p>
-      </div>
-      <div class="flow" aria-hidden="true">
-        <svg viewBox="0 0 900 300">
-          <path class="wire" d="M190 150 C 330 150, 330 70, 450 70"/><path class="wire" d="M190 150 C 330 150, 330 230, 450 230"/><path class="wire" d="M560 70 C 640 70, 640 150, 710 150"/><path class="wire" d="M560 230 C 640 230, 640 150, 710 150"/>
-          <path class="pulse" d="M190 150 C 330 150, 330 70, 450 70"/><path class="pulse b" d="M190 150 C 330 150, 330 230, 450 230"/><path class="pulse c" d="M560 70 C 640 70, 640 150, 710 150"/>
-          <g class="node"><rect x="40" y="105" width="150" height="90" rx="20"/><text x="115" y="146" text-anchor="middle">Phone</text><text class="s" x="115" y="168" text-anchor="middle">Camera, WhatsApp</text></g>
-          <g class="node"><rect x="450" y="30" width="110" height="80" rx="20"/><text x="505" y="66" text-anchor="middle">Tablet</text><text class="s" x="505" y="86" text-anchor="middle">keeps a copy</text></g>
-          <g class="node"><rect x="450" y="190" width="110" height="80" rx="20"/><text x="505" y="226" text-anchor="middle">Laptop</text><text class="s" x="505" y="246" text-anchor="middle">any drive</text></g>
-          <g class="node"><rect x="710" y="105" width="150" height="90" rx="20"/><text x="785" y="146" text-anchor="middle">Laptop was off?</text><text class="s" x="785" y="168" text-anchor="middle">catches up from tablet</text></g>
-        </svg>
+      <div class="section-head">
+        <p class="eyebrow">How it works</p>
+        <h2>Link once. After that, it looks after itself.</h2>
+        <p>Whenever two of your devices are on the same Wi-Fi, they send each other only what's missing.</p>
       </div>
       <ol class="steps">
         <li>
           <h3>Link your devices</h3>
-          <p>One device shows a QR code and the other scans it. The laptop always shows the code, since it has no camera. If scanning doesn't work, you compare a 6-digit code instead. You do this once for each pair.</p>
+          <p>Scan a QR code, or compare a 6-digit code on both screens. You do this once for each pair.</p>
+          <div class="phone"><img src="img/phone-link-dark.webp" width="540" height="1115" alt="The Link a device screen, showing a QR code." loading="lazy"></div>
         </li>
         <li>
-          <h3>Choose folders and where they go</h3>
-          <p>Pick a folder, like Camera, and tick the devices it should go to. Each device chooses its own backup location, and keeps every device's files in their own folder, like <em>Phone/Camera</em>.</p>
+          <h3>Pick folders and where they go</h3>
+          <p>Choose a folder, like Camera, and tick the devices that should keep a copy.</p>
+          <div class="phone">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="img/phone-sending-dark.webp">
+              <img src="img/phone-sending-light.webp" width="540" height="1115" alt="The Sending screen: Camera goes to the Galaxy Tab and the Laptop." loading="lazy">
+            </picture>
+          </div>
         </li>
         <li>
           <h3>Backups run by themselves</h3>
-          <p>When two of your devices are on the same Wi-Fi, they send each other only what's missing. If one is off, its files wait, or arrive later through another device that already has a copy.</p>
+          <p>A device that was off catches up later, even from another device that already has a copy. Big videos resume where they stopped.</p>
+          <div class="phone">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="img/phone-devices-dark.webp">
+              <img src="img/phone-devices-light.webp" width="540" height="1115" alt="The Devices screen: everything is backed up." loading="lazy">
+            </picture>
+          </div>
         </li>
       </ol>
     </div>
   </section>
 
-  <section id="modes">
+  <section id="features">
     <div class="container">
       <div class="section-head">
-        <p class="eyebrow grad-text">Features</p>
-        <h2>What works today, and what's next</h2>
-        <p>PSphere is in early development. The Android and Windows apps do the backing up now; one photo library across all your devices comes next.</p>
+        <p class="eyebrow">What works today</p>
+        <h2>Version 2.0, and what's next</h2>
+        <p>PSphere is in early development. The Android and Windows apps do the backing up now; one photo library across your devices comes next.</p>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th scope="col">Feature</th><th scope="col">Status</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Several folders per device, each going to the devices you choose</td><td class="yes">Available</td></tr>
-            <tr><td>Every device sends and receives: phone, tablet and Windows laptop</td><td class="yes">Available</td></tr>
-            <tr><td>Each device chooses where backups are saved, on any folder or drive</td><td class="yes">Available</td></tr>
-            <tr><td>Backup, not mirror: deleting a file never deletes its copies</td><td class="yes">Available</td></tr>
-            <tr><td>Relay: a device that's off catches up from any device holding a copy</td><td class="yes">Available</td></tr>
-            <tr><td>Big videos resume where they stopped after an interruption</td><td class="yes">Available</td></tr>
-            <tr><td>Windows app that runs in the tray and can start with Windows</td><td class="yes">Available</td></tr>
-            <tr><td>One photo library: see every device's photos on any device</td><td class="no">Coming next</td></tr>
-            <tr><td>Free up space on your phone once photos are safe elsewhere</td><td class="no">Coming next</td></tr>
-            <tr><td>Albums, faces and search on the laptop</td><td class="no">Later</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <ul class="rows">
+        <li><div class="t"><b>Several folders per device</b><span class="d">Each one goes to the devices you choose.</span></div><span class="state ok">Available</span></li>
+        <li><div class="t"><b>Every device sends and receives</b><span class="d">Phone, tablet and Windows laptop. Each picks where the backups it keeps are saved.</span></div><span class="state ok">Available</span></li>
+        <li><div class="t"><b>Backup, not mirror</b><span class="d">Deleting a file never deletes its copies. A changed file keeps its old version for 30 days.</span></div><span class="state ok">Available</span></li>
+        <li><div class="t"><b>Catch up from any copy</b><span class="d">A device that was off catches up from any device that has the files.</span></div><span class="state ok">Available</span></li>
+        <li><div class="t"><b>Windows app in the tray</b><span class="d">Runs quietly and can start with Windows.</span></div><span class="state ok">Available</span></li>
+        <li><div class="t"><b>One photo library</b><span class="d">See every device's photos on any device.</span></div><span class="state">Next</span></li>
+        <li><div class="t"><b>Free up space</b><span class="d">Remove photos from your phone once they're safe elsewhere.</span></div><span class="state">Next</span></li>
+      </ul>
     </div>
   </section>
 
-  <section class="band">
+  <section id="privacy" class="band">
     <div class="container">
       <div class="section-head">
-        <p class="eyebrow grad-text">Privacy</p>
+        <p class="eyebrow">Privacy</p>
         <h2>Built so your photos never need to leave home</h2>
       </div>
-      <div class="grid-3">
-        <div class="feature">
-          <div class="feature-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a7 7 0 0 1 14 0M8.5 16a3.5 3.5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg></div>
-          <h3>Local network only</h3>
-          <p>Your devices talk to each other directly over your Wi-Fi. There's no PSphere server, no cloud and no account, and nothing goes to the internet.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
-          <h3>Only your linked devices</h3>
-          <p>Every connection is encrypted, and each device checks that the other is one you linked. Other PSphere devices on the same Wi-Fi are ignored.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
-          <h3>Nothing lost silently</h3>
-          <p>Every file is checked against its SHA-256 fingerprint when it arrives. Deleting a file never deletes its copies, and when a file changes, the old version is kept for 30 days.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="container">
-      <div class="section-head">
-        <p class="eyebrow grad-text">What's in the project</p>
-        <h2>Two apps, one engine</h2>
-        <p>Both apps share the same core, so they behave the same way. All of it is open source under the GNU AGPL-3.0.</p>
-      </div>
-      <dl class="stack">
-        <div><dt>Android app</dt><dd>For phones and tablets. Backs up folders you pick and keeps backups from your other devices.</dd><span class="tech">Kotlin · Jetpack Compose · WorkManager</span></div>
-        <div><dt>Windows app</dt><dd>Keeps backups on any drive, backs up the laptop's own folders, and runs quietly in the tray.</dd><span class="tech">Kotlin · Compose for Desktop</span></div>
-        <div><dt>Shared core</dt><dd>Linking, encryption, the folder rules, relay and resume: the same code in both apps, with automated tests.</dd><span class="tech">Kotlin · TLS · SHA-256</span></div>
-      </dl>
-    </div>
-  </section>
-
-  <section class="band">
-    <div class="container">
-      <div class="section-head">
-        <p class="eyebrow grad-text">Questions</p>
-        <h2>Frequently asked</h2>
-      </div>
-      <div class="faq">
-        <details>
-          <summary>Do I need a server or an account?</summary>
-          <div><p>No. Install PSphere on two or more of your devices, link them, and they back each other up over your Wi-Fi. Nothing else is needed.</p></div>
-        </details>
-        <details>
-          <summary>Where do backups from my other devices end up?</summary>
-          <div><p>In the backup location you choose on each device, for example <code>D:\PSphere Backups</code> on a laptop or <code>Pictures/PSphere</code> on a phone. Inside it, each device gets its own folder, like <code>Phone/Camera</code>.</p></div>
-        </details>
-        <details>
-          <summary>If I delete a photo on my phone, is it deleted from the backups?</summary>
-          <div><p>No. PSphere is a backup, not a mirror. Copies on your other devices stay where they are.</p></div>
-        </details>
-        <details>
-          <summary>Does it work when I'm not at home?</summary>
-          <div><p>Your devices need to be on the same Wi-Fi. Backups wait until they are, then catch up with only what changed. A device that was off can also catch up from any other device that already has a copy.</p></div>
-        </details>
-        <details>
-          <summary>Is it on the Play Store?</summary>
-          <div><p>Not yet. You install the Android app from its APK file and the Windows app from its installer. The <a href="download.html#install">download page</a> walks through it.</p></div>
-        </details>
-        <details>
-          <summary>Can I rely on it as my only backup?</summary>
-          <div><p>Not yet. PSphere is in early development. Keep another copy of photos you can't afford to lose until it reaches a stable release.</p></div>
-        </details>
-      </div>
+      <ul class="rows">
+        <li><span class="ic"><svg><use href="#i-wifi"/></svg></span><div class="t"><b>Stays at home</b><span class="d">Devices talk directly over your Wi-Fi. There's no PSphere server, no cloud and no account, and nothing goes to the internet.</span></div></li>
+        <li><span class="ic"><svg><use href="#i-lock"/></svg></span><div class="t"><b>Only your devices</b><span class="d">Every connection is encrypted, and each device checks that the other is one you linked. Other PSphere devices on the same Wi-Fi are ignored.</span></div></li>
+        <li><span class="ic"><svg><use href="#i-shield"/></svg></span><div class="t"><b>Nothing lost silently</b><span class="d">Every file is checked against its SHA-256 fingerprint when it arrives.</span></div></li>
+        <li><span class="ic"><svg><use href="#i-code"/></svg></span><div class="t"><b>Open source</b><span class="d">All of it is on <a href="https://github.com/Madhuhas/P-Sphere" rel="noopener">GitHub</a> under the GNU AGPL-3.0, so anyone can check what it does.</span></div></li>
+      </ul>
     </div>
   </section>
 
   <section id="updates">
     <div class="container">
       <div class="section-head">
-        <p class="eyebrow grad-text">Changelog, live</p>
-        <h2>What's new in PSphere</h2>
-        <p>Every change as it lands on GitHub: new features, fixes, security updates and releases. This list checks for new ones by itself while the page is open.</p>
+        <p class="eyebrow">Updates</p>
+        <h2>What's new</h2>
+        <p>Every change as it lands on GitHub. This list checks for new ones while the page is open.</p>
       </div>
       <div class="updates" data-updates data-limit="8">
         <div class="updates-title">
           <span class="file">updates.log</span>
-          <span class="live" data-live><span class="live-dot" aria-hidden="true"></span><span data-live-text>as of 2026-10-31</span></span>
+          <span class="live" data-live><span class="live-dot" aria-hidden="true"></span><span data-live-text>as of 2026-11-01</span></span>
         </div>
         <div class="chips" role="group" aria-label="Show">
           <button type="button" aria-pressed="true" data-kind="">all</button>
@@ -298,7 +174,22 @@
         </ol>
         <p class="log-empty" hidden>Nothing of this kind among the latest changes.</p>
       </div>
-      <p style="margin-top:20px"><a href="https://github.com/Madhuhas/P-Sphere/commits/HEAD" rel="noopener">Every change on GitHub</a></p>
+    </div>
+  </section>
+
+  <section id="faq" class="band">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Questions</p>
+        <h2>Frequently asked</h2>
+      </div>
+      <div class="faq">
+        <details><summary>Do I need a server or an account?</summary><div><p>No. Install PSphere on two or more of your devices, link them, and they back each other up over your Wi-Fi. Nothing else is needed.</p></div></details>
+        <details><summary>Where do backups from my other devices end up?</summary><div><p>In the backup location you choose on each device, for example <code>D:\PSphere Backups</code> on a laptop or <code>Pictures/PSphere</code> on a phone. Inside it, each device gets its own folder, like <code>Phone/Camera</code>.</p></div></details>
+        <details><summary>If I delete a photo on my phone, is the backup deleted?</summary><div><p>No. PSphere is a backup, not a mirror. Copies on your other devices stay where they are.</p></div></details>
+        <details><summary>Does it work when I'm away from home?</summary><div><p>Your devices need to be on the same Wi-Fi. Backups wait until they are, then catch up with only what changed.</p></div></details>
+        <details><summary>Can it be my only backup?</summary><div><p>Not yet. PSphere is in early development. Keep another copy of photos you can't afford to lose until it reaches a stable release.</p></div></details>
+      </div>
     </div>
   </section>
 
@@ -307,11 +198,11 @@
       <div class="cta">
         <div>
           <h2>Try PSphere on your devices</h2>
-          <p>Free and open source. Install it on your phone and laptop, link them, and your first backup starts in a minute.</p>
+          <p>Install it on your phone and laptop, link them, and your first backup starts in a minute.</p>
         </div>
-        <div class="hero-actions" style="margin-top:0">
-          <a href="download.html" class="btn btn-primary">Download</a>
-          <a href="docs.html" class="btn btn-secondary">Documentation</a>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://github.com/Madhuhas/P-Sphere/releases/download/v2.0/PSphere-2.0.0.apk"><svg><use href="#i-dl"/></svg>Android</a>
+          <a class="btn btn-secondary" href="https://github.com/Madhuhas/P-Sphere/releases/download/v2.0/PSphere-2.0.0.msi"><svg><use href="#i-dl"/></svg>Windows</a>
         </div>
       </div>
     </div>
@@ -322,7 +213,7 @@
   <div class="container">
     <div class="foot">
       <div>
-        <a href="index.html" class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 86"><g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M33 79 H90 A20 20 0 0 0 93 39 A30 30 0 0 0 36 30 A24.5 24.5 0 0 0 33 79 Z"/><path d="M49 79 V49 A12.5 12.5 0 1 1 61.5 61.5 H57"/></g></svg></span>PSphere</a>
+        <a href="index.html" class="brand"><span class="brand-mark" aria-hidden="true">(p)</span>PSphere</a>
         <p>Backup between your own devices, for people who'd rather keep their photos at home.</p>
         <a class="built-with" href="https://kadhai.pages.dev">
           <picture>
@@ -334,27 +225,31 @@
       <div>
         <h4>Product</h4>
         <a href="index.html#how">How it works</a>
-        <a href="index.html#modes">Features</a>
+        <a href="index.html#features">Features</a>
         <a href="download.html">Download</a>
+        <a href="index.html#updates">Updates</a>
       </div>
       <div>
-        <h4>Docs</h4>
+        <h4>Help</h4>
         <a href="docs.html#quick-start">Quick start</a>
-        <a href="docs.html#windows">Windows app</a>
         <a href="docs.html#troubleshooting">Troubleshooting</a>
+        <a href="https://github.com/Madhuhas/P-Sphere/issues/new/choose" rel="noopener">Report a problem</a>
+        <a href="https://github.com/Madhuhas/P-Sphere/security/advisories/new" rel="noopener">Report a security issue</a>
       </div>
       <div>
         <h4>Legal</h4>
-        <a href="terms.html">Terms of Service</a>
         <a href="license.html">License</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="https://github.com/Madhuhas/P-Sphere" rel="noopener">Source code</a>
       </div>
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Kotini Sai Madhuhas. Open source under the <a href="license.html">GNU AGPL-3.0</a>.</span>
-      <a href="https://github.com/Madhuhas/P-Sphere">Source on GitHub</a>
+      <span>Version 2.0 · <a href="https://github.com/Madhuhas/P-Sphere/releases" rel="noopener">Releases</a></span>
     </div>
   </div>
 </footer>
+
 <script src="site.js"></script>
 </body>
 </html>
