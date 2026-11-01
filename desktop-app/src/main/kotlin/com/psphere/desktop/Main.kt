@@ -37,10 +37,11 @@ import kotlinx.coroutines.withContext
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Dimension
-import java.awt.Font
 import java.awt.GraphicsEnvironment
+import java.awt.Image
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
 import javax.swing.JOptionPane
 import kotlin.system.exitProcess
 
@@ -50,7 +51,7 @@ fun main(args: Array<String>) {
     val instance = SingleInstance(dataDir)
     if (!instance.acquired) {
         if (!instance.askRunningToShow()) {
-            JOptionPane.showMessageDialog(null, "PSphere is already running. Look for the P icon in the tray, at the bottom right of the screen.", "PSphere", JOptionPane.INFORMATION_MESSAGE)
+            JOptionPane.showMessageDialog(null, "PSphere is already running. Look for the (p) icon in the tray, at the bottom right of the screen.", "PSphere", JOptionPane.INFORMATION_MESSAGE)
         }
         exitProcess(0)
     }
@@ -123,7 +124,7 @@ fun main(args: Array<String>) {
                         Engine.prefs.trayNoticeShown = true
                         trayState.sendNotification(Notification(
                             "PSphere is still running",
-                            "It keeps receiving backups in the tray. To stop it, right-click the P icon and choose Quit.",
+                            "It keeps receiving backups in the tray. To stop it, right-click the (p) icon and choose Quit.",
                         ))
                     }
                 } else {
@@ -156,26 +157,24 @@ private fun startSize(): DpSize {
 
 private val windowIcon: Painter by lazy { drawIcon(64, null).toPainter() }
 
-/** The "P" badge, with a small dot while busy (blue) or paused (amber). */
+/** The "(p)" badge, with a small dot while busy (green) or paused (amber). */
 @Composable
 private fun trayIcon(busy: Boolean, paused: Boolean): Painter = remember(busy, paused) {
-    drawIcon(32, when { busy -> Color(0xA9, 0xC7, 0xFF); paused -> Color(0xFF, 0xB8, 0x66); else -> null }).toPainter()
+    drawIcon(32, when { busy -> Color(0x3D, 0xDC, 0x97); paused -> Color(0xFF, 0xB8, 0x66); else -> null }).toPainter()
+}
+
+/** The app icon, the same picture as icons/psphere.ico. */
+private val iconImage: BufferedImage by lazy {
+    Thread.currentThread().contextClassLoader.getResourceAsStream("psphere-icon.png")!!.use { ImageIO.read(it) }
 }
 
 private fun drawIcon(size: Int, dot: Color?): BufferedImage {
     val img = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
     val g = img.createGraphics()
     g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
-    g.color = Color(0x15, 0x65, 0xC0)
-    val r = size / 4
-    g.fillRoundRect(0, 0, size, size, r, r)
-    g.color = Color.WHITE
-    g.font = Font("Segoe UI", Font.BOLD, (size * 0.68).toInt())
-    val fm = g.fontMetrics
-    val x = (size - fm.stringWidth("P")) / 2
-    val y = (size - fm.height) / 2 + fm.ascent
-    g.drawString("P", x, y)
+    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+    g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+    g.drawImage(iconImage.getScaledInstance(size, size, Image.SCALE_SMOOTH), 0, 0, null)
     if (dot != null) {
         val d = size * 7 / 16
         g.color = dot

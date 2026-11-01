@@ -152,7 +152,7 @@ private fun StatusCard(activity: Activity, overview: Overview, onBackUp: () -> U
     val waitingOffline = overview.rows.filter { it.waiting > 0 && !it.online }
     val waitingOnline = overview.rows.filter { it.waiting > 0 && it.online }
 
-    data class Look(val title: String, val detail: String, val icon: ImageVector, val bg: Color, val fg: Color, val chooseLocation: Boolean = false)
+    data class Look(val title: String, val detail: String, val icon: ImageVector, val bg: Color, val fg: Color, val accent: Color = fg, val chooseLocation: Boolean = false)
     // Files waiting to go out come first: a laptop that only sends doesn't need a backup location.
     val look = when {
         busy -> {
@@ -173,16 +173,16 @@ private fun StatusCard(activity: Activity, overview: Overview, onBackUp: () -> U
         !overview.hasLocation && !overview.hasFolders -> Look(
             "Choose where backups go",
             "Pick a folder on this laptop, such as D:\\PSphere Backups, before your devices can back up here.",
-            Icons.Default.SaveAlt, ok.warningContainer, ok.onWarningContainer, chooseLocation = true,
+            Icons.Default.SaveAlt, cs.surfaceContainerLow, cs.onSurface, accent = ok.warning, chooseLocation = true,
         )
         overview.paused -> Look("Receiving is paused", "Your devices wait until you turn it back on in Receiving.", Icons.Default.PauseCircle, cs.surfaceContainerHigh, cs.onSurface)
         // A laptop that only keeps other devices' backups isn't asked to add folders of its own.
         !overview.hasFolders -> Look(
             "Ready to receive",
             if (overview.keptFiles > 0) "Keeping ${plural(overview.keptFiles, "file")} (${formatBytes(overview.keptBytes)}) from your devices" else "Your devices can back up here when they're on this Wi-Fi.",
-            Icons.Default.CloudDownload, ok.successContainer, ok.onSuccessContainer,
+            Icons.Default.CloudDownload, cs.surfaceContainerLow, cs.onSurface, accent = ok.success,
         )
-        else -> Look("Everything is backed up", lastBackupText(overview.rows), Icons.Default.CheckCircle, ok.successContainer, ok.onSuccessContainer)
+        else -> Look("Everything is backed up", lastBackupText(overview.rows), Icons.Default.CheckCircle, cs.surfaceContainerLow, cs.onSurface, accent = ok.success)
     }
 
     Card(
@@ -197,7 +197,7 @@ private fun StatusCard(activity: Activity, overview: Overview, onBackUp: () -> U
                         CircularProgressIndicator(modifier = Modifier.padding(12.dp), strokeWidth = 2.5.dp, color = look.fg)
                     }
                 } else {
-                    IconBadge(look.icon, container = look.fg.copy(alpha = .10f), content = look.fg, size = 48.dp)
+                    IconBadge(look.icon, container = look.accent.copy(alpha = .12f), content = look.accent, size = 48.dp)
                 }
                 Column(Modifier.weight(1f)) {
                     Text(look.title, style = MaterialTheme.typography.titleLarge)

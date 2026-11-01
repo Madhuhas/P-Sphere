@@ -140,17 +140,17 @@ private fun StatusCard(activity: Activity, overview: Overview, onBackUp: () -> U
     val waitingOffline = overview.rows.filter { it.waiting > 0 && !it.online }
     val waitingOnline = overview.rows.filter { it.waiting > 0 && it.online }
 
-    data class Look(val title: String, val detail: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val bg: Color, val fg: Color)
+    data class Look(val title: String, val detail: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val bg: Color, val fg: Color, val accent: Color = fg)
     val look = when {
         busy -> Look("Backing up", describeActivity(activity).orEmpty(), Icons.Default.Sync, cs.primaryContainer, cs.onPrimaryContainer)
-        !overview.hasFolders -> Look("Choose what to back up", "Pick folders on this device and the devices they go to.", Icons.Default.FolderOpen, ok.warningContainer, ok.onWarningContainer)
+        !overview.hasFolders -> Look("Choose what to back up", "Pick folders on this device and the devices they go to.", Icons.Default.FolderOpen, cs.surfaceContainerLow, cs.onSurface, accent = ok.warning)
         waitingOnline.isNotEmpty() -> Look("Ready to back up", waitingOnline.joinToString(" · ") { "${plural(it.waiting, "file")} for ${it.device.name}" }, Icons.Default.CloudUpload, cs.surfaceContainerHigh, cs.onSurface)
         waitingOffline.isNotEmpty() -> Look(
             "Waiting for ${waitingOffline.joinToString(", ") { it.device.name }}",
             waitingOffline.joinToString(" · ") { "${plural(it.waiting, "file")} for ${it.device.name}" } + ". Backs up when it's on this Wi-Fi.",
             Icons.Default.HourglassBottom, cs.surfaceContainerHigh, cs.onSurface,
         )
-        else -> Look("Everything is backed up", lastBackupText(overview.rows), Icons.Default.CheckCircle, ok.successContainer, ok.onSuccessContainer)
+        else -> Look("Everything is backed up", lastBackupText(overview.rows), Icons.Default.CheckCircle, cs.surfaceContainerLow, cs.onSurface, accent = ok.success)
     }
 
     Card(
@@ -165,7 +165,7 @@ private fun StatusCard(activity: Activity, overview: Overview, onBackUp: () -> U
                         CircularProgressIndicator(modifier = Modifier.padding(12.dp), strokeWidth = 2.5.dp, color = look.fg)
                     }
                 } else {
-                    IconBadge(look.icon, container = look.fg.copy(alpha = .10f), content = look.fg, size = 48.dp)
+                    IconBadge(look.icon, container = look.accent.copy(alpha = .12f), content = look.accent, size = 48.dp)
                 }
                 Column(Modifier.weight(1f)) {
                     Text(look.title, style = MaterialTheme.typography.titleLarge)

@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Adaptive icon foreground: white "P" with an orbit dot, kept inside the 66dp safe zone. -->
+<!-- Adaptive icon foreground: "(p)" in JetBrains Mono ExtraBold, kept inside the 66dp safe zone.
+     Made by make_icons.py from the font's outlines. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M40,32 L40,76 L47,76 L47,60 L58,60 C66,60 71,54 71,46 C71,38 66,32 58,32 Z M47,39 L57,39 C61.5,39 64,42 64,46 C64,50 61.5,53 57,53 L47,53 Z"/>
-    <path
-        android:fillColor="#90CAF9"
-        android:pathData="M73,70 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"/>
+        android:fillColor="#ECEDEF"
+        android:pathData="M40 70.36Q34.29 69.02 31.15 65.25Q28 61.49 28 56.11V49.64Q28 44.25 31.15 40.55Q34.29 36.84 40 35.45V40.91Q36.98 41.6 35.22 43.95Q33.45 46.29 33.45 49.64V56.11Q33.45 59.42 35.22 61.76Q36.98 64.11 40 64.84ZM45.49 72.55V46H50.76V49.64Q51.42 47.75 52.84 46.69Q54.25 45.64 56.25 45.64Q58.18 45.64 59.64 46.64Q61.09 47.64 61.91 49.38Q62.73 51.13 62.73 53.45V58.55Q62.73 60.84 61.91 62.6Q61.09 64.36 59.64 65.36Q58.18 66.36 56.25 66.36Q54.29 66.36 52.87 65.33Q51.45 64.29 50.8 62.44L50.95 67.09V72.55ZM54.15 61.64Q55.64 61.64 56.45 60.78Q57.27 59.93 57.27 58.36V53.64Q57.27 52.04 56.45 51.2Q55.64 50.36 54.15 50.36Q52.58 50.36 51.76 51.25Q50.95 52.15 50.95 53.82V58.18Q50.95 59.85 51.76 60.75Q52.58 61.64 54.15 61.64ZM68 70.36V64.84Q71.02 64.11 72.78 61.76Q74.55 59.42 74.55 56.11V49.64Q74.55 46.29 72.78 43.95Q71.02 41.6 68 40.91V35.45Q73.75 36.84 76.87 40.55Q80 44.25 80 49.64V56.11Q80 61.49 76.87 65.25Q73.75 69.02 68 70.36Z"/>
 </vector>
