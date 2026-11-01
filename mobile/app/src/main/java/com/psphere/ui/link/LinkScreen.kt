@@ -76,16 +76,18 @@ fun LinkScreen(onBack: () -> Unit) {
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var linkedName by remember { mutableStateOf<String?>(null) }
-    val initialIds = remember { Engine.node.devices().map { it.id }.toSet() }
+    val seenIds = remember { Engine.node.devices().map { it.id }.toMutableSet() }
 
     // Show this device as linkable only while this screen is open.
     DisposableEffect(Unit) {
         Engine.openLink()
         onDispose { Engine.closeLink() }
     }
-    // Another device scanned our code: say so.
+    // Another device scanned our code: say so. Each code works once, so show a fresh one
+    // straight away, and another device can link without leaving this screen.
     LaunchedEffect(state.revision) {
-        Engine.node.devices().firstOrNull { it.id !in initialIds }?.let { linkedName = it.name }
+        Engine.node.devices().filter { seenIds.add(it.id) }.forEach { linkedName = it.name }
+        if (state.linkOffer != null && !Engine.node.isPairingOpen) Engine.openLink()
     }
 
     fun run(block: suspend () -> String) {
@@ -189,9 +191,9 @@ private fun NearbyRow(d: NearbyDevice, enabled: Boolean, onLink: () -> Unit) {
 @Composable
 private fun LinkedBanner(name: String, onDone: () -> Unit) {
     val ok = PSphereTheme.status
-    Card(colors = CardDefaults.cardColors(containerColor = ok.successContainer, contentColor = ok.onSuccessContainer)) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, contentColor = MaterialTheme.colorScheme.onSurface)) {
         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Default.CheckCircle, null)
+            Icon(Icons.Default.CheckCircle, null, tint = ok.success)
             Column(Modifier.weight(1f)) {
                 Text("Linked with $name", style = MaterialTheme.typography.titleMedium)
                 Text("Choose folders for it in Sending.", style = MaterialTheme.typography.bodyMedium)

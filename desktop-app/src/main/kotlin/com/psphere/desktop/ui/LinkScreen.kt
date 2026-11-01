@@ -58,7 +58,7 @@ fun LinkScreen(onBack: () -> Unit) {
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var linkedName by remember { mutableStateOf<String?>(null) }
-    val initialIds = remember { Engine.node.devices().map { it.id }.toSet() }
+    val seenIds = remember { Engine.node.devices().map { it.id }.toMutableSet() }
     val cs = MaterialTheme.colorScheme
 
     // Show this laptop as linkable only while this screen is open.
@@ -66,9 +66,11 @@ fun LinkScreen(onBack: () -> Unit) {
         Engine.openLink()
         onDispose { Engine.closeLink() }
     }
-    // A phone scanned our code: say so.
+    // A phone scanned our code: say so. Each code works once, so show a fresh one
+    // straight away, and another device can link without leaving this screen.
     LaunchedEffect(state.revision) {
-        Engine.node.devices().firstOrNull { it.id !in initialIds }?.let { linkedName = it.name }
+        Engine.node.devices().filter { seenIds.add(it.id) }.forEach { linkedName = it.name }
+        if (state.linkOffer != null && !Engine.node.isPairingOpen) Engine.openLink()
     }
 
     fun linkByCode(d: NearbyDevice) {
@@ -158,9 +160,9 @@ private fun NearbyRow(d: NearbyDevice, enabled: Boolean, onLink: () -> Unit) {
 @Composable
 private fun LinkedBanner(name: String, onDone: () -> Unit) {
     val ok = PSphereTheme.status
-    Card(colors = CardDefaults.cardColors(containerColor = ok.successContainer, contentColor = ok.onSuccessContainer)) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, contentColor = MaterialTheme.colorScheme.onSurface)) {
         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Default.CheckCircle, null)
+            Icon(Icons.Default.CheckCircle, null, tint = ok.success)
             Column(Modifier.weight(1f)) {
                 Text("Linked with $name", style = MaterialTheme.typography.titleMedium)
                 Text("On $name, choose folders to back up to ${Engine.node.deviceName} in Sending.", style = MaterialTheme.typography.bodyMedium)
