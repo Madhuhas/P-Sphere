@@ -41,3 +41,6 @@ shared/.kotlin/
 desktop-app/build/
 desktop-app/.gradle/
 desktop-app/.kotlin/
+
+# VS Code Java extension output
+bin/
