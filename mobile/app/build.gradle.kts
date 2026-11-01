@@ -60,6 +60,12 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // The release lint check can't find the jar of the included :shared build ("Could not find
+    // jar for project :shared"), a known Android Gradle Plugin limit with composite builds.
+    lint {
+        checkReleaseBuilds = false
+    }
 }
 
 dependencies {
