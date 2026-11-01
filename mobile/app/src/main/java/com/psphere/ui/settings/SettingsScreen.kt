@@ -130,20 +130,23 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
                     NavRow(Icons.Default.Devices, "Link a device", "Scan or show a code") { onLink() }
                 }
 
+                AboutLinks()
+
                 SectionLabel("About")
                 SettingsCard {
                     InfoRow(Icons.Default.Info, "Version", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                     HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
                     InfoRow(Icons.Default.Devices, "Device ID", Engine.node.id)
                 }
-                Spacer(Modifier.height(24.dp))
+                AboutFooter()
+                Spacer(Modifier.height(16.dp))
             }
         }
     }
 }
 
 @Composable
-private fun SettingsCard(content: @Composable () -> Unit) {
+internal fun SettingsCard(content: @Composable () -> Unit) {
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) { Column { content() } }
 }
 

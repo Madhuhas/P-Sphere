@@ -106,6 +106,8 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
                 NavRow(Icons.Default.QrCode2, "Link a device", "Show a code to scan") { onLink() }
             }
 
+            AboutLinks()
+
             SectionLabel("About")
             PanelCard {
                 InfoRow(Icons.Default.Info, "Version") { Text(APP_VERSION, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant) }
@@ -116,11 +118,7 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
                 HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
                 InfoBlock(Icons.Default.Lock, "Local only", "PSphere talks only to your linked devices on your own network, encrypted. Nothing goes to the internet.")
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "PSphere is free software under the GNU AGPL-3.0.",
-                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp),
-            )
+            AboutFooter()
         }
     }
 }
