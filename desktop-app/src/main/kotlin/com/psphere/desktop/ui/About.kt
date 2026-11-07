@@ -23,12 +23,20 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.SystemUpdateAlt
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +59,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.psphere.core.update.UpdateCheck
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 
 /** Where the About links go. The app itself never goes online; these open in the browser. */
@@ -76,6 +88,11 @@ internal object Links {
 fun AboutLinks() {
     val uri = LocalUriHandler.current
     val cs = MaterialTheme.colorScheme
+
+    SectionLabel("Updates")
+    PanelCard {
+        CheckForUpdatesRow()
+    }
 
     SectionLabel("Help and feedback")
     PanelCard {
@@ -127,6 +144,58 @@ private fun LinkRow(icon: ImageVector, title: String, sub: String, onClick: () -
             Text(sub, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Icon(Icons.AutoMirrored.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+    }
+}
+
+/**
+ * "Check for updates" row. This is the only place the app reaches the internet, and only when
+ * clicked: it asks GitHub for the newest release, compares it, and offers the download if newer.
+ */
+@Composable
+private fun CheckForUpdatesRow() {
+    val uri = LocalUriHandler.current
+    val scope = rememberCoroutineScope()
+    var checking by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf<UpdateCheck.Status?>(null) }
+
+    val sub = when (val s = status) {
+        is UpdateCheck.Status.Available -> "Update available: ${s.version} · click to download"
+        is UpdateCheck.Status.UpToDate -> "You're on the latest version ($APP_VERSION)"
+        is UpdateCheck.Status.Failed -> s.reason
+        else -> if (checking) "Checking…" else "You're on version $APP_VERSION"
+    }
+
+    val onClick: () -> Unit = {
+        val s = status
+        if (s is UpdateCheck.Status.Available) {
+            uri.openUri(s.url)
+        } else {
+            checking = true
+            status = null
+            scope.launch {
+                val result = withContext(Dispatchers.IO) { UpdateCheck.check(APP_VERSION) }
+                status = result
+                checking = false
+            }
+        }
+    }
+
+    Row(
+        Modifier.fillMaxWidth().clickable(enabled = !checking, role = Role.Button, onClick = onClick).padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Icon(Icons.Default.SystemUpdateAlt, null, tint = MaterialTheme.colorScheme.primary)
+        Column(Modifier.weight(1f)) {
+            Text("Check for updates", style = MaterialTheme.typography.bodyLarge)
+            Text(sub, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        when {
+            checking -> CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+            status is UpdateCheck.Status.Available ->
+                Icon(Icons.AutoMirrored.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+            else ->
+                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        }
     }
 }
 
