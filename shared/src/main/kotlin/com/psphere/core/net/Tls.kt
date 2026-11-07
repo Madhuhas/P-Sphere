@@ -34,6 +34,7 @@ class Tls(private val identity: DeviceIdentity) {
         (context.serverSocketFactory.createServerSocket(port) as SSLServerSocket).apply {
             needClientAuth = true
             reuseAddress = true
+            enabledProtocols = allowedProtocols(supportedProtocols)
         }
 
     /** Connects and completes the handshake. The caller must check [peerFingerprint] next. */
@@ -44,6 +45,7 @@ class Tls(private val identity: DeviceIdentity) {
             raw.soTimeout = HANDSHAKE_TIMEOUT_MS
             val ssl = context.socketFactory.createSocket(raw, host, port, true) as SSLSocket
             ssl.useClientMode = true
+            ssl.enabledProtocols = allowedProtocols(ssl.supportedProtocols)
             ssl.startHandshake()
             return ssl
         } catch (e: Exception) {
@@ -56,9 +58,24 @@ class Tls(private val identity: DeviceIdentity) {
         const val CONNECT_TIMEOUT_MS = 5_000
         const val HANDSHAKE_TIMEOUT_MS = 15_000
 
+        /**
+         * Protocols we are willing to speak, strongest first. TLS 1.0/1.1 are obsolete and never
+         * offered. TLS 1.3 is preferred; 1.2 stays only as a floor for Android 8–9 (minSdk 26),
+         * which has no TLS 1.3. Two up-to-date devices therefore always negotiate 1.3. The returned
+         * set is intersected with what the platform supports so older devices never get an
+         * unsupported-protocol error.
+         */
+        private val PREFERRED_PROTOCOLS = listOf("TLSv1.3", "TLSv1.2")
+
+        private fun allowedProtocols(supported: Array<String>): Array<String> {
+            val allowed = PREFERRED_PROTOCOLS.filter { it in supported }
+            return if (allowed.isNotEmpty()) allowed.toTypedArray() else supported
+        }
+
         /** Completes the handshake on an accepted socket. */
         fun accept(socket: Socket): SSLSocket {
             val ssl = socket as SSLSocket
+            ssl.enabledProtocols = allowedProtocols(ssl.supportedProtocols)
             ssl.soTimeout = HANDSHAKE_TIMEOUT_MS
             ssl.startHandshake()
             return ssl

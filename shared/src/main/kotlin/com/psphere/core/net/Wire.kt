@@ -50,6 +50,9 @@ sealed class Msg {
     data class PairRequest(val token: String, val codeMode: Boolean) : Msg()
     data class PairConfirm(val accepted: Boolean) : Msg()
     data class PairOk(val name: String) : Msg()
+    /** Initiator → responder, sent only after the initiator has saved the link, so the responder
+     * never records a one-sided link when the initiator has already given up. */
+    object PairDone : Msg() { override fun toString() = "PairDone" }
     data class Error(val message: String) : Msg()
     object End : Msg() { override fun toString() = "End" }
     object Bye : Msg() { override fun toString() = "Bye" }
@@ -114,6 +117,7 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         is Msg.Error -> { o.str(m.message.take(500)); 16 }
         Msg.End -> 17
         Msg.Bye -> 18
+        Msg.PairDone -> 19
     }
 
     private fun decode(type: Int, i: DataInputStream): Msg = when (type) {
@@ -135,6 +139,7 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         16 -> Msg.Error(i.str())
         17 -> Msg.End
         18 -> Msg.Bye
+        19 -> Msg.PairDone
         else -> throw ProtocolException("Unknown message type $type from ${peerLabel()}")
     }
 
@@ -145,7 +150,7 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
     }
 
     companion object {
-        const val VERSION = 3
+        const val VERSION = 4
         const val MAX_FRAME = 64 * 1024 * 1024
         const val MAX_PREVIEW = 2 * 1024 * 1024
     }

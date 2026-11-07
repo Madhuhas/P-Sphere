@@ -784,7 +784,10 @@ class Node(
                 wire.expect<Msg.Hello>()
                 wire.send(Msg.PairRequest(offer.token, codeMode = false))
                 val ok = wire.expect<Msg.PairOk>()
-                return link(offer.fingerprint, ok.name, HostPort(host, offer.port))
+                val device = link(offer.fingerprint, ok.name, HostPort(host, offer.port))
+                // Tell the other device we've saved the link, so it saves its side too (not before).
+                runCatching { wire.send(Msg.PairDone) }
+                return device
             }
         }
         throw IOException("Couldn't reach ${offer.name}. Make sure both devices are on the same Wi-Fi.", lastError)
@@ -804,7 +807,10 @@ class Node(
             wire.send(Msg.PairConfirm(accepted))
             val ok = wire.expect<Msg.PairOk>()
             if (!accepted) throw ProtocolException("Linking was cancelled")
-            return link(fp, ok.name, address)
+            val device = link(fp, ok.name, address)
+            // Tell the other device we've saved the link, so it saves its side too (not before).
+            runCatching { wire.send(Msg.PairDone) }
+            return device
         }
     }
 
@@ -820,9 +826,12 @@ class Node(
                 return
             }
             pairing = null
+            // Accept, then wait for the initiator to confirm it has saved the link before saving
+            // ours — a dropped connection must not leave a one-sided link.
             // The other device's server port isn't known yet; discovery fills in its address.
-            link(fp, hello.name, null)
             wire.send(Msg.PairOk(state.deviceName))
+            wire.expect<Msg.PairDone>()
+            link(fp, hello.name, null)
             onChange?.invoke()
             return
         }
@@ -833,8 +842,11 @@ class Node(
         val theirs = wire.expect<Msg.PairConfirm>().accepted
         if (!mine || !theirs) { wire.send(Msg.Error("Linking was cancelled")); return }
         pairing = null
-        link(fp, hello.name, null)
+        // Save the link only after the initiator confirms it has saved its side (see the QR branch),
+        // so a lost connection can't leave this device linked on its own.
         wire.send(Msg.PairOk(state.deviceName))
+        wire.expect<Msg.PairDone>()
+        link(fp, hello.name, null)
         onChange?.invoke()
     }
 
