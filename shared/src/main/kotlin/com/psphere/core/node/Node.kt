@@ -621,6 +621,27 @@ class Node(
     }
 
     /**
+     * A local file holding the full-size item, for viewing: the cached copy if present, otherwise
+     * copied out of local storage (own or kept), otherwise fetched from a reachable holder.
+     * Null if the item isn't here and no holder can be reached. Blocking; call off the main thread.
+     */
+    fun fullFile(item: ItemRec, online: Map<String, HostPort>): File? {
+        if (!isValidHash(item.hash)) return null
+        val target = File(cacheDir, item.hash)
+        if (target.isFile && target.length() == item.size) return target
+        if (!holdsLocally(item.hash)) return fetchToCache(item.hash, online)
+        val src = openLocal(item.hash) ?: return fetchToCache(item.hash, online)
+        cacheDir.mkdirs()
+        val tmp = File(cacheDir, "${item.hash}.part")
+        return try {
+            src.use { s -> tmp.outputStream().use { s.stream.copyTo(it) } }
+            if (tmp.renameTo(target)) target else { tmp.delete(); null }
+        } catch (e: Exception) {
+            tmp.delete(); null
+        }
+    }
+
+    /**
      * Download to this device. Own items (e.g. freed ones) go back to their original folder;
      * other devices' items go into the backup location like a normal backup.
      */
