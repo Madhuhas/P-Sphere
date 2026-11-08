@@ -19,8 +19,6 @@ android {
         // 2.2: Photos library + Free up space (step 4); unlink purges the device's photos; reinstall & undecodable-file fixes. Still protocol v4 (links with 2.1).
         versionCode = 5
         versionName = "2.2"
-
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000\"")
     }
 
     // Release signing: put storeFile/storePassword/keyAlias/keyPassword in mobile/keystore.properties
@@ -82,10 +80,6 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.gson)
-    implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.core.splashscreen)
