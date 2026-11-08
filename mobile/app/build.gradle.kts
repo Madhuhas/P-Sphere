@@ -16,8 +16,9 @@ android {
         targetSdk = 34
         // 2.0: linked devices, per-folder destinations, encrypted protocol v3 (not compatible with 1.x).
         // 2.1: TLS 1.3 preferred, one-sided-link fix (protocol v4, not compatible with 2.0), check for updates.
-        versionCode = 4
-        versionName = "2.1"
+        // 2.2: Photos library + Free up space (step 4); unlink purges the device's photos; reinstall & undecodable-file fixes. Still protocol v4 (links with 2.1).
+        versionCode = 5
+        versionName = "2.2"
 
         buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000\"")
     }
