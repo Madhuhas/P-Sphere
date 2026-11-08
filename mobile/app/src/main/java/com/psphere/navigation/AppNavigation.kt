@@ -11,10 +11,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Devices
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -41,6 +43,7 @@ import com.psphere.backup.Prefs
 import com.psphere.ui.components.CodeDialog
 import com.psphere.ui.devices.DeviceScreen
 import com.psphere.ui.devices.DevicesScreen
+import com.psphere.ui.library.PhotosScreen
 import com.psphere.ui.link.LinkScreen
 import com.psphere.ui.receiving.ReceivingScreen
 import com.psphere.ui.sending.FolderScreen
@@ -49,6 +52,7 @@ import com.psphere.ui.settings.SettingsScreen
 import com.psphere.ui.setup.WelcomeScreen
 
 private const val ROUTE_WELCOME   = "welcome"
+private const val ROUTE_PHOTOS    = "photos"
 private const val ROUTE_DEVICES   = "devices"
 private const val ROUTE_DEVICE    = "device/{id}"
 private const val ROUTE_LINK      = "link"
@@ -61,6 +65,7 @@ private fun deviceRoute(id: String) = "device/$id"
 private fun folderRoute(id: String?) = if (id == null) "folder" else "folder?id=$id"
 
 private enum class Tab(val route: String, val label: String, val icon: ImageVector, val selectedIcon: ImageVector) {
+    Photos   (ROUTE_PHOTOS,    "Photos",    Icons.Outlined.PhotoLibrary,  Icons.Default.PhotoLibrary),
     Devices  (ROUTE_DEVICES,   "Devices",   Icons.Outlined.Devices,       Icons.Default.Devices),
     Sending  (ROUTE_SENDING,   "Sending",   Icons.Outlined.CloudUpload,   Icons.Default.CloudUpload),
     Receiving(ROUTE_RECEIVING, "Receiving", Icons.Outlined.CloudDownload, Icons.Default.CloudDownload),
@@ -121,6 +126,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                             navController.navigate(ROUTE_DEVICES) { popUpTo(ROUTE_WELCOME) { inclusive = true } }
                         })
                     }
+                    composable(ROUTE_PHOTOS) { PhotosScreen() }
                     composable(ROUTE_DEVICES) {
                         DevicesScreen(
                             onOpenDevice = { navController.navigate(deviceRoute(it)) },

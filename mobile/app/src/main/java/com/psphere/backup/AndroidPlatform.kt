@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
 import android.net.Uri
@@ -51,7 +52,25 @@ class AndroidPlatform(context: Context) : Platform {
         }.getOrNull()?.takeIf { it > 0 }
     }
 
-    private fun decodePhoto(uri: Uri): Bitmap? = runCatching {
+    private fun decodePhoto(uri: Uri): Bitmap? {
+        // ImageDecoder (API 28+) decodes HEIC/HEIF (Apple), AVIF, animated WebP and 10-bit images
+        // that BitmapFactory can't, and applies EXIF orientation itself. Fall back on older devices
+        // or if it can't handle a particular file.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            runCatching {
+                val src = ImageDecoder.createSource(app.contentResolver, uri)
+                ImageDecoder.decodeBitmap(src) { decoder, info, _ ->
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE  // so it can be JPEG-compressed
+                    decoder.isMutableRequired = false
+                    val longest = max(info.size.width, info.size.height)
+                    if (longest > PREVIEW_PX) decoder.setTargetSampleSize(max(1, longest / PREVIEW_PX))
+                }
+            }.getOrNull()?.let { return it }
+        }
+        return decodePhotoLegacy(uri)
+    }
+
+    private fun decodePhotoLegacy(uri: Uri): Bitmap? = runCatching {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         app.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
         if (bounds.outWidth <= 0) return null

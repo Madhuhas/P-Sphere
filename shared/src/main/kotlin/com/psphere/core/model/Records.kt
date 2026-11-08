@@ -7,8 +7,15 @@ enum class Media {
     PHOTO, VIDEO, OTHER;
 
     companion object {
-        private val PHOTO_EXT = setOf("jpg", "jpeg", "png", "heic", "heif", "webp", "gif", "bmp", "dng", "raw", "cr2", "nef", "arw", "avif")
-        private val VIDEO_EXT = setOf("mp4", "mov", "m4v", "3gp", "mkv", "webm", "avi")
+        private val PHOTO_EXT = setOf(
+            "jpg", "jpeg", "jpe", "jfif", "png", "gif", "bmp", "webp", "tif", "tiff", "ico", "jxl", "jp2",
+            "heic", "heif", "heics", "avif", // Apple / modern formats
+            "dng", "raw", "cr2", "cr3", "nef", "nrw", "arw", "rw2", "orf", "raf", "srw", "pef", // camera raw
+        )
+        private val VIDEO_EXT = setOf(
+            "mp4", "m4v", "mov", "3gp", "3g2", "mkv", "webm", "avi", "wmv", "flv", "f4v",
+            "mpg", "mpeg", "m2v", "mts", "m2ts", "ts", "ogv", "mxf",
+        )
 
         fun of(fileName: String): Media = when (fileName.substringAfterLast('.', "").lowercase()) {
             in PHOTO_EXT -> PHOTO
