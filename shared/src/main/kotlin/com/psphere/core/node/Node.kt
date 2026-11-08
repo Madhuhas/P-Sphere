@@ -182,6 +182,10 @@ class Node(
         ownRules().forEach { (rule, _) ->
             if (deviceId in rule.destinations) catalog.putOwn(rule.copy(destinations = rule.destinations - deviceId))
         }
+        // Forget the device's photos from the shared library, and drop previews nothing needs now.
+        catalog.removeOrigin(deviceId).forEach { hash ->
+            if (catalog.itemsWithHash(hash).isEmpty() && !holdsLocally(hash)) previews.remove(hash)
+        }
         save()
     }
 

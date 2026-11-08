@@ -50,6 +50,26 @@ class Catalog(val selfId: String) {
         return true
     }
 
+    /**
+     * Forgets everything a device told us — its name, folders, items and what it holds — e.g. when
+     * it's unlinked, so its photos leave the shared library. Never drops this device's own records.
+     * Returns the hashes of the items that were removed, for cleaning up their previews.
+     */
+    @Synchronized
+    fun removeOrigin(origin: String): Set<String> {
+        if (origin == selfId) return emptySet()
+        val prefix = origin + '\u0000'
+        val removed = records.keys.filter { it.startsWith(prefix) }
+        val hashes = HashSet<String>()
+        removed.forEach { k ->
+            val r = records.remove(k)
+            if (r is ItemRec) hashes += r.hash
+            unindex(r)
+        }
+        known.remove(origin)
+        return hashes
+    }
+
     private fun store(r: Rec) {
         val k = id(r.origin, r.key)
         unindex(records.put(k, r))

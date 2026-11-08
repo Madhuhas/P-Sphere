@@ -67,6 +67,29 @@ class CatalogTest {
         assertTrue(a.holders("h1").isEmpty())
     }
 
+    @Test fun unlinkingForgetsADevicesRecords() {
+        val a = Catalog("a")
+        a.putOwn(item("a", "mine.jpg", "hm"))
+        a.apply(DeviceRec("b", 1, "Tablet"))
+        a.apply(item("b", "theirs.jpg", "ht"))
+        a.apply(HoldRec("b", 2, "ht", true))
+        assertEquals(2, a.items().size)
+        assertEquals(setOf("b"), a.holders("ht"))
+
+        val hashes = a.removeOrigin("b")
+
+        assertEquals(setOf("ht"), hashes)
+        assertEquals(null, a.deviceName("b"))
+        assertEquals(1, a.items().size)                       // only this device's own item is left
+        assertEquals("mine.jpg", a.items().first().relPath)
+        assertTrue(a.holders("ht").isEmpty())
+        assertTrue(a.itemsWithHash("ht").isEmpty())
+        assertFalse("b" in a.vector())                        // no longer counts as a known origin
+        // This device's own records are never dropped.
+        assertTrue(a.removeOrigin("a").isEmpty())
+        assertEquals(1, a.items().size)
+    }
+
     @Test fun savesAndLoads() {
         val a = Catalog("a")
         a.putOwn(item("a", "x.jpg", "h"))

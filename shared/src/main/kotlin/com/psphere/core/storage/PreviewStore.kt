@@ -22,5 +22,7 @@ class PreviewStore(private val dir: File) {
         if (!tmp.renameTo(f)) { f.delete(); tmp.renameTo(f) }
     }
 
+    fun remove(hash: String) { runCatching { fileFor(hash).delete() } }
+
     fun totalBytes(): Long = dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
 }
