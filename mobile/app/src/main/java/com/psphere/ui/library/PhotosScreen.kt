@@ -282,7 +282,7 @@ private fun PhotoPage(li: LibraryItem, reload: Int, onZoom: (Boolean) -> Unit) {
         is Full.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = Color.White)
         }
-        is Full.Ready -> ZoomableImage(s.file, onZoom)
+        is Full.Ready -> ZoomableImage(s.file, preview, onZoom)
         is Full.Video -> PreviewWithNote(preview, "Video — download to play. In-app playback comes soon.")
         is Full.Away -> PreviewWithNote(preview, s.where)
     }
@@ -294,9 +294,16 @@ private fun PhotoPage(li: LibraryItem, reload: Int, onZoom: (Boolean) -> Unit) {
  * at normal zoom. Double-tap toggles zoom.
  */
 @Composable
-private fun ZoomableImage(file: File, onZoom: (Boolean) -> Unit) {
+private fun ZoomableImage(file: File, preview: File?, onZoom: (Boolean) -> Unit) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+    var failed by remember(file) { mutableStateOf(false) }
+
+    // Not a decodable image (e.g. a non-media file) — show the preview + a note instead of black.
+    if (failed) {
+        PreviewWithNote(preview, "Can't preview this file. Download or share it to open it in another app.")
+        return
+    }
 
     Box(
         Modifier
@@ -335,6 +342,7 @@ private fun ZoomableImage(file: File, onZoom: (Boolean) -> Unit) {
         AsyncImage(
             file, null,
             contentScale = ContentScale.Fit,
+            onError = { failed = true },
             modifier = Modifier.fillMaxSize().graphicsLayer {
                 scaleX = scale; scaleY = scale; translationX = offset.x; translationY = offset.y
             },
