@@ -4,8 +4,11 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +61,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -285,31 +289,47 @@ private fun PhotoPage(li: LibraryItem, reload: Int, onZoom: (Boolean) -> Unit) {
 }
 
 /**
- * Double-tap-to-zoom image, with pinch and panning once zoomed. The pan/pinch detector is only
- * attached while zoomed, so at normal zoom horizontal drags pass through to the pager for swiping.
+ * Zoomable image. Two-finger pinch zooms from any scale (and is consumed, so the pager doesn't
+ * swipe mid-pinch); a one-finger drag pans when zoomed, or passes through to the pager for swiping
+ * at normal zoom. Double-tap toggles zoom.
  */
 @Composable
 private fun ZoomableImage(file: File, onZoom: (Boolean) -> Unit) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
-    fun set(newScale: Float, newOffset: Offset) {
-        scale = newScale.coerceIn(1f, 5f)
-        offset = if (scale > 1f) newOffset else Offset.Zero
-        onZoom(scale > 1f)
-    }
-
     Box(
         Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                detectTapGestures(onDoubleTap = { set(if (scale > 1f) 1f else 2.5f, Offset.Zero) })
+                detectTapGestures(onDoubleTap = {
+                    scale = if (scale > 1f) 1f else 2.5f
+                    if (scale == 1f) offset = Offset.Zero
+                    onZoom(scale > 1f)
+                })
             }
-            .then(
-                if (scale > 1f) Modifier.pointerInput(Unit) {
-                    detectTransformGestures { _, pan, zoom, _ -> set(scale * zoom, offset + pan) }
-                } else Modifier,
-            ),
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    do {
+                        val event = awaitPointerEvent()
+                        val pointers = event.changes.count { it.pressed }
+                        when {
+                            pointers >= 2 -> {
+                                scale = (scale * event.calculateZoom()).coerceIn(1f, 5f)
+                                offset = if (scale > 1f) offset + event.calculatePan() else Offset.Zero
+                                onZoom(scale > 1f)
+                                event.changes.forEach { if (it.positionChanged()) it.consume() }
+                            }
+                            scale > 1f -> {
+                                offset += event.calculatePan()
+                                event.changes.forEach { if (it.positionChanged()) it.consume() }
+                            }
+                            // else: one finger at normal zoom — leave it for the pager to swipe.
+                        }
+                    } while (event.changes.any { it.pressed })
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
         AsyncImage(
