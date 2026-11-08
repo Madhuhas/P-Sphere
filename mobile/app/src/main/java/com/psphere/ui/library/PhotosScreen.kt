@@ -4,6 +4,8 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -39,7 +43,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -48,7 +54,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -85,7 +94,7 @@ fun PhotosScreen() {
     var device by remember { mutableStateOf<String?>(null) }
     var folder by remember { mutableStateOf<String?>(null) }
     var showDeleted by remember { mutableStateOf(false) }
-    var selected by remember { mutableStateOf<LibraryItem?>(null) }
+    var openAt by remember { mutableStateOf<Int?>(null) }
 
     val devices = remember(all) { all.map { it.device }.distinct().sorted() }
     val folders = remember(all) { all.map { it.folder }.distinct().sorted() }
@@ -136,15 +145,15 @@ fun PhotosScreen() {
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    items(shown, key = { it.li.item.origin + "/" + it.li.item.key }) { s ->
-                        PhotoCell(s.li, onClick = { selected = s.li })
+                    items(count = shown.size, key = { shown[it].li.item.origin + "/" + shown[it].li.item.key }) { i ->
+                        PhotoCell(shown[i].li, onClick = { openAt = i })
                     }
                 }
             }
         }
     }
 
-    selected?.let { PhotoViewer(it, onClose = { selected = null }) }
+    openAt?.let { idx -> PhotoViewer(shown.map { it.li }, idx, onClose = { openAt = null }) }
 }
 
 /** A horizontal row of filter chips: an "All" chip plus one per option. */
@@ -198,49 +207,52 @@ private sealed interface Full {
     object Video : Full
 }
 
-/** Full-screen viewer for one item, with Share and Download. HEIC-safe via Coil's ImageDecoder. */
+/**
+ * Full-screen, swipeable viewer. Horizontal swipe moves between photos; pinch or double-tap zooms.
+ * Each page loads its full size (from this device, or fetched from a holder). HEIC-safe via Coil.
+ */
 @Composable
-private fun PhotoViewer(li: LibraryItem, onClose: () -> Unit) {
+private fun PhotoViewer(items: List<LibraryItem>, start: Int, onClose: () -> Unit) {
+    if (items.isEmpty()) { onClose(); return }
     BackHandler(onBack = onClose)
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preview = remember(li.item.hash) { Engine.node.previews.file(li.item.hash) }
-    var reload by remember { mutableIntStateOf(0) }
+    val pager = rememberPagerState(initialPage = start.coerceIn(0, items.lastIndex)) { items.size }
+    var zoomed by remember { mutableStateOf(false) }
+    LaunchedEffect(pager.currentPage) { zoomed = false }
+
+    val current = items[pager.currentPage.coerceIn(0, items.lastIndex)]
+    var reloads by remember { mutableIntStateOf(0) }
     var downloading by remember { mutableStateOf(false) }
 
-    val state by produceState<Full>(Full.Loading, li.item.hash, reload) {
-        value = withContext(Dispatchers.IO) {
-            if (li.item.media == Media.VIDEO) Full.Video
-            else Engine.node.fullFile(li.item, Engine.onlineLinked())?.let { Full.Ready(it) } ?: Full.Away(holdersText(li))
-        }
+    // The visible page's full file, for Share (cheap: fullFile returns the page's cached copy).
+    val currentFile by produceState<File?>(null, current.item.hash, reloads) {
+        value = if (current.item.media == Media.VIDEO) null
+        else withContext(Dispatchers.IO) { Engine.node.fullFile(current.item, Engine.onlineLinked()) }
     }
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
-        when (val s = state) {
-            is Full.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.White)
-            is Full.Ready -> AsyncImage(s.file, null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-            is Full.Video -> PreviewWithNote(preview, "Video — download to play. In-app playback comes soon.")
-            is Full.Away -> PreviewWithNote(preview, s.where)
+        HorizontalPager(state = pager, userScrollEnabled = !zoomed, modifier = Modifier.fillMaxSize()) { page ->
+            PhotoPage(items[page], reloads, onZoom = { zoomed = it })
         }
 
-        // Top bar: close on the left, actions on the right.
         Row(Modifier.align(Alignment.TopStart).fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClose) { Icon(Icons.Filled.Close, "Close", tint = Color.White) }
             Spacer(Modifier.weight(1f))
-            if (state is Full.Ready) {
-                IconButton(onClick = { share(context, (state as Full.Ready).file, li.item.media) }) {
+            currentFile?.let { f ->
+                IconButton(onClick = { share(context, f, current.item.media) }) {
                     Icon(Icons.Filled.Share, "Share", tint = Color.White)
                 }
             }
-            if (!li.onThisDevice) {
+            if (!current.onThisDevice) {
                 IconButton(
                     enabled = !downloading,
                     onClick = {
                         downloading = true
                         scope.launch {
-                            withContext(Dispatchers.IO) { Engine.node.download(li.item, Engine.onlineLinked()) }
+                            withContext(Dispatchers.IO) { Engine.node.download(current.item, Engine.onlineLinked()) }
                             downloading = false
-                            reload++
+                            reloads++
                         }
                     },
                 ) {
@@ -249,6 +261,60 @@ private fun PhotoViewer(li: LibraryItem, onClose: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/** One page of the viewer: the full image (zoomable), or a note for a video / unreachable item. */
+@Composable
+private fun PhotoPage(li: LibraryItem, reload: Int, onZoom: (Boolean) -> Unit) {
+    val preview = remember(li.item.hash) { Engine.node.previews.file(li.item.hash) }
+    val state by produceState<Full>(Full.Loading, li.item.hash, reload) {
+        value = withContext(Dispatchers.IO) {
+            if (li.item.media == Media.VIDEO) Full.Video
+            else Engine.node.fullFile(li.item, Engine.onlineLinked())?.let { Full.Ready(it) } ?: Full.Away(holdersText(li))
+        }
+    }
+    when (val s = state) {
+        is Full.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = Color.White)
+        }
+        is Full.Ready -> ZoomableImage(s.file, onZoom)
+        is Full.Video -> PreviewWithNote(preview, "Video — download to play. In-app playback comes soon.")
+        is Full.Away -> PreviewWithNote(preview, s.where)
+    }
+}
+
+/** Pinch- and double-tap-to-zoom image, with panning when zoomed in. */
+@Composable
+private fun ZoomableImage(file: File, onZoom: (Boolean) -> Unit) {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onDoubleTap = {
+                    scale = if (scale > 1f) 1f else 2.5f
+                    if (scale == 1f) offset = Offset.Zero
+                    onZoom(scale > 1f)
+                })
+            }
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    scale = (scale * zoom).coerceIn(1f, 5f)
+                    offset = if (scale > 1f) offset + pan else Offset.Zero
+                    onZoom(scale > 1f)
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        AsyncImage(
+            file, null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize().graphicsLayer {
+                scaleX = scale; scaleY = scale; translationX = offset.x; translationY = offset.y
+            },
+        )
     }
 }
 
