@@ -101,4 +101,21 @@ class CatalogTest {
         assertEquals(a.vector(), loaded.vector())
         assertEquals(1, loaded.items().size)
     }
+
+    @Test fun aCatalogFromAnotherIdentityIsDiscardedNotThrown() {
+        val a = Catalog("a")
+        a.putOwn(item("a", "x.jpg", "h"))
+        val f = tmp.root.resolve("c.bin")
+        a.save(f)
+        // Reinstall left old data behind; the new identity must start fresh, not crash.
+        val fresh = Catalog.load(f, "different-device")
+        assertEquals(0, fresh.items().size)
+        assertTrue(fresh.vector().isEmpty())
+    }
+
+    @Test fun aCorruptCatalogIsDiscardedNotThrown() {
+        val f = tmp.root.resolve("c.bin")
+        f.writeBytes(byteArrayOf(0, 0, 0, 1, 42, 42, 42))   // valid format int, then garbage
+        assertEquals(0, Catalog.load(f, "a").items().size)
+    }
 }

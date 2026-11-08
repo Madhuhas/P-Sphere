@@ -146,14 +146,23 @@ class Catalog(val selfId: String) {
     companion object {
         private const val FORMAT = 1
 
+        /**
+         * Loads the catalog, or starts a fresh one if the file is missing, unreadable, or was
+         * written by a different identity. The catalog is only an index of what we and our peers
+         * hold — never the files themselves — so discarding a stale or foreign one loses no data;
+         * it's rebuilt by scanning and re-syncing. This keeps a reinstall over leftover app data
+         * (new identity, old catalog) from throwing on launch.
+         */
         fun load(file: File, selfId: String): Catalog {
             val cat = Catalog(selfId)
             if (!file.isFile) return cat
-            DataInputStream(BufferedInputStream(file.inputStream())).use { input ->
-                require(input.readInt() == FORMAT) { "Unknown catalog format" }
-                require(input.str() == selfId) { "Catalog belongs to another device" }
-                repeat(input.readInt()) { cat.apply(input.rec()) }
-            }
+            runCatching {
+                DataInputStream(BufferedInputStream(file.inputStream())).use { input ->
+                    if (input.readInt() != FORMAT) return cat          // unknown format → start fresh
+                    if (input.str() != selfId) return cat              // belongs to another identity → start fresh
+                    repeat(input.readInt()) { cat.apply(input.rec()) }
+                }
+            }.onFailure { return Catalog(selfId) }                     // truncated/corrupt → start fresh
             return cat
         }
     }
