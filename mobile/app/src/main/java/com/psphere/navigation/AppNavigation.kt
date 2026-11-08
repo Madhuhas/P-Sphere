@@ -47,6 +47,7 @@ import com.psphere.ui.library.PhotosScreen
 import com.psphere.ui.link.LinkScreen
 import com.psphere.ui.receiving.ReceivingScreen
 import com.psphere.ui.sending.FolderScreen
+import com.psphere.ui.sending.FreeUpScreen
 import com.psphere.ui.sending.SendingScreen
 import com.psphere.ui.settings.SettingsScreen
 import com.psphere.ui.setup.WelcomeScreen
@@ -59,6 +60,7 @@ private const val ROUTE_LINK      = "link"
 private const val ROUTE_SENDING   = "sending"
 private const val ROUTE_FOLDER    = "folder?id={id}"
 private const val ROUTE_RECEIVING = "receiving"
+private const val ROUTE_FREEUP    = "freeup"
 private const val ROUTE_SETTINGS  = "settings"
 
 private fun deviceRoute(id: String) = "device/$id"
@@ -142,8 +144,10 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                         SendingScreen(
                             onAdd = { navController.navigate(folderRoute(null)) },
                             onEdit = { navController.navigate(folderRoute(it)) },
+                            onFreeUp = { navController.navigate(ROUTE_FREEUP) },
                         )
                     }
+                    composable(ROUTE_FREEUP) { FreeUpScreen(onBack = { navController.popBackStack() }) }
                     composable(ROUTE_FOLDER) { entry ->
                         FolderScreen(
                             ruleId = entry.arguments?.getString("id"),

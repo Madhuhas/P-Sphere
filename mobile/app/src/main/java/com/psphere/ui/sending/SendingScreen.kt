@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Button
@@ -56,7 +57,7 @@ private data class Sending(val rows: List<FolderRow> = emptyList(), val loaded: 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SendingScreen(onAdd: () -> Unit, onEdit: (String) -> Unit) {
+fun SendingScreen(onAdd: () -> Unit, onEdit: (String) -> Unit, onFreeUp: () -> Unit) {
     val data by rememberEngineData(Sending()) {
         val node = Engine.node
         val items = node.catalog.items(node.id).filter { it.state == ItemState.PRESENT }
@@ -94,6 +95,11 @@ fun SendingScreen(onAdd: () -> Unit, onEdit: (String) -> Unit) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("Add a folder")
+                }
+                OutlinedButton(onClick = onFreeUp, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.DeleteSweep, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Free up space")
                 }
                 Spacer(Modifier.height(8.dp))
             }
