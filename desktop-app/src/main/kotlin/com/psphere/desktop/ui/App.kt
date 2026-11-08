@@ -18,10 +18,12 @@ import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Devices
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +48,7 @@ import com.psphere.desktop.engine.Engine
 /** Where the app is. A small back stack: tabs at the bottom, detail screens on top. */
 sealed class Screen {
     object Welcome : Screen()
+    object Photos : Screen()
     object Devices : Screen()
     data class Device(val id: String) : Screen()
     object Link : Screen()
@@ -56,6 +59,7 @@ sealed class Screen {
 }
 
 private enum class Tab(val label: String, val on: ImageVector, val off: ImageVector, val root: Screen) {
+    PHOTOS("Photos", Icons.Filled.PhotoLibrary, Icons.Outlined.PhotoLibrary, Screen.Photos),
     DEVICES("Devices", Icons.Filled.Devices, Icons.Outlined.Devices, Screen.Devices),
     SENDING("Sending", Icons.Filled.CloudUpload, Icons.Outlined.CloudUpload, Screen.Sending),
     RECEIVING("Receiving", Icons.Filled.CloudDownload, Icons.Outlined.CloudDownload, Screen.Receiving),
@@ -64,6 +68,7 @@ private enum class Tab(val label: String, val on: ImageVector, val off: ImageVec
 
 private fun tabOf(s: Screen): Tab? = when (s) {
     Screen.Welcome -> null
+    Screen.Photos -> Tab.PHOTOS
     Screen.Devices, is Screen.Device, Screen.Link -> Tab.DEVICES
     Screen.Sending, is Screen.Folder -> Tab.SENDING
     Screen.Receiving -> Tab.RECEIVING
@@ -87,6 +92,7 @@ fun App() {
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 when (val s = screen) {
                     Screen.Welcome -> WelcomeScreen(onDone = { tab(Tab.DEVICES) })
+                    Screen.Photos -> PhotosScreen()
                     Screen.Devices -> DevicesScreen(onOpenDevice = { go(Screen.Device(it)) }, onLink = { go(Screen.Link) }, onOpenReceiving = { tab(Tab.RECEIVING) })
                     is Screen.Device -> DeviceScreen(s.id, onBack = ::back)
                     Screen.Link -> LinkScreen(onBack = ::back)
