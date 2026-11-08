@@ -284,28 +284,32 @@ private fun PhotoPage(li: LibraryItem, reload: Int, onZoom: (Boolean) -> Unit) {
     }
 }
 
-/** Pinch- and double-tap-to-zoom image, with panning when zoomed in. */
+/**
+ * Double-tap-to-zoom image, with pinch and panning once zoomed. The pan/pinch detector is only
+ * attached while zoomed, so at normal zoom horizontal drags pass through to the pager for swiping.
+ */
 @Composable
 private fun ZoomableImage(file: File, onZoom: (Boolean) -> Unit) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+
+    fun set(newScale: Float, newOffset: Offset) {
+        scale = newScale.coerceIn(1f, 5f)
+        offset = if (scale > 1f) newOffset else Offset.Zero
+        onZoom(scale > 1f)
+    }
+
     Box(
         Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                detectTapGestures(onDoubleTap = {
-                    scale = if (scale > 1f) 1f else 2.5f
-                    if (scale == 1f) offset = Offset.Zero
-                    onZoom(scale > 1f)
-                })
+                detectTapGestures(onDoubleTap = { set(if (scale > 1f) 1f else 2.5f, Offset.Zero) })
             }
-            .pointerInput(Unit) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    scale = (scale * zoom).coerceIn(1f, 5f)
-                    offset = if (scale > 1f) offset + pan else Offset.Zero
-                    onZoom(scale > 1f)
-                }
-            },
+            .then(
+                if (scale > 1f) Modifier.pointerInput(Unit) {
+                    detectTransformGestures { _, pan, zoom, _ -> set(scale * zoom, offset + pan) }
+                } else Modifier,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         AsyncImage(
