@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- The core's full-size view cache: filesDir/core/cache/<hash>. -->
+    <files-path name="core-cache" path="core/cache/" />
+</paths>
