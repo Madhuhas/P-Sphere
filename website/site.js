@@ -113,7 +113,9 @@
       }).then(function (all) {
         var data = all.filter(function (c) {
           var who = (c.author && c.author.login) || c.commit.author.name || '';
-          return !/bot/i.test(who) && !/signed the cla|cla signature/i.test(c.commit.message);
+          var subject = c.commit.message.split('\n')[0];
+          // Hide noise: bots, CLA signatures, version bumps and merge commits.
+          return !/bot/i.test(who) && !/signed the cla|cla signature/i.test(c.commit.message) && !/^(bump |merge )/i.test(subject);
         }).map(function (c) {
           var subject = c.commit.message.split('\n')[0];
           return { sha: c.sha, date: c.commit.author.date.slice(0, 10), subject: subject, kind: kindOf(subject) };
