@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // The Windows app: Compose for Desktop around the shared core in ../shared.
 plugins {
-    kotlin("jvm") version "2.0.21"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.21"
-    id("org.jetbrains.compose") version "1.7.3"
+    kotlin("jvm") version "2.4.21"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.4.21"
+    id("org.jetbrains.compose") version "1.12.2"
 }
 
 group = "com.psphere"
@@ -23,11 +23,12 @@ kotlin {
 dependencies {
     implementation("com.psphere:psphere-shared")
     implementation(compose.desktop.currentOs)
-    implementation(compose.material3)
-    implementation(compose.materialIconsExtended)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.1")
+    implementation("org.jetbrains.compose.material3:material3:1.9.0")
+    // Pinned upstream at 1.7.3 (no newer release); still works with Compose 1.12.
+    implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.11.0")
     // Finding linked devices on the network (mDNS), like Android's NSD.
-    implementation("org.jmdns:jmdns:3.5.9")
+    implementation("org.jmdns:jmdns:3.6.5")
     implementation("org.slf4j:slf4j-nop:2.0.20")
     // The QR code shown on Link a device.
     implementation("com.google.zxing:core:3.5.3")
