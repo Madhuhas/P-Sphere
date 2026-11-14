@@ -71,7 +71,7 @@ folders too. Runs in the tray.
 </table>
 </div>
 
-> **Early development.** Version 2.2 is a pre-release. Both apps are tested on real devices, but expect rough edges, and please [tell us what breaks](https://github.com/Madhuhas/P-Sphere/issues/new?template=bug_report.yml).
+> **Early development.** Version 2.3 is a pre-release. Both apps are tested on real devices, but expect rough edges, and please [tell us what breaks](https://github.com/Madhuhas/P-Sphere/issues/new?template=bug_report.yml).
 
 ---
 
