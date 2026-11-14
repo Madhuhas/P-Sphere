@@ -1,0 +1,89 @@
+# Builds the Linux (.deb, .rpm) and macOS (.dmg) packages of the desktop app, and checks that each
+# one starts: it opens PSphere's port (47820) within a minute. Run it by hand from the Actions tab;
+# it also runs for pull requests that change the desktop app or the core, and for version tags (v*). The packages are attached to the run as artifacts.
+#
+# The macOS app isn't notarized (that needs a paid Apple Developer account), so macOS asks once
+# before opening it: System Settings > Privacy & Security > Open Anyway.
+name: Packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths: ["desktop-app/**", "shared/**", ".github/workflows/package.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux (.deb, .rpm)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: desktop-app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - name: Packaging tools
+        run: sudo apt-get update && sudo apt-get install -y rpm fakeroot xvfb
+      - run: ./gradlew packageDeb packageRpm
+      - name: Install the .deb and check it starts
+        run: |
+          sudo apt-get install -y ./build/compose/binaries/main/deb/*.deb
+          app=$(dpkg -L psphere | grep -E '/bin/[^/]+$' | head -1)
+          echo "Launcher: $app"
+          xvfb-run -a "$app" > app.log 2>&1 &
+          for i in $(seq 1 60); do
+            if ss -ltn | grep -q ':47820 '; then echo "PSphere is listening on 47820"; break; fi
+            sleep 1
+          done
+          ss -ltn | grep -q ':47820 ' || { echo "PSphere didn't start"; cat app.log; exit 1; }
+          pkill -f "$app" || true
+      - uses: actions/upload-artifact@v7
+        with:
+          name: psphere-linux
+          path: |
+            desktop-app/build/compose/binaries/main/deb/*.deb
+            desktop-app/build/compose/binaries/main/rpm/*.rpm
+          if-no-files-found: error
+
+  macos:
+    name: macOS (.dmg, Apple silicon)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: desktop-app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: ./gradlew packageDmg createDistributable
+      - name: Check the app is signed (ad-hoc) and starts
+        run: |
+          app=build/compose/binaries/main/app/PSphere.app
+          codesign --verify --deep --verbose=2 "$app" || codesign --force --deep --sign - "$app"
+          codesign -dv "$app" 2>&1 | head -5
+          plutil -p "$app/Contents/Info.plist" | grep -E 'NSLocalNetworkUsageDescription|_psphere._tcp|CFBundleIdentifier'
+          "$app/Contents/MacOS/PSphere" > app.log 2>&1 &
+          for i in $(seq 1 60); do
+            if lsof -nP -iTCP:47820 -sTCP:LISTEN > /dev/null; then echo "PSphere is listening on 47820"; break; fi
+            sleep 1
+          done
+          lsof -nP -iTCP:47820 -sTCP:LISTEN > /dev/null || { echo "PSphere didn't start"; cat app.log; exit 1; }
+          pkill -f "PSphere.app/Contents/MacOS/PSphere" || true
+      - uses: actions/upload-artifact@v7
+        with:
+          name: psphere-macos
+          path: desktop-app/build/compose/binaries/main/dmg/*.dmg
+          if-no-files-found: error

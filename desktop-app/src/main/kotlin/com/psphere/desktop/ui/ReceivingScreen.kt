@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.psphere.core.node.KeptGroup
 import com.psphere.desktop.engine.Engine
-import com.psphere.desktop.engine.WindowsSystem
+import com.psphere.desktop.engine.DesktopSystem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -67,7 +67,7 @@ fun ReceivingScreen() {
     fun pick() {
         val path = pickFolder("Choose where backups go", data.location) ?: return
         // Backups saved inside a folder this laptop sends would be sent back out to other devices.
-        val clash = Engine.node.ownRules().firstOrNull { (_, local) -> WindowsSystem.overlaps(path, local.location) }
+        val clash = Engine.node.ownRules().firstOrNull { (_, local) -> DesktopSystem.overlaps(path, local.location) }
         if (clash != null) {
             pickError = "You back up “${clash.first.label}” from this folder, so backups can't be saved here. Choose a different folder."
             return

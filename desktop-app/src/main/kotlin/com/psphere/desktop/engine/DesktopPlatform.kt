@@ -20,8 +20,8 @@ import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
 import kotlin.math.max
 
-/** Windows' side of the shared core: folders are plain paths; previews and dates come from the files. */
-class WindowsPlatform : Platform {
+/** The desktop side of the shared core (Windows, macOS, Linux): folders are plain paths; previews and dates come from the files. */
+class DesktopPlatform : Platform {
 
     override fun openFolder(location: String): Folder? {
         val dir = File(location)

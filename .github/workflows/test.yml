@@ -1,5 +1,5 @@
-# Runs the shared core's tests on Windows (the primary platform) and Linux, and builds the Android
-# app, on every push to the default branch and every pull request. Offline: the tests use fake devices.
+# Runs the shared core's tests on Windows (the primary platform) and Linux, builds the Android app,
+# and builds and tests the desktop app on Windows, Linux and macOS, on every push to the default branch and every pull request. Offline: the tests use fake devices.
 name: Tests
 
 on:
@@ -48,10 +48,14 @@ jobs:
           cache: gradle
       - run: ./gradlew assembleDebug
 
-  windows:
-    name: Windows app
-    runs-on: windows-latest
+  desktop:
+    name: Desktop app / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
     defaults:
       run:
         shell: bash

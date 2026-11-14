@@ -45,7 +45,8 @@ compose.desktop {
         // For testing: gradlew run -PdataDir=<folder> keeps the real %LOCALAPPDATA%\PSphere untouched.
         (project.findProperty("dataDir") as String?)?.let { jvmArgs("-Dpsphere.dataDir=$it") }
         nativeDistributions {
-            targetFormats(TargetFormat.Msi)
+            // Each format is built on its own system: MSI on Windows, DEB/RPM on Linux, DMG on macOS.
+            targetFormats(TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Rpm, TargetFormat.Dmg)
             packageName = "PSphere"
             packageVersion = "2.3.0"
             description = "Back up folders between your devices over your home Wi-Fi"
@@ -62,6 +63,27 @@ compose.desktop {
                 perUserInstall = true
                 // Keep this fixed: Windows uses it to recognise upgrades of the same app.
                 upgradeUuid = "6f1d8a52-3c47-4e0b-9a2e-7b5c1f0d9e34"
+            }
+            linux {
+                iconFile.set(project.file("icons/psphere.png"))
+                packageName = "psphere"
+                menuGroup = "Utility"
+                appCategory = "Utility"
+                shortcut = true
+            }
+            macOS {
+                iconFile.set(project.file("icons/psphere.icns"))
+                bundleID = "com.psphere.desktop"
+                appCategory = "public.app-category.utilities"
+                infoPlist {
+                    // macOS asks before an app may find devices on the local network.
+                    extraKeysRawXml = """
+                        <key>NSLocalNetworkUsageDescription</key>
+                        <string>PSphere finds your other devices on this Wi-Fi and backs up with them.</string>
+                        <key>NSBonjourServices</key>
+                        <array><string>_psphere._tcp</string></array>
+                    """
+                }
             }
         }
     }

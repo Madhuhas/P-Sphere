@@ -3,7 +3,7 @@ package com.psphere.desktop.engine
 import java.io.File
 import java.util.Properties
 
-/** Settings only the Windows app has. The shared core keeps everything else. */
+/** Settings only the desktop app has. The shared core keeps everything else. */
 class DesktopPrefs(private val file: File) {
     private val props = Properties().apply { if (file.isFile) runCatching { file.inputStream().use { load(it) } } }
 
@@ -28,7 +28,7 @@ class DesktopPrefs(private val file: File) {
         runCatching {
             file.parentFile?.mkdirs()
             val tmp = File(file.path + ".tmp")
-            tmp.outputStream().use { props.store(it, "PSphere for Windows") }
+            tmp.outputStream().use { props.store(it, "PSphere desktop settings") }
             if (!tmp.renameTo(file)) { file.delete(); tmp.renameTo(file) }
         }
     }

@@ -24,7 +24,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.net.InetAddress
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
@@ -55,7 +54,7 @@ class CodeRequest(val otherDevice: String, val code: String, private val answer:
     fun reply(ok: Boolean) { answer.complete(ok) }
 }
 
-/** Something worth a Windows notification, e.g. a finished backup while the window is closed. */
+/** Something worth a notification, e.g. a finished backup while the window is closed. */
 data class Notice(val title: String, val text: String, val warning: Boolean = false)
 
 /**
@@ -95,7 +94,7 @@ object Engine {
         if (isStarted) return
         this.dataDir = dataDir
         prefs = DesktopPrefs(File(dataDir, "desktop.properties"))
-        node = Node(File(dataDir, "core"), defaultDeviceName(), WindowsPlatform())
+        node = Node(File(dataDir, "core"), defaultDeviceName(), DesktopPlatform())
         node.onChange = { bump() }
         node.codeConfirmer = CodeConfirmer { name, code -> askUser(name, code) }
         node.onIncomingProgress = { p -> _state.update { it.copy(activity = Activity.Serving(p.peerName, p)) } }
@@ -128,8 +127,7 @@ object Engine {
 
     /** The computer's name, e.g. "DESKTOP-4KQ1", tidied; the user can change it on first start. */
     private fun defaultDeviceName(): String =
-        (System.getenv("COMPUTERNAME") ?: runCatching { InetAddress.getLocalHost().hostName }.getOrNull())
-            ?.takeIf { it.isNotBlank() }?.lowercase()?.replaceFirstChar { it.uppercase() } ?: "Laptop"
+        DesktopSystem.computerName()?.lowercase()?.replaceFirstChar { it.uppercase() } ?: "Laptop"
 
     fun bump() = _state.update { it.copy(revision = it.revision + 1) }
 

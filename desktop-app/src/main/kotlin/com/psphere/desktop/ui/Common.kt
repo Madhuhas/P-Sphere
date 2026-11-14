@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.sp
 import com.psphere.core.node.SyncProgress
 import com.psphere.desktop.engine.Activity
 import com.psphere.desktop.engine.Engine
-import com.psphere.desktop.engine.WindowsSystem
+import com.psphere.desktop.engine.DesktopSystem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -223,10 +223,10 @@ fun NotesCard(notes: List<String>) {
     }
 }
 
-/** "Open folder": shows [path] in File Explorer. */
+/** "Open folder": shows [path] in the file manager. */
 @Composable
 fun OpenFolderButton(path: String) {
-    TextButton(onClick = { WindowsSystem.openInExplorer(path) }) {
+    TextButton(onClick = { DesktopSystem.openFolder(path) }) {
         Icon(Icons.AutoMirrored.Filled.OpenInNew, null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.size(8.dp))
         Text("Open folder")

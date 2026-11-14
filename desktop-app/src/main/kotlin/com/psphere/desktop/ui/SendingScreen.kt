@@ -45,7 +45,7 @@ import com.psphere.core.model.Include
 import com.psphere.core.model.ItemState
 import com.psphere.core.model.RuleRec
 import com.psphere.desktop.engine.Engine
-import com.psphere.desktop.engine.WindowsSystem
+import com.psphere.desktop.engine.DesktopSystem
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -161,7 +161,7 @@ fun FolderScreen(ruleId: String?, onBack: () -> Unit, onLinkDevice: () -> Unit) 
         val path = pickFolder("Choose a folder to back up", location) ?: return
         // Sending the Receiving folder (or a folder around it) would send other devices' backups back out.
         val backups = node.state.backupLocation
-        if (backups != null && WindowsSystem.overlaps(path, backups)) {
+        if (backups != null && DesktopSystem.overlaps(path, backups)) {
             pickError = "Backups from your other devices are saved in this folder (see Receiving). Choose a different folder."
             return
         }

@@ -46,7 +46,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.psphere.desktop.engine.Engine
-import com.psphere.desktop.engine.WindowsSystem
+import com.psphere.desktop.engine.DesktopSystem
 
 const val APP_VERSION = "2.3.0"
 
@@ -55,8 +55,8 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
     val state by Engine.state.collectAsState()
     val cs = MaterialTheme.colorScheme
     var renaming by remember { mutableStateOf(false) }
-    val installed = remember { WindowsSystem.installedExe() != null }
-    var startup by remember { mutableStateOf(installed && WindowsSystem.startsWithWindows()) }
+    val installed = remember { DesktopSystem.installedExe() != null }
+    var startup by remember { mutableStateOf(installed && DesktopSystem.startsAtLogin()) }
     var keepInTray by remember { mutableStateOf(Engine.prefs.keepInTray) }
     val name = remember(state.revision) { Engine.node.deviceName }
     val devices = remember(state.revision) { Engine.linked() }
@@ -81,16 +81,17 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
             SectionLabel("When to back up")
             PanelCard {
                 ToggleRow(
-                    Icons.Default.PowerSettingsNew, "Start PSphere when Windows starts",
-                    if (installed) "It opens in the tray, so your devices can back up here without you opening it."
+                    Icons.Default.PowerSettingsNew, DesktopSystem.startAtLoginLabel,
+                    if (installed) "It opens ${if (DesktopSystem.hasTray) "in the tray" else "in the background"}, so your devices can back up here without you opening it."
                     else "Available in the installed app.",
                     startup, enabled = installed,
-                ) { on -> if (WindowsSystem.setStartsWithWindows(on)) startup = on }
+                ) { on -> if (DesktopSystem.setStartsAtLogin(on)) startup = on }
                 HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
                 ToggleRow(
                     Icons.Default.WebAsset, "Keep running in the tray when closed",
-                    "Closing the window leaves PSphere in the tray, still receiving backups. Quit it from the tray icon.",
-                    keepInTray,
+                    if (DesktopSystem.hasTray) "Closing the window leaves PSphere in the tray, still receiving backups. Quit it from the tray icon."
+                    else "This desktop has no tray, so closing the window quits PSphere.",
+                    keepInTray && DesktopSystem.hasTray, enabled = DesktopSystem.hasTray,
                 ) { keepInTray = it; Engine.prefs.keepInTray = it }
                 HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
                 InfoBlock(Icons.Default.Wifi, "Backs up automatically", "Whenever a linked device is on the same Wi-Fi and PSphere is running. Use “Back up now” to start it yourself.")
