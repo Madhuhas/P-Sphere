@@ -17,10 +17,14 @@ case "serve":
     let rest = Array(args.dropFirst(2))
     let port = rest.first.flatMap(Int.init) ?? 47820
     let name = rest.count > 1 ? rest[1] : "iPad"
-    let node = try Node(dataDir: dataDir, name: name) { peer, code in
-        log("CODE \(code) shown for \(peer); confirming here")
-        return true
-    }
+    let node = try Node(dataDir: dataDir, name: name, backupDir: dataDir.appendingPathComponent("Backups"),
+        confirmCode: { peer, code in
+            log("CODE \(code) shown for \(peer); confirming here")
+            return true
+        },
+        onSync: { peer, r in
+            log("Sync with \(peer): received=\(r.received) failed=\(r.failed) notes=\(r.notes)")
+        })
     await node.openPairing()
     log("Swift device \(name) (\(await node.id)) listening on \(port), ready to link")
     do {
