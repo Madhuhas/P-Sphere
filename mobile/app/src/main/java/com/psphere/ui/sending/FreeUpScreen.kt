@@ -149,7 +149,7 @@ private fun DoneView(result: FreeUpResult, onBack: () -> Unit) {
         )
         if (result.notRechecked.isNotEmpty()) {
             Text(
-                "Couldn't re-check ${result.notRechecked.joinToString(", ") { Engine.node.nameOf(it) }} — used their last confirmation.",
+                "Couldn't re-check ${result.notRechecked.joinToString(", ") { Engine.node.nameOf(it) }}, so their last confirmation was used.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

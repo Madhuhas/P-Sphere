@@ -283,7 +283,7 @@ private fun PhotoPage(li: LibraryItem, reload: Int, onZoom: (Boolean) -> Unit) {
             CircularProgressIndicator(color = Color.White)
         }
         is Full.Ready -> ZoomableImage(s.file, preview, onZoom)
-        is Full.Video -> PreviewWithNote(preview, "Video — download to play. In-app playback comes soon.")
+        is Full.Video -> PreviewWithNote(preview, "Video. Download it to play it; playing videos in the app is coming.")
         is Full.Away -> PreviewWithNote(preview, s.where)
     }
 }
