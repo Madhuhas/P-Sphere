@@ -33,7 +33,7 @@ dependencies {
     // The QR code shown on Link a device.
     implementation("com.google.zxing:core:3.5.3")
     // When a photo was taken, and which way up it is.
-    implementation("com.drewnoakes:metadata-extractor:2.19.0")
+    implementation("com.drewnoakes:metadata-extractor:2.22.0")
 
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
