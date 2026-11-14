@@ -6,8 +6,8 @@ import com.psphere.core.storage.FileSystemFolder
 import com.psphere.desktop.engine.DesktopPrefs
 import com.psphere.desktop.engine.Discovery
 import com.psphere.desktop.engine.SingleInstance
-import com.psphere.desktop.engine.WindowsPlatform
-import com.psphere.desktop.engine.WindowsSystem
+import com.psphere.desktop.engine.DesktopPlatform
+import com.psphere.desktop.engine.DesktopSystem
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
@@ -22,7 +22,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class WindowsPartsTest {
+class DesktopPartsTest {
     private fun tempDir(): File = Files.createTempDirectory("psphere-test").toFile().apply { deleteOnExit() }
 
     @Test
@@ -31,13 +31,26 @@ class WindowsPartsTest {
         val photos = File(root, "Photos").apply { mkdirs() }
         val inside = File(photos, "PSphere").apply { mkdirs() }
         val other = File(root, "Photos 2").apply { mkdirs() }
-        assertTrue(WindowsSystem.overlaps(photos.path, photos.path))
-        assertTrue(WindowsSystem.overlaps(photos.path, inside.path))
-        assertTrue(WindowsSystem.overlaps(inside.path, photos.path))
-        // Windows paths ignore case.
-        assertTrue(WindowsSystem.overlaps(photos.path.uppercase(), inside.path))
+        assertTrue(DesktopSystem.overlaps(photos.path, photos.path))
+        assertTrue(DesktopSystem.overlaps(photos.path, inside.path))
+        assertTrue(DesktopSystem.overlaps(inside.path, photos.path))
+        // Windows and macOS ignore case in folder names; Linux doesn't.
+        assertTrue(DesktopSystem.overlaps(photos.path.uppercase(), inside.path, ignoreCase = true))
+        // (Paths that don't exist, so Windows can't correct their case while resolving them.)
+        assertFalse(DesktopSystem.overlaps(File(root, "none/Photos").path, File(root, "none/photos/PSphere").path, ignoreCase = false))
         // A folder whose name only starts the same way is a different folder.
-        assertFalse(WindowsSystem.overlaps(photos.path, other.path))
+        assertFalse(DesktopSystem.overlaps(photos.path, other.path))
+    }
+
+    @Test
+    fun startAtLoginEntriesPointAtTheAppAndOpenInTheTray() {
+        val linux = DesktopSystem.linuxAutostartEntry("/opt/psphere/bin/PSphere")
+        assertTrue("[Desktop Entry]" in linux)
+        assertTrue("Exec=\"/opt/psphere/bin/PSphere\" --tray" in linux)
+        val mac = DesktopSystem.macAgentPlist("/Applications/PSphere & Co.app/Contents/MacOS/PSphere")
+        assertTrue("<string>/Applications/PSphere &amp; Co.app/Contents/MacOS/PSphere</string>" in mac)
+        assertTrue("<string>--tray</string>" in mac)
+        assertTrue("<key>RunAtLoad</key><true/>" in mac)
     }
 
     @Test
@@ -86,10 +99,10 @@ class WindowsPartsTest {
             createGraphics().apply { color = Color(30, 120, 200); fillRect(0, 0, 3000, 2000); dispose() }
         }
         ImageIO.write(big, "jpg", File(dir, "photo.jpg"))
-        val preview = WindowsPlatform().makePreview(FileSystemFolder(dir), "photo.jpg", Media.PHOTO)
+        val preview = DesktopPlatform().makePreview(FileSystemFolder(dir), "photo.jpg", Media.PHOTO)
         assertNotNull(preview)
         val img = ImageIO.read(ByteArrayInputStream(preview))
-        assertEquals(WindowsPlatform.PREVIEW_PX, max(img.width, img.height))
+        assertEquals(DesktopPlatform.PREVIEW_PX, max(img.width, img.height))
         assertTrue(img.width > img.height, "landscape stays landscape")
         assertTrue(preview.size < 100_000, "a preview is small: ${preview.size} bytes")
     }
@@ -98,7 +111,7 @@ class WindowsPartsTest {
     fun filesThatArentPhotosGetNoPreviewOrDate() {
         val dir = tempDir()
         File(dir, "notes.txt").writeText("not a photo")
-        val platform = WindowsPlatform()
+        val platform = DesktopPlatform()
         val folder = FileSystemFolder(dir)
         assertNull(platform.makePreview(folder, "notes.txt", Media.PHOTO))
         assertNull(platform.makePreview(folder, "missing.jpg", Media.PHOTO))
@@ -108,7 +121,7 @@ class WindowsPartsTest {
     @Test
     fun onlyExistingFoldersOpen() {
         val dir = tempDir()
-        val platform = WindowsPlatform()
+        val platform = DesktopPlatform()
         assertNotNull(platform.openFolder(dir.path))
         assertNull(platform.openFolder(File(dir, "gone").path))
     }

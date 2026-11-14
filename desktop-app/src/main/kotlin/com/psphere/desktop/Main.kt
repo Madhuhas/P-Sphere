@@ -24,7 +24,8 @@ import androidx.compose.ui.window.rememberWindowState
 import com.psphere.desktop.engine.Activity
 import com.psphere.desktop.engine.Engine
 import com.psphere.desktop.engine.SingleInstance
-import com.psphere.desktop.engine.WindowsSystem
+import com.psphere.desktop.engine.DesktopSystem
+import com.psphere.desktop.engine.Os
 import com.psphere.desktop.ui.App
 import com.psphere.desktop.ui.PSphereTheme
 import com.psphere.desktop.ui.Starting
@@ -46,19 +47,23 @@ import javax.swing.JOptionPane
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    val dataDir = WindowsSystem.dataDir()
+    val dataDir = DesktopSystem.dataDir()
     // Two copies would fight over the same data and port. Opening it again shows the running one.
     val instance = SingleInstance(dataDir)
     if (!instance.acquired) {
         if (!instance.askRunningToShow()) {
-            JOptionPane.showMessageDialog(null, "PSphere is already running. Look for the (p) icon in the tray, at the bottom right of the screen.", "PSphere", JOptionPane.INFORMATION_MESSAGE)
+            JOptionPane.showMessageDialog(null, "PSphere is already running. Look for the (p) icon ${DesktopSystem.trayPlace}.", "PSphere", JOptionPane.INFORMATION_MESSAGE)
         }
         exitProcess(0)
     }
     val showRequests = MutableStateFlow(0)
     instance.listen { showRequests.update { it + 1 } }
-    // Started from "start with Windows": stay in the tray until someone opens the window.
-    val startHidden = WindowsSystem.TRAY_ARG in args
+    // Started at sign-in: stay in the tray until someone opens the window (only if there is a tray to open it from).
+    val startHidden = DesktopSystem.TRAY_ARG in args && DesktopSystem.hasTray
+    // macOS: clicking the Dock icon while the window is closed shows it again.
+    if (DesktopSystem.os == Os.MAC) runCatching {
+        java.awt.Desktop.getDesktop().addAppEventListener(java.awt.desktop.AppReopenedListener { showRequests.update { it + 1 } })
+    }
 
     application(exitProcessOnExit = true) {
         var started by remember { mutableStateOf(false) }
@@ -118,13 +123,13 @@ fun main(args: Array<String>) {
 
         Window(
             onCloseRequest = {
-                if (started && Engine.prefs.keepInTray) {
+                if (started && Engine.prefs.keepInTray && DesktopSystem.hasTray) {
                     visible = false
                     if (!Engine.prefs.trayNoticeShown) {
                         Engine.prefs.trayNoticeShown = true
                         trayState.sendNotification(Notification(
                             "PSphere is still running",
-                            "It keeps receiving backups in the tray. To stop it, right-click the (p) icon and choose Quit.",
+                            "It keeps receiving backups ${DesktopSystem.trayPlace}. To stop it, click the (p) icon and choose Quit PSphere.",
                         ))
                     }
                 } else {
