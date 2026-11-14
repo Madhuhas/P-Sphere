@@ -36,6 +36,8 @@ jobs:
       - run: ./gradlew packageDeb packageRpm
       - name: Install the .deb and check it starts
         run: |
+          # A desktop install has a menu folder for the shortcut; this bare CI machine doesn't.
+          sudo mkdir -p /etc/xdg/menus/applications-merged /usr/share/desktop-directories
           sudo apt-get install -y ./build/compose/binaries/main/deb/*.deb
           app=$(dpkg -L psphere | grep -E '/bin/[^/]+$' | head -1)
           echo "Launcher: $app"
