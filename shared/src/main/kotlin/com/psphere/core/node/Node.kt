@@ -774,12 +774,21 @@ class Node(
                 (includeDeleted || item.state != ItemState.DELETED)
         }
 
-    /** The whole library across linked devices, newest first. */
-    fun library(includeDeleted: Boolean = false): List<LibraryItem> =
-        libraryItems(includeDeleted).sortedByDescending { it.takenAt }.map { item ->
+    /**
+     * The whole library across linked devices, newest first. Items that no device could provide are
+     * left out: not here, and the only copies are on devices this one isn't linked with (for example
+     * leftovers from a device unlinked by an older version), since they could never be opened.
+     */
+    fun library(includeDeleted: Boolean = false): List<LibraryItem> {
+        val linked = synchronized(this) { state.devices.keys.toSet() }
+        return libraryItems(includeDeleted).sortedByDescending { it.takenAt }.mapNotNull { item ->
             val local = (item.origin == id && item.state == ItemState.PRESENT) || kept?.has(item.hash) == true
-            LibraryItem(item, nameOf(item.origin), local, catalog.holders(item.hash))
+            val holders = catalog.holders(item.hash)
+            val reachable = local || holders.any { it in linked } ||
+                (item.origin in linked && item.state == ItemState.PRESENT)
+            if (reachable) LibraryItem(item, nameOf(item.origin), local, holders) else null
         }
+    }
 
     // ── Linking ──────────────────────────────────────────────────────────────
 

@@ -337,6 +337,28 @@ class NodeTest {
         assertFalse("the tablet's photo isn't stored on the phone", onPhone.single { it.originName == "Tablet" }.onThisDevice)
     }
 
+    @Test fun photosNoLinkedDeviceCanProvideAreHidden() {
+        phone.linkTo(tablet)
+        tablet.linkTo(laptop)
+        val backups = tablet.receiveInto()
+        laptop.backUp("Camera", laptop.folder("Camera").apply { write("l.jpg", "L") }, listOf(tablet))
+        laptop.node.scan()
+        tablet.node.setReceivingPaused(true)
+        laptop.syncWith(tablet)           // the tablet learns about l.jpg but doesn't take a copy
+        tablet.syncWith(phone)
+
+        // Only the laptop has it, and the phone isn't linked to the laptop: nothing could open it.
+        assertTrue(phone.node.library().none { it.item.relPath == "l.jpg" })
+
+        tablet.node.setReceivingPaused(false)
+        laptop.syncWith(tablet)           // now the tablet keeps a copy
+        assertTrue(File(backups, "Laptop/Camera/l.jpg").exists())
+        tablet.syncWith(phone)
+        val l = phone.node.library().single { it.item.relPath == "l.jpg" }
+        assertFalse(l.onThisDevice)
+        assertTrue(tablet.id in l.holders)
+    }
+
     @Test fun freeUpSpaceDeletesOnlyWhatIsSafeAndPhotosCanComeBack() {
         linkAll()
         tablet.receiveInto()
