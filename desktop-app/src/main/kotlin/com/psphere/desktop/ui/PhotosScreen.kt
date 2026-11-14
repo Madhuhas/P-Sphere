@@ -124,7 +124,7 @@ private sealed interface Full {
 private fun Viewer(li: LibraryItem, onClose: () -> Unit) {
     val state by produceState<Full>(Full.Loading, li.item.hash) {
         value = withContext(Dispatchers.IO) {
-            if (li.item.media == Media.VIDEO) Full.Note("Video — open it from the backup folder for now.")
+            if (li.item.media == Media.VIDEO) Full.Note("Video. For now, open it from the backup folder.")
             else {
                 val file = Engine.node.fullFile(li.item, Engine.onlineLinked())
                 val bmp = loadBitmap(file)
