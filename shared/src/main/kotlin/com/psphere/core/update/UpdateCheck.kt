@@ -1,7 +1,7 @@
 package com.psphere.core.update
 
 import java.net.HttpURLConnection
-import java.net.URL
+import java.net.URI
 
 /**
  * Checks GitHub for a newer release. This is the only part of PSphere that reaches the internet,
@@ -41,7 +41,7 @@ object UpdateCheck {
     }
 
     private fun fetch(url: String): String {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+        val conn = (URI(url).toURL().openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = TIMEOUT_MS
             readTimeout = TIMEOUT_MS
