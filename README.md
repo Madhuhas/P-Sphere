@@ -5,7 +5,7 @@
 <h1 align="center">PSphere</h1>
 
 <p align="center">
-Google Photos, but your own devices are the cloud.
+Back up folders between your own devices over your home Wi-Fi.
 </p>
 
 <div align="center">
@@ -38,7 +38,7 @@ Google Photos, but your own devices are the cloud.
 
 <br>
 
-PSphere backs up folders between your Android phone, tablet and Windows laptop over your home Wi-Fi. There's no server, no account and no subscription, and your photos never leave home.
+PSphere backs up folders between your Android phone, tablet and Windows laptop. The devices talk to each other directly, so there's no server, no account and no subscription, and your photos stay on your home network.
 
 <div align="center">
 <table>

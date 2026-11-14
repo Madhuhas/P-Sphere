@@ -1,6 +1,6 @@
 # PSphere local backup (v3): spec
 
-> **In one line:** Google Photos, but your own devices are the cloud. Nothing leaves your home network.
+> **In one line:** back up folders between your own devices over your home Wi-Fi. Nothing leaves your home network.
 
 Status: **approved** (2026-10-25). Steps 1, 2 and 3 are built; see section 8.
 Scope: local backup between your own devices on the same Wi-Fi. No server and no internet.
@@ -14,7 +14,7 @@ You have a phone, a tablet and a Windows laptop. You want:
 - to back up **several folders** from any device to **one or more** of your other devices, with a choice per folder;
 - every device to be able to **send and receive**;
 - backups to keep working when one device is off (for example, phone → tablet while the laptop is off);
-- to see all their photos on any device, like Google Photos, and download any of them when needed. Albums, faces and AI search come later.
+- to see all their photos on any device, and download any of them when needed. Albums, faces and AI search come later.
 
 Example setup:
 
@@ -118,7 +118,7 @@ Deletes files **from this device only**, once they are safely backed up elsewher
 - Files are deleted through the folder access granted by the system folder picker (7.6), so Android doesn't block it.
 - Result line afterwards, e.g. "Freed 8.3 GB · 1,240 files". If any were skipped, it says why.
 
-### 6.3b Photos (one library across all your devices, like Google Photos)
+### 6.3b Photos (one library across all your devices)
 One timeline on every device, showing the photos and videos from the backup folders of **all** your linked devices. The phone sees the tablet's photos, the tablet sees the phone's, and the laptop sees both.
 
 **What's shown**
@@ -164,7 +164,7 @@ One timeline on every device, showing the photos and videos from the backup fold
 ### 6.6 What happens to today's screens
 - The current Photos tab is rebuilt as the Photos view in 6.3b.
 - Albums, Search and the server sign-in are **parked**. They're hidden for now, not deleted.
-- Albums, Search and sign-in come back with the laptop's "Google Photos" work.
+- Albums, Search and sign-in come back with the laptop photo-library work.
 
 ## 7. How it works underneath
 
@@ -230,7 +230,7 @@ Each step ends with something you can test on your own devices.
 | 2 | Android: linking, Sending, Receiving, Devices screens | Phone ↔ tablet backups both ways, multiple folders, choice of destination |
 | 3 | Windows app | Phone/tablet → laptop to a drive you pick, tray icon, start with Windows |
 | 4 | Photos (combined library on Android and Windows) and Free up space; relay, resume and full-disk handling on real devices; polish | See the tablet's photos on the phone. Free 8 GB on the phone, still browse those photos, open one full-size from the laptop, download it back. Laptop off → phone to tablet → laptop catches up from the tablet |
-| Later | Laptop "Google Photos" extras: albums, faces, search | n/a |
+| Later | Laptop photo-library extras: albums, faces, search | n/a |
 
 ## 9. Decisions I made (say if any are wrong)
 

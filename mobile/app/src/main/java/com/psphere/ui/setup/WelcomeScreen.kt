@@ -50,7 +50,7 @@ fun WelcomeScreen(onDone: () -> Unit) {
             Column(Modifier.padding(horizontal = 24.dp, vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 Text("PSphere", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold)
                 Text(
-                    "Your own Google Photos, where your devices are the cloud. Photos stay on your home Wi-Fi.",
+                    "Back up folders between your own devices. Photos stay on your home Wi-Fi.",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

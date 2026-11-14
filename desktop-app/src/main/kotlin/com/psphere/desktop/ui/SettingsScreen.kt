@@ -181,7 +181,7 @@ fun WelcomeScreen(onDone: () -> Unit) {
     Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 48.dp, vertical = 40.dp).widthIn(max = 640.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Text("PSphere", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold)
         Text(
-            "Your own Google Photos, where your devices are the cloud. This laptop can keep backups of your phone and tablet, and back up its own folders to them.",
+            "Back up folders between your own devices over your home Wi-Fi. This laptop can keep backups of your phone and tablet, and back up its own folders to them.",
             style = MaterialTheme.typography.titleMedium, color = cs.onSurfaceVariant,
         )
         Point(Icons.Default.Devices, "Link your devices", "Your phone or tablet scans a code shown here.")
