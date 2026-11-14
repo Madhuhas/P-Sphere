@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.dp
 import com.psphere.desktop.engine.Engine
 import com.psphere.desktop.engine.WindowsSystem
 
-const val APP_VERSION = "2.2.0"
+const val APP_VERSION = "2.3.0"
 
 @Composable
 fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {

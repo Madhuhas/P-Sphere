@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.psphere"
-version = "2.2.0"
+version = "2.3.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -47,7 +47,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi)
             packageName = "PSphere"
-            packageVersion = "2.2.0"
+            packageVersion = "2.3.0"
             description = "Back up folders between your devices over your home Wi-Fi"
             vendor = "Kotini Sai Madhuhas"
             copyright = "Copyright (C) 2026 Kotini Sai Madhuhas. GNU AGPL-3.0."
