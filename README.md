@@ -21,7 +21,7 @@ Back up folders between your own devices over your home Wi-Fi.
 <a href="https://psphere.pages.dev/download" target="_blank"><strong>Download</strong></a>
 </td>
 <td align="center">
-<a href="https://github.com/Madhuhas/P-Sphere/discussions/categories/feature-requests" target="_blank"><strong>Feature Requests</strong></a>
+<a href="https://github.com/Madhuhas/P-Sphere/discussions" target="_blank"><strong>Discussions</strong></a>
 </td>
 <td align="center">
 <a href="https://psphere.pages.dev/security" target="_blank"><strong>Security</strong></a>
@@ -57,13 +57,15 @@ and free up space once photos are safe.
 </td>
 <td align="center" width="50%">
 
-### Windows app
+### Desktop app
 
 Keeps the backups from your phone and tablet
 on any drive you choose, and backs up its own
 folders too. Runs in the tray.
 
-<a href="https://psphere.pages.dev/download">Download the installer</a>
+<a href="https://psphere.pages.dev/download">Download for Windows</a>
+<br>
+<sub>Linux and macOS: packages come with the next release.</sub>
 <br><br>
 
 </td>
@@ -81,7 +83,8 @@ folders too. Runs in the tray.
 |---|---|---|
 | **Shared core** | The sync engine every app uses: protocol, encryption, linking, rules, relay, resume, photo catalog. Pure Kotlin, no third-party dependencies. | [`shared/`](shared) |
 | **Android app** | Kotlin and Jetpack Compose. | [`mobile/`](mobile) |
-| **Windows app** | Kotlin and Compose for Desktop, packaged as an MSI. | [`desktop-app/`](desktop-app) |
+| **Desktop app** | Kotlin and Compose for Desktop. Runs on Windows (MSI), Linux (.deb, .rpm) and macOS (.dmg). | [`desktop-app/`](desktop-app) |
+| **iPhone and iPad** | Early development: PSphere's engine in Swift, so an iPad can link and back up with the other apps. Links and receives backups so far; no app yet. | [`ios/PSphereKit`](ios/PSphereKit) |
 | **Design** | The full spec: how devices link, what goes where, and why. | [`docs/p2p-v3.md`](docs/p2p-v3.md) |
 | **Website** | [psphere.pages.dev](https://psphere.pages.dev), kept in its own repository. | n/a |
 
@@ -117,12 +120,16 @@ cd mobile      && ./gradlew assembleDebug   # mobile/app/build/outputs/apk/debug
 cd desktop-app && ./gradlew run             # add -PdataDir=<folder> to keep your real data untouched
 ```
 
-To package the Windows app you need a full JDK with `jpackage` (Android Studio's doesn't have it):
+To package the desktop app you need a full JDK with `jpackage` (Android Studio's doesn't have it), and each package is built on its own system:
 
 ```sh
 cd desktop-app
-./gradlew packageMsi    # build/compose/binaries/main/msi
+./gradlew packageMsi                 # on Windows: build/compose/binaries/main/msi
+./gradlew packageDeb packageRpm      # on Linux
+./gradlew packageDmg                 # on macOS
 ```
+
+The Swift engine in `ios/PSphereKit` builds with Swift 6 on macOS or Linux: `swift test` runs its tests.
 
 On Windows, Gradle sometimes fails with "Unable to delete directory …/build/…". Run `attrib -r "build\*" /s /d` in that folder and try again.
 
@@ -131,8 +138,8 @@ On Windows, Gradle sometimes fails with "Unable to delete directory …/build/�
 ## Feedback
 
 - **Found a bug?** [Open a bug report](https://github.com/Madhuhas/P-Sphere/issues/new?template=bug_report.yml). Say which devices were involved and how they were connected.
-- **Have an idea?** [Post it in Feature Requests](https://github.com/Madhuhas/P-Sphere/discussions/new?category=feature-requests), where others can upvote it.
-- **Want to help?** [Open for Contribution](https://github.com/Madhuhas/P-Sphere/discussions/categories/open-for-contribution) lists work anyone can pick up, and [CONTRIBUTING.md](CONTRIBUTING.md) explains how to start.
+- **Have an idea?** [Share it in Discussions](https://github.com/Madhuhas/P-Sphere/discussions/categories/ideas).
+- **Want to help?** [CONTRIBUTING.md](CONTRIBUTING.md) explains how to start.
 - **Found a security problem?** Please don't open an issue. [Report it privately](https://github.com/Madhuhas/P-Sphere/security/advisories/new); see [SECURITY.md](SECURITY.md).
 
 ## License
