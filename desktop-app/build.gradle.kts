@@ -31,7 +31,7 @@ dependencies {
     implementation("org.jmdns:jmdns:3.6.5")
     implementation("org.slf4j:slf4j-nop:2.0.20")
     // The QR code shown on Link a device.
-    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:core:3.5.4")
     // When a photo was taken, and which way up it is.
     implementation("com.drewnoakes:metadata-extractor:2.19.0")
 
