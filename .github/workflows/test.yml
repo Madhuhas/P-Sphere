@@ -68,3 +68,15 @@ jobs:
           java-version: 17
           cache: gradle
       - run: ./gradlew build
+
+  swift:
+    name: iPhone/iPad engine (Swift)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container: swift:latest
+    defaults:
+      run:
+        working-directory: ios/PSphereKit
+    steps:
+      - uses: actions/checkout@v7
+      - run: swift test

@@ -66,18 +66,14 @@ public final class Connection: @unchecked Sendable {
         return msg
     }
 
-    /// Reads exactly `n` raw bytes, e.g. file contents after a `fileData` frame, in chunks.
-    public func receiveRaw(_ n: Int64, into sink: ([UInt8]) throws -> Void) async throws {
-        var left = n
-        while left > 0 {
-            if buffer.readableBytes == 0 {
-                guard var more = try await inbound.next() else { throw PSphereError.closed }
-                buffer.writeBuffer(&more)
-            }
-            let take = Int(min(Int64(buffer.readableBytes), left))
-            try sink(buffer.readBytes(length: take)!)
-            left -= Int64(take)
+    /// Reads the next chunk of raw bytes (at most `max`), e.g. file contents after a `fileData`
+    /// frame. Callers loop until they have read the whole file.
+    public func receiveRawChunk(max: Int64) async throws -> [UInt8] {
+        if buffer.readableBytes == 0 {
+            guard var more = try await inbound.next() else { throw PSphereError.closed }
+            buffer.writeBuffer(&more)
         }
+        return buffer.readBytes(length: Int(min(Int64(buffer.readableBytes), max)))!
     }
 }
 

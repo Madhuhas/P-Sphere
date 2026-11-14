@@ -10,8 +10,15 @@ public struct LinkedDevice: Codable, Equatable, Sendable {
     public var fingerprintHex: String
 }
 
-/// The Swift PSphere device: its identity, its links, and a server other devices connect to.
-/// This first version answers linking requests; backing up comes next.
+/// What one sync achieved.
+public struct SyncResult: Sendable {
+    public var received = 0
+    public var failed = 0
+    public var notes: [String] = []
+}
+
+/// The Swift PSphere device: its identity, its links, its catalog, the backups it keeps for
+/// other devices, and a server other devices connect to.
 public actor Node {
     public let identity: DeviceIdentity
     public private(set) var name: String
@@ -20,11 +27,19 @@ public actor Node {
     private var pairingOpenUntil: Date?
     /// Shows the 6-digit code to the user and returns whether they confirmed it matches.
     private let confirmCode: @Sendable (String, String) async -> Bool
+    let catalog: Catalog
+    /// Where backups from other devices go. Nil until a backup location is chosen.
+    let kept: KeptStore?
+    /// Called after each sync another device ran with this one.
+    private let onSync: @Sendable (String, SyncResult) -> Void
 
-    public init(dataDir: URL, name: String, confirmCode: @escaping @Sendable (String, String) async -> Bool) throws {
+    public init(dataDir: URL, name: String, backupDir: URL? = nil,
+                confirmCode: @escaping @Sendable (String, String) async -> Bool,
+                onSync: @escaping @Sendable (String, SyncResult) -> Void = { _, _ in }) throws {
         self.dataDir = dataDir
         self.name = name
         self.confirmCode = confirmCode
+        self.onSync = onSync
         identity = try DeviceIdentity.loadOrCreate(at: dataDir.appendingPathComponent("identity.bin"))
         let linksFile = dataDir.appendingPathComponent("links.json")
         if let data = try? Data(contentsOf: linksFile),
@@ -33,7 +48,14 @@ public actor Node {
         } else {
             devices = [:]
         }
+        let id = identity.deviceId
+        catalog = Catalog.load(from: dataDir.appendingPathComponent("catalog.bin"), selfId: id)
+        kept = try backupDir.map { try KeptStore(root: $0) }
+        // Other devices learn this device's name from its catalog.
+        if !name.isEmpty { catalog.putOwn(.device(origin: id, seq: 0, name: name)) }
     }
+
+    private func saveCatalog() { try? catalog.save(to: dataDir.appendingPathComponent("catalog.bin")) }
 
     public var id: String { identity.deviceId }
 
@@ -103,8 +125,122 @@ public actor Node {
         let linked = devices[fp.deviceId].map { $0.fingerprintHex == fp.hex } ?? false
         try await conn.send(.hello(version: Msg.version, deviceId: id, name: name))
         if !linked { try await handlePairing(conn, fp, peerName); return }
-        try await conn.send(.error("\(name) can't back up with other devices yet"))
+        guard let peer = devices[fp.deviceId] else { return }
+        switch try await conn.receive() {
+        case let .vector(known):
+            let result = try await serveSync(conn, peer: peer, firstVector: known)
+            onSync(peer.name, result)
+        default:
+            try await conn.send(.error("Unexpected request"))
+        }
     }
+
+    // MARK: Sync (this device answering)
+
+    /// The responder side of one sync, step for step as `Session` in the Kotlin core:
+    /// catalog, previews, files, catalog again, Bye.
+    private func serveSync(_ conn: Connection, peer: LinkedDevice, firstVector: [String: Int64]) async throws -> SyncResult {
+        var result = SyncResult()
+        try await exchangeCatalog(conn, alreadyRead: firstVector)
+        // Previews: answer first (this device has none to give yet), then ask (none wanted yet).
+        guard case .previewWant = try await conn.receive() else { throw PSphereError.protocolError("Expected PreviewWant") }
+        try await conn.send(.end)
+        try await conn.send(.previewWant([]))
+        previews: while true {
+            switch try await conn.receive() {
+            case .end: break previews
+            case .preview: continue
+            case let m: throw PSphereError.protocolError("Unexpected \(m) while syncing previews")
+            }
+        }
+        // Files: receive what the other device offers, then offer this device's (none yet).
+        try await pull(conn, peer: peer, into: &result)
+        try await conn.send(.offer([]))
+        guard case .want = try await conn.receive() else { throw PSphereError.protocolError("Expected Want") }
+        try await conn.send(.end)
+        try await exchangeCatalog(conn, alreadyRead: nil)
+        guard case .bye = try await conn.receive() else { throw PSphereError.protocolError("Expected Bye") }
+        try await conn.send(.bye)
+        saveCatalog()
+        return result
+    }
+
+    private func exchangeCatalog(_ conn: Connection, alreadyRead: [String: Int64]?) async throws {
+        let theirs: [String: Int64]
+        if let alreadyRead { theirs = alreadyRead } else {
+            guard case let .vector(v) = try await conn.receive() else { throw PSphereError.protocolError("Expected Vector") }
+            theirs = v
+        }
+        try await conn.send(.vector(catalog.vector()))
+        records: while true {
+            switch try await conn.receive() {
+            case let .records(recs): recs.forEach { catalog.apply($0) }
+            case .end: break records
+            case let m: throw PSphereError.protocolError("Unexpected \(m) while syncing the catalog")
+            }
+        }
+        let delta = catalog.delta(theirs)
+        for start in stride(from: 0, to: delta.count, by: 2_000) {
+            try await conn.send(.records(Array(delta[start..<min(start + 2_000, delta.count)])))
+        }
+        try await conn.send(.end)
+    }
+
+    /// Receives the files the other device offers, checking each one's SHA-256.
+    private func pull(_ conn: Connection, peer: LinkedDevice, into result: inout SyncResult) async throws {
+        guard case let .offer(entries) = try await conn.receive() else { throw PSphereError.protocolError("Expected Offer") }
+        var wanted: [(Int32, Int64)] = []
+        var targets: [Int32: (URL, String)] = [:]
+        var notes: [String] = []
+        if let kept {
+            for (i, e) in entries.enumerated() {
+                guard isValidHash(e.hash), e.size >= 0, e.origin != id,
+                      let rule = catalog.rule(e.origin, e.ruleId), !rule.removed, rule.destinations.contains(id),
+                      let target = kept.location(originName: catalog.deviceName(e.origin) ?? e.origin, label: rule.label, relPath: e.relPath)
+                else { continue }
+                if kept.has(target, hash: e.hash) { holds(e.hash); continue }
+                wanted.append((Int32(i), 0))
+                targets[Int32(i)] = (target, e.hash)
+            }
+        } else if !entries.isEmpty {
+            notes.append("\(name) has no backup location set")
+        }
+        try await conn.send(.want(wanted: wanted, notes: notes))
+        result.notes += notes
+        while true {
+            let m = try await conn.receive()
+            if case .end = m { break }
+            guard case let .fileData(index, _, length) = m, let wantedFile = targets[index], let kept else {
+                throw PSphereError.protocolError("\(peer.name) sent a file that wasn't requested")
+            }
+            let (target, hash) = wantedFile
+            if length < 0 { result.failed += 1; continue }
+            let incoming = try kept.begin(target: target, hash: hash)
+            do {
+                var left = length
+                while left > 0 {
+                    let chunk = try await conn.receiveRawChunk(max: left)
+                    try incoming.write(chunk)
+                    left -= Int64(chunk.count)
+                }
+            } catch {
+                kept.cancel(incoming)
+                throw error
+            }
+            if let reason = kept.finish(incoming) {
+                result.failed += 1
+                try await conn.send(.ack(index: index, ok: false, reason: reason))
+            } else {
+                result.received += 1
+                holds(hash)
+                try await conn.send(.ack(index: index, ok: true, reason: ""))
+            }
+        }
+        saveCatalog()
+    }
+
+    /// Tells other devices (through the catalog) that this device now holds a copy of `hash`.
+    private func holds(_ hash: String) { catalog.putOwn(.hold(origin: id, seq: 0, hash: hash, present: true)) }
 
     /// The responder side of linking, as `Node.handlePairing` in the Kotlin core.
     private func handlePairing(_ conn: Connection, _ fp: Fingerprint, _ peerName: String) async throws {
