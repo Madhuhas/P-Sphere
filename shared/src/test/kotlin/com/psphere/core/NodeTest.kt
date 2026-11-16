@@ -337,6 +337,26 @@ class NodeTest {
         assertFalse("the tablet's photo isn't stored on the phone", onPhone.single { it.originName == "Tablet" }.onThisDevice)
     }
 
+    @Test fun thePhoneSearchesItsPhotosOnTheLaptop() {
+        phone.linkTo(laptop)
+        laptop.receiveInto()
+        phone.backUp("Camera", phone.folder("Camera").apply { write("dog.jpg", "D"); write("beach.jpg", "B") }, listOf(laptop))
+        phone.node.scan()
+        phone.syncWith(laptop)
+        // Stand-in for the laptop's search models: matches photos whose name contains the query.
+        laptop.node.smartSearch = com.psphere.core.node.SmartSearch { query, _ ->
+            laptop.node.library().filter { query in it.item.relPath }.map { it.item.hash to 0.3f }
+        }
+
+        val found = phone.node.searchPhotos("dog", online(laptop))
+        assertEquals(listOf("dog.jpg"), found.items.map { it.item.relPath })
+        assertEquals(listOf("Laptop"), found.searchedBy)
+
+        laptop.node.smartSearch = null
+        val none = phone.node.searchPhotos("dog", online(laptop))
+        assertTrue("no device can search", none.searchedBy.isEmpty() && none.items.isEmpty())
+    }
+
     @Test fun photosNoLinkedDeviceCanProvideAreHidden() {
         phone.linkTo(tablet)
         tablet.linkTo(laptop)

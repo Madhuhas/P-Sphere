@@ -53,6 +53,13 @@ sealed class Msg {
     /** Initiator → responder, sent only after the initiator has saved the link, so the responder
      * never records a one-sided link when the initiator has already given up. */
     object PairDone : Msg() { override fun toString() = "PairDone" }
+    /**
+     * Smart search: asks a device that has the optional search models to find photos matching
+     * [query] ("dog on the beach"). Devices without it, or older versions, just don't answer it.
+     */
+    data class Search(val query: String, val limit: Int) : Msg()
+    /** [ready] is false when this device has no search models. [hits] are best first. */
+    data class SearchReply(val ready: Boolean, val hits: List<Pair<String, Float>>) : Msg()
     data class Error(val message: String) : Msg()
     object End : Msg() { override fun toString() = "End" }
     object Bye : Msg() { override fun toString() = "Bye" }
@@ -118,6 +125,12 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         Msg.End -> 17
         Msg.Bye -> 18
         Msg.PairDone -> 19
+        is Msg.Search -> { o.str(m.query.take(MAX_QUERY)); o.writeInt(m.limit); 20 }
+        is Msg.SearchReply -> {
+            o.writeBoolean(m.ready); o.writeInt(m.hits.size)
+            m.hits.forEach { (h, score) -> o.str(h); o.writeFloat(score) }
+            21
+        }
     }
 
     private fun decode(type: Int, i: DataInputStream): Msg = when (type) {
@@ -140,6 +153,8 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         17 -> Msg.End
         18 -> Msg.Bye
         19 -> Msg.PairDone
+        20 -> Msg.Search(i.str(), i.readInt())
+        21 -> Msg.SearchReply(i.readBoolean(), List(count(i)) { i.str() to i.readFloat() })
         else -> throw ProtocolException("Unknown message type $type from ${peerLabel()}")
     }
 
@@ -153,5 +168,6 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         const val VERSION = 4
         const val MAX_FRAME = 64 * 1024 * 1024
         const val MAX_PREVIEW = 2 * 1024 * 1024
+        const val MAX_QUERY = 200
     }
 }

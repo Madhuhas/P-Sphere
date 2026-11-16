@@ -22,6 +22,22 @@ import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.CloudQueue
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.PhotoLibrary
+import androidx.compose.material.icons.outlined.ImageSearch
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.input.ImeAction
+import com.psphere.core.net.Wire
+import com.psphere.core.node.PhotoSearch
+import kotlinx.coroutines.launch
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +69,13 @@ import javax.imageio.ImageIO
 private fun loadBitmap(file: File?): ImageBitmap? =
     file?.takeIf { it.isFile }?.let { runCatching { ImageIO.read(it)?.toComposeImageBitmap() }.getOrNull() }
 
+/** What the Photos tab shows: the timeline, or the results of a search. */
+private sealed interface PhotosView {
+    object Timeline : PhotosView
+    data class Searching(val query: String) : PhotosView
+    data class Results(val query: String, val found: PhotoSearch) : PhotosView
+}
+
 /** The Photos timeline on Windows: one gallery across every linked device, from the shared catalog. */
 @Composable
 fun PhotosScreen() {
@@ -60,27 +83,84 @@ fun PhotosScreen() {
         Engine.node.library().sortedByDescending { it.item.takenAt }
     }
     var selected by remember { mutableStateOf<LibraryItem?>(null) }
+    var query by remember { mutableStateOf("") }
+    var view by remember { mutableStateOf<PhotosView>(PhotosView.Timeline) }
+    val scope = rememberCoroutineScope()
+
+    fun runSearch() {
+        val q = query.trim()
+        if (q.isEmpty()) { view = PhotosView.Timeline; return }
+        view = PhotosView.Searching(q)
+        scope.launch {
+            val found = withContext(Dispatchers.IO) { Engine.node.searchPhotos(q, Engine.onlineLinked()) }
+            if ((view as? PhotosView.Searching)?.query == q) view = PhotosView.Results(q, found)
+        }
+    }
 
     Column(Modifier.fillMaxSize()) {
-        ScreenTitle("Photos")
-        if (items.isEmpty()) {
-            EmptyPhotos()
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 140.dp),
-                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
-                contentPadding = PaddingValues(bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                items(items, key = { it.item.origin + "/" + it.item.key }) { li ->
-                    PhotoCell(li) { selected = li }
+        ScreenTitle("Photos") {
+            if (items.isNotEmpty()) SearchBox(query, { query = it; if (it.isBlank()) view = PhotosView.Timeline }, ::runSearch) {
+                query = ""; view = PhotosView.Timeline
+            }
+        }
+        when (val v = view) {
+            is PhotosView.Timeline -> if (items.isEmpty()) EmptyPhotos() else PhotoGrid(items) { selected = it }
+            is PhotosView.Searching -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            is PhotosView.Results -> when {
+                v.found.searchedBy.isEmpty() -> EmptyState(
+                    Icons.Outlined.ImageSearch, "Smart search is off",
+                    "Turn it on in Settings, under Smart search, to find photos by describing them.",
+                )
+                v.found.items.isEmpty() -> EmptyState(
+                    Icons.Outlined.ImageSearch, "No matches for “${v.query}”",
+                    "Try other words, like what's in the photo or where it was taken.",
+                )
+                else -> Column {
+                    Text(
+                        "${plural(v.found.items.size, "photo")} for “${v.query}”, best matches first",
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 28.dp, bottom = 8.dp),
+                    )
+                    PhotoGrid(v.found.items) { selected = it }
                 }
             }
         }
     }
 
     selected?.let { Viewer(it) { selected = null } }
+}
+
+@Composable
+private fun PhotoGrid(items: List<LibraryItem>, onOpen: (LibraryItem) -> Unit) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 140.dp),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+        contentPadding = PaddingValues(bottom = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        items(items, key = { it.item.origin + "/" + it.item.key }) { li ->
+            PhotoCell(li) { onOpen(li) }
+        }
+    }
+}
+
+@Composable
+private fun SearchBox(query: String, onChange: (String) -> Unit, onSearch: () -> Unit, onClear: () -> Unit) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = { onChange(it.take(Wire.MAX_QUERY)) },
+        placeholder = { Text("Search, e.g. dog on the beach") },
+        leadingIcon = { Icon(Icons.Filled.Search, null) },
+        trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = onClear) { Icon(Icons.Filled.Close, "Clear search") } },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+        textStyle = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.width(340.dp).onPreviewKeyEvent { e ->
+            if (e.type == KeyEventType.KeyDown && (e.key == Key.Enter || e.key == Key.NumPadEnter)) { onSearch(); true } else false
+        },
+    )
 }
 
 @Composable

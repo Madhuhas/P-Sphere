@@ -20,7 +20,31 @@ kotlin {
     compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
 }
 
+// ONNX Runtime ships one 93 MB jar with native libraries and debug symbols for every system
+// (421 MB unpacked). Each installer is built on its own system, so keep only that system's library.
+// Held at 1.20: newer builds need a newer Visual C++ runtime than the bundled Java ships
+// (msvcp140 14.29/14.36) and fail to load on Windows with "DLL initialization routine failed".
+val onnxRuntime: Configuration by configurations.creating { isTransitive = false }
+val onnxNativeDir: String = run {
+    val os = System.getProperty("os.name").lowercase()
+    val arm = System.getProperty("os.arch").lowercase().let { "aarch64" in it || "arm64" in it }
+    when {
+        "win" in os -> "win-x64"
+        "mac" in os -> if (arm) "osx-aarch64" else "osx-x64"
+        else -> if (arm) "linux-aarch64" else "linux-x64"
+    }
+}
+val onnxRuntimeSlim = tasks.register<Jar>("onnxRuntimeSlim") {
+    archiveFileName.set("onnxruntime-slim.jar")
+    destinationDirectory.set(layout.buildDirectory.dir("onnxruntime"))
+    from({ zipTree(onnxRuntime.singleFile) }) {
+        exclude { it.path.startsWith("ai/onnxruntime/native/") && !it.path.startsWith("ai/onnxruntime/native/$onnxNativeDir") }
+        exclude("**/*.pdb", "**/*.dSYM/**")
+    }
+}
+
 dependencies {
+    onnxRuntime("com.microsoft.onnxruntime:onnxruntime:1.20.0")
     implementation("com.psphere:psphere-shared")
     implementation(compose.desktop.currentOs)
     implementation("org.jetbrains.compose.material3:material3:1.9.0")
@@ -34,6 +58,9 @@ dependencies {
     implementation("com.google.zxing:core:3.5.4")
     // When a photo was taken, and which way up it is.
     implementation("com.drewnoakes:metadata-extractor:2.22.0")
+    // Smart search: runs the optional, downloaded search model on this computer's CPU.
+    // The slimmed jar (see onnxRuntimeSlim above) keeps only this system's native library.
+    implementation(files(onnxRuntimeSlim))
 
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
@@ -91,4 +118,7 @@ compose.desktop {
 
 tasks.test {
     useJUnit()
+    // Optional real-model check, see SmartSearchQualityTest.
+    listOf("smart.models", "smart.photos", "smart.download").forEach { k -> System.getProperty(k)?.let { systemProperty(k, it) } }
+    testLogging { showStandardStreams = System.getProperty("smart.models") != null || System.getProperty("smart.download") != null }
 }

@@ -22,6 +22,11 @@ class DesktopPrefs(private val file: File) {
         get() = props.getProperty("trayNoticeShown") == "1"
         set(v) = put("trayNoticeShown", if (v) "1" else "0")
 
+    /** Smart search stops scanning photos until the user resumes it. */
+    var smartPaused: Boolean
+        get() = props.getProperty("smartPaused") == "1"
+        set(v) = put("smartPaused", if (v) "1" else "0")
+
     @Synchronized
     private fun put(key: String, value: String) {
         props.setProperty(key, value)

@@ -48,6 +48,22 @@ interface Platform {
 
 data class HostPort(val host: String, val port: Int)
 
+/**
+ * Optional photo search by description ("dog on the beach"). The desktop app plugs its search
+ * models in here once the user downloads them; other devices then ask it over the network.
+ */
+fun interface SmartSearch {
+    /** Photo hashes with scores, best first, or null while it isn't ready. */
+    fun search(query: String, limit: Int): List<Pair<String, Float>>?
+}
+
+data class PhotoSearch(
+    /** Matching photos, best first. */
+    val items: List<LibraryItem>,
+    /** Devices that searched, this one included. Empty when no reachable device has smart search. */
+    val searchedBy: List<String>,
+)
+
 data class ScanResult(val files: Int, val changed: Int, val deleted: Int, val errors: List<String>)
 
 data class LibraryItem(
@@ -121,6 +137,9 @@ class Node(
     @Volatile var onIncomingProgress: ((SyncProgress) -> Unit)? = null
     /** Called when a sync another device started has ended, with its result. */
     @Volatile var onIncomingDone: ((SyncResult) -> Unit)? = null
+
+    /** Set by an app that has smart search turned on. */
+    @Volatile var smartSearch: SmartSearch? = null
 
     @Volatile private var pairing: PairingWindow? = null
     private class PairingWindow(val token: String, val expiresAt: Long, val allowCode: Boolean)
@@ -537,6 +556,7 @@ class Node(
                     is Msg.Vector -> serveSync(wire, dev, req.known)
                     is Msg.Get -> serveGet(wire, req)
                     is Msg.Has -> wire.send(Msg.HasReply(req.hashes.filter { isValidHash(it) && holdsLocally(it) }))
+                    is Msg.Search -> wire.send(searchHere(req.query, req.limit)?.let { Msg.SearchReply(true, it) } ?: Msg.SearchReply(false, emptyList()))
                     else -> wire.send(Msg.Error("Unexpected request"))
                 }
             }
@@ -790,6 +810,63 @@ class Node(
         }
     }
 
+    // ── Smart search ─────────────────────────────────────────────────────────
+
+    private fun searchHere(query: String, limit: Int): List<Pair<String, Float>>? {
+        val q = query.trim().take(Wire.MAX_QUERY)
+        if (q.isEmpty()) return emptyList()
+        return runCatching { smartSearch?.search(q, limit.coerceIn(1, MAX_SEARCH_HITS)) }.getOrNull()
+            ?.filter { isValidHash(it.first) }
+    }
+
+    /**
+     * Finds library photos matching [query], using this device's smart search if it has one and
+     * asking every linked device at the same time: at its address in [online] when it was seen on
+     * the network, otherwise at its last known address (discovery is sometimes blocked). Blocking.
+     */
+    fun searchPhotos(query: String, online: Map<String, HostPort>, limit: Int = 200): PhotoSearch {
+        val q = query.trim()
+        if (q.isEmpty()) return PhotoSearch(emptyList(), emptyList())
+        val targets = devices().filter { it.id in online || it.lastHost != null }
+        val pool = java.util.concurrent.Executors.newFixedThreadPool(targets.size.coerceIn(1, 8)) { r ->
+            Thread(r, "psphere-search").apply { isDaemon = true }
+        }
+        val answers = ArrayList<Pair<String, List<Pair<String, Float>>>>()
+        try {
+            val askers = targets.map { dev -> pool.submit<List<Pair<String, Float>>?> { askSearch(dev.id, listOfNotNull(online[dev.id]), q, limit) } }
+            searchHere(q, limit)?.let { answers += id to it }
+            val deadline = System.currentTimeMillis() + SEARCH_TIMEOUT_MS
+            targets.zip(askers).forEach { (dev, f) ->
+                val wait = (deadline - System.currentTimeMillis()).coerceAtLeast(1)
+                val hits = runCatching { f.get(wait, java.util.concurrent.TimeUnit.MILLISECONDS) }.getOrNull()
+                if (hits != null) answers += dev.id to hits
+            }
+        } finally {
+            pool.shutdownNow()
+        }
+        val best = HashMap<String, Float>()
+        answers.forEach { (_, hits) -> hits.forEach { (h, score) -> if (score > (best[h] ?: Float.NEGATIVE_INFINITY)) best[h] = score } }
+        val byHash = library().groupBy { it.item.hash }
+        val items = best.entries.sortedByDescending { it.value }.mapNotNull { byHash[it.key]?.first() }.take(limit)
+        return PhotoSearch(items, answers.map { nameOf(it.first) })
+    }
+
+    /** Null if [deviceId] can't be reached or has no smart search (including older versions). */
+    private fun askSearch(deviceId: String, addresses: List<HostPort>, query: String, limit: Int): List<Pair<String, Float>>? {
+        val dev = device(deviceId) ?: return null
+        val (socket, _) = connectTo(dev, addresses) ?: return null
+        return socket.use {
+            runCatching {
+                val wire = Wire(socket.inputStream, socket.outputStream) { dev.name }
+                handshake(wire, dev)
+                socket.soTimeout = SEARCH_TIMEOUT_MS.toInt()
+                wire.send(Msg.Search(query, limit))
+                val reply = wire.expect<Msg.SearchReply>()
+                if (reply.ready) reply.hits.filter { isValidHash(it.first) } else null
+            }.getOrNull()
+        }
+    }
+
     // ── Linking ──────────────────────────────────────────────────────────────
 
     /** Opens a 10-minute window for another device to link, and returns what the QR code shows. */
@@ -911,5 +988,7 @@ class Node(
         const val SERVE_SCAN_BUDGET_MS = 20_000L
         const val PAIRING_TIMEOUT_MS = 180_000
         const val PAIRING_WINDOW_MS = 10 * 60_000L
+        const val SEARCH_TIMEOUT_MS = 15_000L
+        const val MAX_SEARCH_HITS = 1_000
     }
 }

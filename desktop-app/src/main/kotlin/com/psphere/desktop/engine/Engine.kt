@@ -110,6 +110,7 @@ object Engine {
             onNetworkReset = { _state.update { it.copy(nearby = emptyMap()) } },
         ).also { it.start(srv.localPort, node.deviceName) }
 
+        com.psphere.desktop.smart.Smart.start(dataDir)
         scope.launch { scan() }
         scope.launch {
             while (isActive) {

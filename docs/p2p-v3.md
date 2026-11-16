@@ -148,6 +148,24 @@ One timeline on every device, showing the photos and videos from the backup fold
 - **Share:** shares the full file if it's available, otherwise it offers to download it first.
 - Freed items don't appear in other gallery apps on the device, because the files are no longer there. Only PSphere shows them.
 
+### 6.3c Smart search (optional)
+Find photos by describing them ("dog on the beach", "birthday cake", "snow"). Off until the user turns it on, because it needs a download and keeps the computer busy for a while the first time.
+
+**Where it runs**
+- On the **computer** (Windows, macOS, Linux). Settings → Photos → **Smart search** → **Download (148 MB)**.
+- The computer looks at each photo's **preview** once (the previews every device already keeps, 6.3b), so it can search phone photos too, including HEIC photos, videos, and photos that are only on the phone.
+- Phones and tablets don't run the model. Their Photos tab gets a search button; the search is sent to the computer, which answers with the matching photos. This works while the computer is on and on the same Wi-Fi. Otherwise the phone says that smart search runs on the computer.
+
+**Being gentle with the computer**
+- Scanning uses one processor core on a low-priority thread, with a short rest between photos. About 0.3 s per photo, so 10,000 photos take about an hour, once. New photos after that take seconds.
+- **Pause** / **Resume** while it scans. Search already works for the photos done.
+- The model is unloaded after a few idle minutes (it takes about 400 MB of memory while loaded) and comes back on the next search.
+- **Remove** deletes the model and what it learned. Photos are never touched.
+
+**The model**
+- OpenAI CLIP ViT-B/32 (MIT licence), 8-bit ONNX export, run with ONNX Runtime. Downloaded from a pinned revision, and every file is checked against its SHA-256 before use.
+- The download, and Check for updates, are the only times PSphere goes online, and only when the user taps them.
+
 ### 6.4 Receiving
 - **Backup location**, with a button to change it.
   - Changing it asks whether to move the existing backups or leave them.
@@ -194,7 +212,7 @@ One timeline on every device, showing the photos and videos from the backup fold
 - **Library catalog:** each device keeps a list of the photos and videos in its shared folders. Each entry has the hash, original device, folder, path, date taken, type, size, and which devices hold a copy.
   - Linked devices exchange changes to this list, plus the previews, every time they connect. This is how every device can show the whole library.
   - When a backup is confirmed, the "which devices hold a copy" part is updated, so any device knows where to fetch the full size from.
-- **On request:** a device can ask a linked device for one file by its hash, to show a full-size freed photo or to download it back (6.3b). It can also ask "do you still have these?" (the free-up-space re-check, 6.3a).
+- **On request:** a device can ask a linked device for one file by its hash, to show a full-size freed photo or to download it back (6.3b). It can also ask "do you still have these?" (the free-up-space re-check, 6.3a), and "which photos match this search?" (6.3c). A device without smart search, or an older version, simply doesn't answer the search, so this needed no protocol version change.
 
 ### 7.4 Edits and name clashes
 - A **file changed on the source** (same name, new content): the new version replaces the backup copy. The old version is moved to `<backup location>/.psphere/old/<date>/` and deleted after 30 days.
@@ -230,7 +248,8 @@ Each step ends with something you can test on your own devices.
 | 2 | Android: linking, Sending, Receiving, Devices screens | Phone ↔ tablet backups both ways, multiple folders, choice of destination |
 | 3 | Windows app | Phone/tablet → laptop to a drive you pick, tray icon, start with Windows |
 | 4 | Photos (combined library on Android and Windows) and Free up space; relay, resume and full-disk handling on real devices; polish | See the tablet's photos on the phone. Free 8 GB on the phone, still browse those photos, open one full-size from the laptop, download it back. Laptop off → phone to tablet → laptop catches up from the tablet |
-| Later | Laptop photo-library extras: albums, faces, search | n/a |
+| 5 | Smart search (6.3c): optional model on the computer, search from every device | Download it on the laptop, search "dog" on the laptop and on the phone |
+| Later | Laptop photo-library extras: albums, faces, text in photos | n/a |
 
 ## 9. Decisions I made (say if any are wrong)
 
@@ -248,5 +267,5 @@ Each step ends with something you can test on your own devices.
 
 - Backups over the internet or mobile data when you're away from home.
 - iPhone and Mac.
-- Albums, faces and AI search. The timeline itself is in this version (6.3b).
+- Albums, faces and text in photos. The timeline (6.3b) and smart search (6.3c) are in this version.
 - Two-way sync where deletes and edits travel both ways.

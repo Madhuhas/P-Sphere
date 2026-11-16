@@ -36,6 +36,17 @@ import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.CloudQueue
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.PhotoLibrary
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
+import com.psphere.core.net.Wire
+import com.psphere.core.node.PhotoSearch
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -99,6 +110,22 @@ fun PhotosScreen() {
     var folder by remember { mutableStateOf<String?>(null) }
     var showDeleted by remember { mutableStateOf(false) }
     var openAt by remember { mutableStateOf<Int?>(null) }
+    var searchOpen by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var search by remember { mutableStateOf<SearchUi?>(null) }
+    val scope = rememberCoroutineScope()
+
+    fun runSearch() {
+        val q = query.trim()
+        if (q.isEmpty()) { search = null; return }
+        search = SearchUi.Loading(q)
+        scope.launch {
+            val found = withContext(Dispatchers.IO) { Engine.node.searchPhotos(q, Engine.onlineLinked()) }
+            if ((search as? SearchUi.Loading)?.query == q) search = SearchUi.Done(q, found)
+        }
+    }
+    fun closeSearch() { searchOpen = false; query = ""; search = null }
+    if (searchOpen) BackHandler(onBack = ::closeSearch)
 
     val devices = remember(all) { all.map { it.device }.distinct().sorted() }
     val folders = remember(all) { all.map { it.folder }.distinct().sorted() }
@@ -109,9 +136,15 @@ fun PhotosScreen() {
             (showDeleted || it.li.item.state != ItemState.DELETED)
     }
 
+    val results = (search as? SearchUi.Done)?.found?.items
+    val gridItems = results ?: shown.map { it.li }
+
     Scaffold(
         topBar = {
-            TopAppBar(title = {
+            if (searchOpen) SearchBar(query, { query = it.take(Wire.MAX_QUERY); if (it.isBlank()) search = null }, ::runSearch, ::closeSearch)
+            else TopAppBar(actions = {
+                if (all.isNotEmpty()) IconButton(onClick = { searchOpen = true }) { Icon(Icons.Filled.Search, "Search photos") }
+            }, title = {
                 Column {
                     Text("Photos")
                     if (shown.isNotEmpty()) {
@@ -126,6 +159,15 @@ fun PhotosScreen() {
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+            val s = search
+            if (s != null) {
+                SearchResults(s, onOpen = { openAt = it })
+                return@Column
+            }
+            if (searchOpen) {
+                Centered("Describe what's in the photo, like “dog on the beach”, “birthday cake” or “snow”.")
+                return@Column
+            }
             if (all.isNotEmpty()) {
                 if (devices.size > 1) ChipRow(devices, device) { device = it }
                 if (folders.size > 1) ChipRow(folders, folder) { folder = it }
@@ -157,7 +199,70 @@ fun PhotosScreen() {
         }
     }
 
-    openAt?.let { idx -> PhotoViewer(shown.map { it.li }, idx, onClose = { openAt = null }) }
+    openAt?.let { idx -> PhotoViewer(gridItems, idx, onClose = { openAt = null }) }
+}
+
+private sealed interface SearchUi {
+    data class Loading(val query: String) : SearchUi
+    data class Done(val query: String, val found: PhotoSearch) : SearchUi
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchBar(query: String, onChange: (String) -> Unit, onSearch: () -> Unit, onClose: () -> Unit) {
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    TopAppBar(
+        navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Close search") } },
+        title = {
+            TextField(
+                value = query,
+                onValueChange = onChange,
+                placeholder = { Text("Search your photos") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
+                ),
+                modifier = Modifier.fillMaxWidth().focusRequester(focus),
+            )
+        },
+        actions = { if (query.isNotEmpty()) IconButton(onClick = { onChange("") }) { Icon(Icons.Filled.Close, "Clear") } },
+    )
+}
+
+@Composable
+private fun SearchResults(s: SearchUi, onOpen: (Int) -> Unit) {
+    when (s) {
+        is SearchUi.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        is SearchUi.Done -> when {
+            s.found.searchedBy.isEmpty() -> Centered(
+                "Smart search runs on your computer.\n\nTurn it on in PSphere's Settings on your computer, under Smart search. Then search here while the computer is on and on this Wi-Fi.",
+            )
+            s.found.items.isEmpty() -> Centered("No matches for “${s.query}”. Try other words, like what's in the photo.")
+            else -> Column {
+                Text(
+                    "${plural(s.found.items.size, "photo")} · best matches first",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                )
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 108.dp),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    items(count = s.found.items.size, key = { s.found.items[it].item.origin + "/" + s.found.items[it].item.key }) { i ->
+                        PhotoCell(s.found.items[i], onClick = { onOpen(i) })
+                    }
+                }
+            }
+        }
+    }
 }
 
 /** A horizontal row of filter chips: an "All" chip plus one per option. */
@@ -387,8 +492,8 @@ private fun holdersText(li: LibraryItem): String {
 
 @Composable
 private fun Centered(text: String) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+        Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
     }
 }
 
