@@ -371,6 +371,18 @@ class NodeTest {
         assertTrue("nothing can search", noSearch.from.isEmpty() && noSearch.items.isEmpty() && !noSearch.saved)
     }
 
+    @Test fun theDeviceThatAcceptedALinkCanBackUpRightAwayWithoutDiscovery() {
+        phone.linkTo(laptop) // the phone scans the laptop's code; the laptop only accepts
+        laptop.receiveInto()
+        laptop.backUp("Pictures", laptop.folder("Pictures").apply { write("a.jpg", "A") }, listOf(phone))
+        phone.receiveInto()
+        laptop.node.scan()
+        // The laptop learned the phone's address while linking, so no discovery is needed.
+        val r = laptop.node.syncWith(phone.id, emptyList())
+        assertNull(r.error)
+        assertEquals(1, r.sent)
+    }
+
     @Test fun aPhotoOnTheLaptopOpensEvenBeforeTheLaptopIsSeenOnTheNetwork() {
         phone.linkTo(laptop)
         laptop.backUp("Pictures", laptop.folder("Pictures").apply { write("view.jpg", "a view") }, emptyList())

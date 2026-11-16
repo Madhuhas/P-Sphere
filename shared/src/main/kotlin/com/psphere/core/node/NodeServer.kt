@@ -25,6 +25,7 @@ class NodeServer(private val node: Node, private val port: Int = 0, private val 
         val slots = Semaphore(maxConnections)
         socket = ss
         pool = workers
+        node.serverPort = ss.localPort
         Thread({
             while (!ss.isClosed) {
                 val client = try { ss.accept() } catch (e: SocketException) { break } catch (e: Exception) { Thread.sleep(200); continue }

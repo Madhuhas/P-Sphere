@@ -122,6 +122,9 @@ class Node(
     /** Called when a sync another device started has ended, with its result. */
     @Volatile var onIncomingDone: ((SyncResult) -> Unit)? = null
 
+    /** Where this device listens for connections; told to other devices in Hello. Set by [NodeServer]. */
+    @Volatile var serverPort = 0
+
     /** Set by an app that has the smart features turned on. */
     @Volatile var smart: SmartLibrary? = null
     private val smartCache = SmartCache(File(dataDir, "smart-answers.bin"))
@@ -512,7 +515,7 @@ class Node(
 
     /** Client side of the opening exchange with a linked device. */
     private fun handshake(wire: Wire, dev: LinkedDevice) {
-        wire.send(Msg.Hello(Wire.VERSION, id, state.deviceName))
+        wire.send(Msg.Hello(Wire.VERSION, id, state.deviceName, serverPort))
         val hello = wire.expect<Msg.Hello>()
         if (hello.deviceId != dev.id) throw ProtocolException("${dev.name} identified itself incorrectly")
     }
@@ -533,8 +536,10 @@ class Node(
                 }
                 if (hello.deviceId != fp.deviceId) { wire.send(Msg.Error("Identity mismatch")); return }
                 val dev = device(fp.deviceId)?.takeIf { it.fingerprint == fp }
-                wire.send(Msg.Hello(Wire.VERSION, id, state.deviceName))
+                wire.send(Msg.Hello(Wire.VERSION, id, state.deviceName, serverPort))
                 if (dev == null) { handlePairing(ssl, wire, fp, hello); return }
+                // Remember where it can be reached, so this device can start syncs with it too.
+                addressOf(ssl, hello)?.let { noteAddress(dev.id, it) }
 
                 ssl.soTimeout = SESSION_TIMEOUT_MS
                 when (val req = wire.receive()) {
@@ -894,7 +899,7 @@ class Node(
                     throw ProtocolException("The device at that address isn't the one in the QR code")
                 }
                 val wire = Wire(socket.inputStream, socket.outputStream) { offer.name }
-                wire.send(Msg.Hello(Wire.VERSION, id, state.deviceName))
+                wire.send(Msg.Hello(Wire.VERSION, id, state.deviceName, serverPort))
                 wire.expect<Msg.Hello>()
                 wire.send(Msg.PairRequest(offer.token, codeMode = false))
                 val ok = wire.expect<Msg.PairOk>()
@@ -913,7 +918,7 @@ class Node(
             val fp = Tls.peerFingerprint(socket)
             socket.soTimeout = PAIRING_TIMEOUT_MS
             val wire = Wire(socket.inputStream, socket.outputStream)
-            wire.send(Msg.Hello(Wire.VERSION, id, state.deviceName))
+            wire.send(Msg.Hello(Wire.VERSION, id, state.deviceName, serverPort))
             val hello = wire.expect<Msg.Hello>()
             if (hello.deviceId != fp.deviceId) throw ProtocolException("The other device identified itself incorrectly")
             wire.send(Msg.PairRequest("", codeMode = true))
@@ -926,6 +931,12 @@ class Node(
             runCatching { wire.send(Msg.PairDone) }
             return device
         }
+    }
+
+    /** The other device's address: where it connected from, at the port it listens on (newer versions say). */
+    private fun addressOf(socket: Socket, hello: Msg.Hello): HostPort? {
+        val ip = socket.inetAddress?.hostAddress ?: return null
+        return if (hello.port in 1..65535) HostPort(ip, hello.port) else null
     }
 
     private fun handlePairing(socket: SSLSocket, wire: Wire, fp: Fingerprint, hello: Msg.Hello) {
@@ -942,10 +953,9 @@ class Node(
             pairing = null
             // Accept, then wait for the initiator to confirm it has saved the link before saving
             // ours — a dropped connection must not leave a one-sided link.
-            // The other device's server port isn't known yet; discovery fills in its address.
             wire.send(Msg.PairOk(state.deviceName))
             wire.expect<Msg.PairDone>()
-            link(fp, hello.name, null)
+            link(fp, hello.name, addressOf(socket, hello))
             onChange?.invoke()
             return
         }
@@ -960,7 +970,7 @@ class Node(
         // so a lost connection can't leave this device linked on its own.
         wire.send(Msg.PairOk(state.deviceName))
         wire.expect<Msg.PairDone>()
-        link(fp, hello.name, null)
+        link(fp, hello.name, addressOf(socket, hello))
         onChange?.invoke()
     }
 

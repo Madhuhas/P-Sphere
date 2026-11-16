@@ -31,7 +31,12 @@ data class OfferEntry(
  * File contents follow a [FileData] frame as exactly [FileData.length] raw bytes.
  */
 sealed class Msg {
-    data class Hello(val version: Int, val deviceId: String, val name: String) : Msg()
+    /**
+     * [port] is where the sender listens for connections (0 if unknown). It was added after v4
+     * shipped as a trailing field, which older versions simply don't read; it lets a device reach
+     * the other directly even when discovery on the network is slow or blocked.
+     */
+    data class Hello(val version: Int, val deviceId: String, val name: String, val port: Int = 0) : Msg()
     data class Vector(val known: Map<String, Long>) : Msg()
     data class Records(val records: List<Rec>) : Msg()
     data class PreviewWant(val hashes: List<String>) : Msg()
@@ -104,7 +109,7 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
     class PeerError(message: String) : IOException(message)
 
     private fun encode(o: DataOutputStream, m: Msg): Int = when (m) {
-        is Msg.Hello -> { o.writeInt(m.version); o.str(m.deviceId); o.str(m.name); 1 }
+        is Msg.Hello -> { o.writeInt(m.version); o.str(m.deviceId); o.str(m.name); o.writeInt(m.port); 1 }
         is Msg.Vector -> { o.writeInt(m.known.size); m.known.forEach { (k, v) -> o.str(k); o.writeLong(v) }; 2 }
         is Msg.Records -> { o.writeInt(m.records.size); m.records.forEach { o.rec(it) }; 3 }
         is Msg.PreviewWant -> { o.strList(m.hashes); 4 }
@@ -136,7 +141,7 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
     }
 
     private fun decode(type: Int, i: DataInputStream): Msg = when (type) {
-        1 -> Msg.Hello(i.readInt(), i.str(), i.str())
+        1 -> Msg.Hello(i.readInt(), i.str(), i.str(), if (i.available() >= 4) i.readInt() else 0)
         2 -> Msg.Vector(HashMap<String, Long>().apply { repeat(count(i)) { put(i.str(), i.readLong()) } })
         3 -> Msg.Records(List(count(i)) { i.rec() })
         4 -> Msg.PreviewWant(i.strList())
