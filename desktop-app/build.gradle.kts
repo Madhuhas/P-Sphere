@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.psphere"
-version = "2.3.0"
+version = "2.4.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -75,7 +75,7 @@ compose.desktop {
             // Each format is built on its own system: MSI on Windows, DEB/RPM on Linux, DMG on macOS.
             targetFormats(TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Rpm, TargetFormat.Dmg)
             packageName = "PSphere"
-            packageVersion = "2.3.0"
+            packageVersion = "2.4.0"
             description = "Back up folders between your devices over your home Wi-Fi"
             vendor = "Kotini Sai Madhuhas"
             copyright = "Copyright (C) 2026 Kotini Sai Madhuhas. GNU AGPL-3.0."
