@@ -246,16 +246,27 @@ object Smart : SmartLibrary {
             }
             SmartOps.PHOTO -> {
                 val h = args.firstOrNull().orEmpty()
-                facts.peopleIn(h).filter { p -> facts.people().any { it.first.id == p.id } }.map { personItem(it, facts.photosOf(it.id).size) } +
-                    listOfNotNull(facts.placeOf(h)?.let { placeItem(it, facts.photosAt(it.id)) })
+                val shown = facts.people().associate { it.first.id to it.second.size }
+                facts.peopleIn(h).mapNotNull { p -> shown[p.id]?.let { personItem(p, it) } } +
+                    listOfNotNull(facts.placeOf(h)?.let { pl -> facts.places().firstOrNull { it.first.id == pl.id }?.let { placeItem(it.first, it.second) } })
             }
             else -> emptyList()
         }
     }
 
+    /** When each library photo was taken, worked out once per change of the library. */
+    private var takenCache: Pair<List<com.psphere.core.node.LibraryItem>, Map<String, Long>>? = null
+
+    @Synchronized
+    private fun takenAt(): Map<String, Long> {
+        val lib = Engine.node.library()
+        takenCache?.let { (l, m) -> if (l === lib) return m }
+        return lib.associate { it.item.hash to it.item.takenAt }.also { takenCache = lib to it }
+    }
+
     /** Photos, newest first. */
     private fun photos(hashes: Set<String>): List<SmartItem> {
-        val taken = Engine.node.library().associate { it.item.hash to it.item.takenAt }
+        val taken = takenAt()
         return hashes.filter { it in taken }.sortedByDescending { taken[it] }.map { SmartItem(SmartItem.Kind.PHOTO, it) }
     }
 
@@ -334,7 +345,7 @@ object Smart : SmartLibrary {
         SmartItem(SmartItem.Kind.PERSON, p.id.toString(), p.name, count = photos, cover = p.coverHash, image = p.coverJpeg)
 
     private fun placeItem(pl: Place, hs: Set<String>): SmartItem {
-        val taken = Engine.node.library().associate { it.item.hash to it.item.takenAt }
+        val taken = takenAt()
         val cover = hs.maxByOrNull { taken[it] ?: 0L } ?: ""
         return SmartItem(SmartItem.Kind.PLACE, pl.id, pl.city, listOf(pl.region, pl.country).filter { it.isNotEmpty() && it != pl.city }.joinToString(", "), hs.size, cover)
     }

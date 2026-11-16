@@ -30,7 +30,7 @@ import com.psphere.desktop.smart.SmartState
 
 /** Settings → Smart photos: an optional download, then a quiet background scan. */
 @Composable
-fun SmartSearchCard() {
+fun SmartPhotosCard() {
     val state by Smart.state.collectAsState()
     val cs = MaterialTheme.colorScheme
     var confirmRemove by remember { mutableStateOf(false) }

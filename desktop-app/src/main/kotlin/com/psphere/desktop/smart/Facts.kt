@@ -27,6 +27,10 @@ class Facts(private val file: File) {
     private val people = HashMap<Int, Person>()
     private var nextPerson = 1
     private var dirty = 0
+    /** Goes up on every change; the people and places lists are rebuilt only then. */
+    private var changes = 0
+    private var peopleCache: Pair<Int, List<Pair<Person, Set<String>>>>? = null
+    private var placesCache: Pair<Int, List<Pair<Place, Set<String>>>>? = null
 
     init { load() }
 
@@ -49,6 +53,7 @@ class Facts(private val file: File) {
         text[hash] = words
         placeOf[hash] = place?.id ?: ""
         place?.let { places[it.id] = it }
+        changes++
         if (++dirty >= 20) save()
     }
 
@@ -65,6 +70,7 @@ class Facts(private val file: File) {
         gone.forEach { h -> faces.remove(h)?.forEach { f -> people[f.person]?.let { it.faces-- } } }
         text.keys.retainAll(keep); placeOf.keys.retainAll(keep)
         people.values.removeIf { it.faces <= 0 }
+        changes++
         save()
     }
 
@@ -73,11 +79,13 @@ class Facts(private val file: File) {
     /** People seen in at least two photos (or named), named ones first, then by how often they appear. */
     @Synchronized
     fun people(): List<Pair<Person, Set<String>>> {
+        peopleCache?.let { (at, list) -> if (at == changes) return list }
         val photos = HashMap<Int, MutableSet<String>>()
         faces.forEach { (h, fs) -> fs.forEach { photos.getOrPut(it.person) { HashSet() } += h } }
         return people.values.mapNotNull { p -> photos[p.id]?.let { p to it } }
             .filter { (p, hs) -> p.name.isNotEmpty() || hs.size >= MIN_PHOTOS }
             .sortedWith(compareBy<Pair<Person, Set<String>>>({ it.first.name.isEmpty() }, { -it.second.size }))
+            .also { peopleCache = changes to it }
     }
 
     @Synchronized fun photosOf(person: Int): Set<String> = faces.filterValues { fs -> fs.any { it.person == person } }.keys.toSet()
@@ -99,6 +107,7 @@ class Facts(private val file: File) {
         } else {
             p.name = clean
         }
+        changes++
         save()
     }
 
@@ -120,6 +129,7 @@ class Facts(private val file: File) {
                     if (drop.coverSize > keep.coverSize && drop.coverJpeg != null) { keep.coverHash = drop.coverHash; keep.coverSize = drop.coverSize; keep.coverJpeg = drop.coverJpeg }
                     people.remove(drop.id)
                     merged = true
+                    changes++
                     break@loop
                 }
             }
@@ -140,10 +150,13 @@ class Facts(private val file: File) {
 
     /** Places with their photos, most photos first. */
     @Synchronized
-    fun places(): List<Pair<Place, Set<String>>> =
-        placeOf.entries.filter { it.value.isNotEmpty() }.groupBy({ it.value }, { it.key })
+    fun places(): List<Pair<Place, Set<String>>> {
+        placesCache?.let { (at, list) -> if (at == changes) return list }
+        return placeOf.entries.filter { it.value.isNotEmpty() }.groupBy({ it.value }, { it.key })
             .mapNotNull { (id, hs) -> places[id]?.let { it to hs.toSet() } }
             .sortedByDescending { it.second.size }
+            .also { placesCache = changes to it }
+    }
 
     @Synchronized fun photosAt(placeId: String): Set<String> = placeOf.filterValues { it == placeId }.keys.toSet()
 
@@ -152,7 +165,7 @@ class Facts(private val file: File) {
     // ── Saving ───────────────────────────────────────────────────────────────
 
     @Synchronized
-    fun clear() { faces.clear(); text.clear(); placeOf.clear(); places.clear(); people.clear(); nextPerson = 1; file.delete() }
+    fun clear() { faces.clear(); text.clear(); placeOf.clear(); places.clear(); people.clear(); nextPerson = 1; changes++; file.delete() }
 
     @Synchronized
     fun save() {

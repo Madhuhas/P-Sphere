@@ -371,6 +371,18 @@ class NodeTest {
         assertTrue("nothing can search", noSearch.from.isEmpty() && noSearch.items.isEmpty() && !noSearch.saved)
     }
 
+    @Test fun aPhotoOnTheLaptopOpensEvenBeforeTheLaptopIsSeenOnTheNetwork() {
+        phone.linkTo(laptop)
+        laptop.backUp("Pictures", laptop.folder("Pictures").apply { write("view.jpg", "a view") }, emptyList())
+        laptop.node.scan()
+        phone.syncWith(laptop)
+        val item = phone.node.library().single { it.item.relPath == "view.jpg" }
+        assertFalse(item.onThisDevice)
+        // Nothing discovered yet (empty online map): the last known address is used.
+        val file = phone.node.fetchToCache(item.item.hash, emptyMap())
+        assertEquals("a view", file?.readText())
+    }
+
     @Test fun memoriesShowThisDayInEarlierYears() {
         val zone = java.time.ZoneId.of("UTC")
         fun at(date: String) = java.time.LocalDate.parse(date).atTime(12, 0).atZone(zone).toInstant().toEpochMilli()

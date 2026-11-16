@@ -96,6 +96,12 @@ Pick a folder, like Camera, and tick the devices that should keep a copy. Each d
 
 The Photos tab shows the photos and videos from all your linked devices in one timeline. Photos that live on another device show a preview; open one to see it full size, or download it back.
 
+## Smart photos
+
+An optional download on the computer (about 200 MB). It looks through your photos once and then lets you search by describing them ("dog on the beach"), see them by the people in them and where they were taken, and find words written in them, like a receipt. Your phone and tablet use it too while the computer is on, and keep People and Places for when you're away. Everything runs on your own computer; nothing is sent anywhere.
+
+The timeline itself has date headings, "1 year ago" memories and pinch to zoom on every device, with no download.
+
 ## Free up space
 
 On your phone, PSphere lists the photos already backed up safely on another device. Free them up and they're removed from the phone only, after PSphere checks again that the copies are really there. They stay in Photos as previews.
@@ -157,4 +163,6 @@ In plain words: use it, change it and share it freely. If you share a changed ve
 - **[ZXing](https://github.com/zxing/zxing)** draws the linking QR codes (Apache 2.0).
 - **[JmDNS](https://github.com/jmdns/jmdns)** finds devices on the Wi-Fi in the Windows app (Apache 2.0).
 - **[metadata-extractor](https://github.com/drewnoakes/metadata-extractor)** reads when a photo was taken in the Windows app (Apache 2.0).
+- Smart photos runs on **[ONNX Runtime](https://onnxruntime.ai)** (MIT) with these models, downloaded only when you ask: **[OpenAI CLIP](https://github.com/openai/CLIP)** ViT-B/32 for search (MIT), **[YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet)** (MIT) and **[SFace](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface)** (Apache 2.0) from OpenCV for faces, and **[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)** for text in photos (Apache 2.0).
+- Place names come from **[GeoNames](https://www.geonames.org)** (CC BY 4.0).
 - QR codes are scanned with Google's **ML Kit code scanner**, part of Google Play services, which is not open source and has its own [terms](https://developers.google.com/ml-kit/terms).

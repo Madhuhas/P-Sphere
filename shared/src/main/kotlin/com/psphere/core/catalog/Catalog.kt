@@ -26,6 +26,10 @@ class Catalog(val selfId: String) {
     private val holders = HashMap<String, MutableSet<String>>()
     private val itemsByHash = HashMap<String, MutableSet<String>>()
 
+    /** Goes up on every change, so callers can tell when something they worked out is stale. */
+    @Volatile var version = 0L
+        private set
+
     private fun id(origin: String, key: String) = origin + '\u0000' + key
 
     // ── Writing ──────────────────────────────────────────────────────────────
@@ -67,10 +71,12 @@ class Catalog(val selfId: String) {
             unindex(r)
         }
         known.remove(origin)
+        version++
         return hashes
     }
 
     private fun store(r: Rec) {
+        version++
         val k = id(r.origin, r.key)
         unindex(records.put(k, r))
         index(r)

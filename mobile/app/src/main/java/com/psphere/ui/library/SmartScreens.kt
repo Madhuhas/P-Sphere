@@ -191,7 +191,7 @@ private fun CoverTile(hash: String, title: String, onClick: () -> Unit) {
 @Composable
 internal fun SmartPhotos(
     op: String, args: List<String>, columns: Int, refresh: Int = 0,
-    header: (@Composable () -> Unit)? = null,
+    header: (@Composable (photos: Int) -> Unit)? = null,
     onOpen: (List<LibraryItem>, Int) -> Unit,
 ) {
     val answer = smartAnswer(op, args, refresh) ?: return Loading()
@@ -204,7 +204,7 @@ internal fun SmartPhotos(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        if (header != null) item(span = { GridItemSpan(maxLineSpan) }) { header() }
+        if (header != null) item(span = { GridItemSpan(maxLineSpan) }) { header(photos.size) }
         item(span = { GridItemSpan(maxLineSpan) }) { SavedNote(answer) }
         if (photos.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
             Text(
@@ -221,11 +221,11 @@ internal fun SmartPhotos(
 
 /** The header of a person's page: their face, name (tap to name them) and how many photos. */
 @Composable
-internal fun PersonHeader(person: SmartItem, onName: () -> Unit) {
+internal fun PersonHeader(person: SmartItem, photos: Int, onName: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Avatar(person, 64.dp)
+        Avatar(person, 72.dp)
         Column {
-            Text(person.title.ifEmpty { "Someone" }, style = MaterialTheme.typography.titleLarge)
+            Text(plural(photos, "photo"), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             TextButton(onClick = onName, contentPadding = PaddingValues(0.dp)) { Text(if (person.title.isEmpty()) "Add a name" else "Rename") }
         }
     }

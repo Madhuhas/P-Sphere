@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -89,6 +91,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.psphere.backup.Engine
@@ -176,7 +180,7 @@ fun PhotosScreen() {
                     title = { Text("Photos") },
                     actions = {
                         if (all.isNotEmpty()) {
-                            IconButton(onClick = { go(PhotosView.Search) }) { Icon(Icons.Filled.Search, "Search photos") }
+                            IconButton(onClick = { query = ""; go(PhotosView.Search) }) { Icon(Icons.Filled.Search, "Search photos") }
                             FilterMenu(devices, device, { device = it }, folders, folder, { folder = it }, hasDeleted, showDeleted, { showDeleted = it })
                         }
                     },
@@ -214,14 +218,20 @@ fun PhotosScreen() {
                 is PhotosView.Results -> SmartPhotos(SmartOps.SEARCH, listOf(view.query), columns) { l, i -> viewer = l to i }
                 is PhotosView.Person -> SmartPhotos(
                     SmartOps.PERSON, listOf(view.item.id), columns, refresh,
-                    header = { PersonHeader(view.item) { naming = view.item } },
+                    header = { n -> PersonHeader(view.item, n) { naming = view.item } },
                 ) { l, i -> viewer = l to i }
                 is PhotosView.Place -> SmartPhotos(SmartOps.PLACE, listOf(view.item.id), columns) { l, i -> viewer = l to i }
             }
         }
     }
 
-    viewer?.let { (list, i) -> PhotoViewer(list, i, onClose = { viewer = null }) }
+    viewer?.let { (list, i) ->
+        // A full-screen window, so the viewer covers the tab bar too.
+        Dialog(
+            onDismissRequest = { viewer = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        ) { PhotoViewer(list, i, onClose = { viewer = null }) }
+    }
 }
 
 @Composable
@@ -340,8 +350,7 @@ private fun MemoryCard(m: Memory, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchBar(query: String, onChange: (String) -> Unit, onSearch: () -> Unit, onClose: () -> Unit) {
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    // No keyboard until the box is tapped, so Explore (people, places, things) stays in view.
     TopAppBar(
         navigationIcon = { BackButton(onClose) },
         title = {
@@ -356,7 +365,7 @@ private fun SearchBar(query: String, onChange: (String) -> Unit, onSearch: () ->
                     focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
                 ),
-                modifier = Modifier.fillMaxWidth().focusRequester(focus),
+                modifier = Modifier.fillMaxWidth(),
             )
         },
         actions = { if (query.isNotEmpty()) IconButton(onClick = { onChange("") }) { Icon(Icons.Filled.Close, "Clear") } },
@@ -442,9 +451,9 @@ private fun PhotoViewer(items: List<LibraryItem>, start: Int, onClose: () -> Uni
         HorizontalPager(state = pager, userScrollEnabled = !zoomed, modifier = Modifier.fillMaxSize()) { page ->
             PhotoPage(items[page], reloads, onZoom = { zoomed = it })
         }
-        if (!zoomed) PhotoInfo(current, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp))
+        if (!zoomed) PhotoInfo(current, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 24.dp))
 
-        Row(Modifier.align(Alignment.TopStart).fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.align(Alignment.TopStart).fillMaxWidth().statusBarsPadding().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClose) { Icon(Icons.Filled.Close, "Close", tint = Color.White) }
             Spacer(Modifier.weight(1f))
             currentFile?.let { f ->
@@ -483,8 +492,10 @@ private fun PhotoPage(li: LibraryItem, reload: Int, onZoom: (Boolean) -> Unit) {
         }
     }
     when (val s = state) {
+        // Show the preview straight away while the full size loads (it may come from another device).
         is Full.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = Color.White)
+            if (preview != null) AsyncImage(preview, null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+            CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp).size(24.dp))
         }
         is Full.Ready -> ZoomableImage(s.file, preview, onZoom)
         is Full.Video -> PreviewWithNote(preview, "Video. Download it to play it; playing videos in the app is coming.")

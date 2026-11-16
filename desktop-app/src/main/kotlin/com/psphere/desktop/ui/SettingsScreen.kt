@@ -98,7 +98,7 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
             }
 
             SectionLabel("Photos")
-            SmartSearchCard()
+            SmartPhotosCard()
 
             SectionLabel("Linked devices")
             PanelCard {

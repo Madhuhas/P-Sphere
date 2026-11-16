@@ -483,6 +483,7 @@ private fun Viewer(items: List<LibraryItem>, start: Int, onClose: () -> Unit) {
     val li = items[index]
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
+    val preview by previewOf(li.item.hash)
     val state by produceState<Full>(Full.Loading, li.item.hash) {
         value = Full.Loading
         value = withContext(Dispatchers.IO) {
@@ -508,7 +509,11 @@ private fun Viewer(items: List<LibraryItem>, start: Int, onClose: () -> Unit) {
         },
     ) {
         when (val s = state) {
-            is Full.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = Color.White)
+            // The preview right away while the full size loads (it may come from another device).
+            is Full.Loading -> {
+                preview?.let { Image(it, null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 56.dp, bottom = 72.dp)) }
+                CircularProgressIndicator(Modifier.align(Alignment.BottomCenter).padding(bottom = 56.dp).size(22.dp), color = Color.White, strokeWidth = 2.dp)
+            }
             is Full.Ready -> Image(s.bitmap, null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 56.dp, bottom = 72.dp))
             is Full.Note -> Column(Modifier.align(Alignment.Center).padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Icons.Outlined.CloudOff, null, tint = Color.White, modifier = Modifier.size(40.dp))

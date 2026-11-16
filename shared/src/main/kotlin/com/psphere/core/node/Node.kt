@@ -592,10 +592,13 @@ class Node(
      * [sink] receives the stream and its length and must consume exactly that many bytes.
      */
     fun fetch(hash: String, online: Map<String, HostPort>, sink: (InputStream, Long) -> Unit): Boolean {
-        val holders = catalog.holders(hash).filter { it != id && it in online }
+        // Devices seen on the network first, then the rest at their last known address: right
+        // after starting, or where discovery is blocked, the holder may not have been seen yet.
+        val holders = catalog.holders(hash).filter { it != id && (it in online || device(it)?.lastHost != null) }
+            .sortedBy { if (it in online) 0 else 1 }
         for (holder in holders) {
             val dev = device(holder) ?: continue
-            val (socket, _) = connectTo(dev, listOf(online.getValue(holder))) ?: continue
+            val (socket, _) = connectTo(dev, listOfNotNull(online[holder])) ?: continue
             val ok = socket.use {
                 runCatching {
                     val wire = Wire(socket.inputStream, socket.outputStream) { dev.name }
@@ -786,6 +789,16 @@ class Node(
      */
     fun library(includeDeleted: Boolean = false): List<LibraryItem> {
         val linked = synchronized(this) { state.devices.keys.toSet() }
+        val version = catalog.version
+        // Screens and smart photos ask often; rebuild only when the catalog or the links changed.
+        libraryCache[includeDeleted]?.let { c -> if (c.version == version && c.linked == linked) return c.items }
+        return buildLibrary(includeDeleted, linked).also { libraryCache[includeDeleted] = LibrarySnapshot(version, linked, it) }
+    }
+
+    private class LibrarySnapshot(val version: Long, val linked: Set<String>, val items: List<LibraryItem>)
+    private val libraryCache = ConcurrentHashMap<Boolean, LibrarySnapshot>()
+
+    private fun buildLibrary(includeDeleted: Boolean, linked: Set<String>): List<LibraryItem> {
         return libraryItems(includeDeleted).sortedByDescending { it.takenAt }.mapNotNull { item ->
             val local = (item.origin == id && item.state == ItemState.PRESENT) || kept?.has(item.hash) == true
             val holders = catalog.holders(item.hash)
