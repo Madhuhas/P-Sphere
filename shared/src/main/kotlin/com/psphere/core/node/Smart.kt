@@ -88,24 +88,37 @@ internal fun memoriesOf(library: List<LibraryItem>, now: Long, zone: ZoneId = Zo
         .sortedBy { it.yearsAgo }
 }
 
-/** The last smart answers, kept on disk so phones can show People and Places away from home. */
+/**
+ * The last smart answers, kept on disk so phones can show People and Places away from home.
+ * Each remembers the device that gave it, and is only used while that device is still linked.
+ */
 internal class SmartCache(private val file: File) {
-    private val answers = LinkedHashMap<String, List<SmartItem>>(64, 0.75f, true)
+    private class Saved(val device: String, val items: List<SmartItem>)
+    private val answers = LinkedHashMap<String, Saved>(64, 0.75f, true)
     private var loaded = false
 
     private fun key(op: String, args: List<String>) = (listOf(op) + args).joinToString("\u0000")
 
-    @Synchronized fun get(op: String, args: List<String>): List<SmartItem>? { load(); return answers[key(op, args)] }
+    @Synchronized
+    fun get(op: String, args: List<String>, linked: Set<String>): List<SmartItem>? {
+        load()
+        return answers[key(op, args)]?.takeIf { it.device in linked }?.items
+    }
 
     @Synchronized
-    fun put(op: String, args: List<String>, items: List<SmartItem>) {
+    fun put(op: String, args: List<String>, device: String, items: List<SmartItem>) {
         load()
-        answers[key(op, args)] = items
+        answers[key(op, args)] = Saved(device, items)
         while (answers.size > MAX_ANSWERS) answers.remove(answers.keys.first())
         save()
     }
 
-    @Synchronized fun clear() { answers.clear(); file.delete() }
+    /** Forgets everything [device] said, e.g. when it's unlinked. */
+    @Synchronized
+    fun forget(device: String) {
+        load()
+        if (answers.values.removeIf { it.device == device }) save()
+    }
 
     private fun load() {
         if (loaded) return
@@ -113,9 +126,11 @@ internal class SmartCache(private val file: File) {
         if (!file.isFile) return
         runCatching {
             DataInputStream(BufferedInputStream(file.inputStream())).use { input ->
+                if (input.readInt() != FORMAT) return
                 repeat(input.readInt()) {
                     val k = input.str()
-                    answers[k] = List(input.readInt()) { input.smartItem() }
+                    val device = input.str()
+                    answers[k] = Saved(device, List(input.readInt()) { input.smartItem() })
                 }
             }
         }.onFailure { answers.clear() }
@@ -126,12 +141,17 @@ internal class SmartCache(private val file: File) {
             file.parentFile?.mkdirs()
             val tmp = File(file.path + ".tmp")
             DataOutputStream(BufferedOutputStream(tmp.outputStream())).use { out ->
+                out.writeInt(FORMAT)
                 out.writeInt(answers.size)
-                answers.forEach { (k, v) -> out.str(k); out.writeInt(v.size); v.forEach { with(com.psphere.core.net.Codec) { out.smartItem(it) } } }
+                answers.forEach { (k, v) -> out.str(k); out.str(v.device); out.writeInt(v.items.size); v.items.forEach { out.smartItem(it) } }
             }
             if (!tmp.renameTo(file)) { file.delete(); tmp.renameTo(file) }
         }
     }
 
-    companion object { private const val MAX_ANSWERS = 200 }
+    companion object {
+        private const val MAX_ANSWERS = 200
+        /** Saved files without it (from before answers knew their device) are discarded. */
+        private const val FORMAT = 0x50534332
+    }
 }

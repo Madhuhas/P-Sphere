@@ -193,6 +193,8 @@ class Node(
         catalog.removeOrigin(deviceId).forEach { hash ->
             if (catalog.itemsWithHash(hash).isEmpty() && !holdsLocally(hash)) previews.remove(hash)
         }
+        // And the people, places and searches it answered: they're its photos too.
+        smartCache.forget(deviceId)
         save()
     }
 
@@ -829,6 +831,7 @@ class Node(
         askHere(op, args)?.let { return SmartAnswer(it, listOf(state.deviceName)) }
         val targets = devices().filter { it.id in online || it.lastHost != null }
         var answer: SmartAnswer? = null
+        var answeredBy = ""
         if (targets.isNotEmpty()) {
             val pool = java.util.concurrent.Executors.newFixedThreadPool(targets.size.coerceAtMost(8)) { r ->
                 Thread(r, "psphere-smart").apply { isDaemon = true }
@@ -840,14 +843,15 @@ class Node(
                 for (n in targets.indices) {
                     val wait = (deadline - System.currentTimeMillis()).coerceAtLeast(1)
                     val (dev, items) = service.poll(wait, java.util.concurrent.TimeUnit.MILLISECONDS)?.get() ?: break
-                    if (items != null) { answer = SmartAnswer(items, listOf(dev.name)); break }
+                    if (items != null) { answer = SmartAnswer(items, listOf(dev.name)); answeredBy = dev.id; break }
                 }
             } finally {
                 pool.shutdownNow()
             }
         }
-        answer?.let { if (op in SmartOps.CACHED) smartCache.put(op, args, it.items); return it }
-        smartCache.get(op, args)?.let { return SmartAnswer(it, emptyList(), saved = true) }
+        answer?.let { if (op in SmartOps.CACHED) smartCache.put(op, args, answeredBy, it.items); return it }
+        val linked = synchronized(this) { state.devices.keys.toSet() }
+        smartCache.get(op, args, linked)?.let { return SmartAnswer(it, emptyList(), saved = true) }
         return SmartAnswer(emptyList(), emptyList())
     }
 

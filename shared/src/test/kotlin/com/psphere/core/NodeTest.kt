@@ -369,6 +369,11 @@ class NodeTest {
         assertEquals(listOf<Byte>(1, 2, 3), later.items.single().image!!.toList())
         val noSearch = phone.node.smartAsk(SmartOps.SEARCH, listOf("dog"), online(laptop))
         assertTrue("nothing can search", noSearch.from.isEmpty() && noSearch.items.isEmpty() && !noSearch.saved)
+
+        // Unlinked: what the laptop said is forgotten too.
+        phone.node.unlink(laptop.id)
+        val gone = phone.node.smartAsk(SmartOps.EXPLORE, online = online(laptop))
+        assertTrue("nothing kept from an unlinked device", gone.items.isEmpty() && !gone.saved)
     }
 
     @Test fun theDeviceThatAcceptedALinkCanBackUpRightAwayWithoutDiscovery() {
