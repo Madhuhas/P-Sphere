@@ -119,6 +119,6 @@ compose.desktop {
 tasks.test {
     useJUnit()
     // Optional real-model check, see SmartSearchQualityTest.
-    listOf("smart.models", "smart.photos", "smart.download").forEach { k -> System.getProperty(k)?.let { systemProperty(k, it) } }
+    listOf("smart.models", "smart.photos", "smart.download", "smart.faces", "smart.text").forEach { k -> System.getProperty(k)?.let { systemProperty(k, it) } }
     testLogging { showStandardStreams = System.getProperty("smart.models") != null || System.getProperty("smart.download") != null }
 }

@@ -48,22 +48,6 @@ interface Platform {
 
 data class HostPort(val host: String, val port: Int)
 
-/**
- * Optional photo search by description ("dog on the beach"). The desktop app plugs its search
- * models in here once the user downloads them; other devices then ask it over the network.
- */
-fun interface SmartSearch {
-    /** Photo hashes with scores, best first, or null while it isn't ready. */
-    fun search(query: String, limit: Int): List<Pair<String, Float>>?
-}
-
-data class PhotoSearch(
-    /** Matching photos, best first. */
-    val items: List<LibraryItem>,
-    /** Devices that searched, this one included. Empty when no reachable device has smart search. */
-    val searchedBy: List<String>,
-)
-
 data class ScanResult(val files: Int, val changed: Int, val deleted: Int, val errors: List<String>)
 
 data class LibraryItem(
@@ -138,8 +122,9 @@ class Node(
     /** Called when a sync another device started has ended, with its result. */
     @Volatile var onIncomingDone: ((SyncResult) -> Unit)? = null
 
-    /** Set by an app that has smart search turned on. */
-    @Volatile var smartSearch: SmartSearch? = null
+    /** Set by an app that has the smart features turned on. */
+    @Volatile var smart: SmartLibrary? = null
+    private val smartCache = SmartCache(File(dataDir, "smart-answers.bin"))
 
     @Volatile private var pairing: PairingWindow? = null
     private class PairingWindow(val token: String, val expiresAt: Long, val allowCode: Boolean)
@@ -556,7 +541,7 @@ class Node(
                     is Msg.Vector -> serveSync(wire, dev, req.known)
                     is Msg.Get -> serveGet(wire, req)
                     is Msg.Has -> wire.send(Msg.HasReply(req.hashes.filter { isValidHash(it) && holdsLocally(it) }))
-                    is Msg.Search -> wire.send(searchHere(req.query, req.limit)?.let { Msg.SearchReply(true, it) } ?: Msg.SearchReply(false, emptyList()))
+                    is Msg.Smart -> wire.send(askHere(req.op, req.args)?.let { Msg.SmartReply(true, it) } ?: Msg.SmartReply(false, emptyList()))
                     else -> wire.send(Msg.Error("Unexpected request"))
                 }
             }
@@ -810,59 +795,64 @@ class Node(
         }
     }
 
-    // ── Smart search ─────────────────────────────────────────────────────────
+    // ── Smart photos ─────────────────────────────────────────────────────────
 
-    private fun searchHere(query: String, limit: Int): List<Pair<String, Float>>? {
-        val q = query.trim().take(Wire.MAX_QUERY)
-        if (q.isEmpty()) return emptyList()
-        return runCatching { smartSearch?.search(q, limit.coerceIn(1, MAX_SEARCH_HITS)) }.getOrNull()
-            ?.filter { isValidHash(it.first) }
-    }
+    private fun askHere(op: String, args: List<String>): List<SmartItem>? =
+        runCatching { smart?.ask(op, args.map { it.trim().take(Wire.MAX_QUERY) }) }.getOrNull()
+            ?.filter { it.kind != SmartItem.Kind.PHOTO || isValidHash(it.id) }
 
     /**
-     * Finds library photos matching [query], using this device's smart search if it has one and
-     * asking every linked device at the same time: at its address in [online] when it was seen on
-     * the network, otherwise at its last known address (discovery is sometimes blocked). Blocking.
+     * Asks the smart features (see [SmartOps]): this device's own if it has them, otherwise every
+     * linked device at once, at its address in [online] or its last known one (discovery is
+     * sometimes blocked). The first device with smart features answers. When none can be asked,
+     * the last answer kept on this device is used, so People and Places work away from home. Blocking.
      */
-    fun searchPhotos(query: String, online: Map<String, HostPort>, limit: Int = 200): PhotoSearch {
-        val q = query.trim()
-        if (q.isEmpty()) return PhotoSearch(emptyList(), emptyList())
+    fun smartAsk(op: String, args: List<String> = emptyList(), online: Map<String, HostPort>): SmartAnswer {
+        askHere(op, args)?.let { return SmartAnswer(it, listOf(state.deviceName)) }
         val targets = devices().filter { it.id in online || it.lastHost != null }
-        val pool = java.util.concurrent.Executors.newFixedThreadPool(targets.size.coerceIn(1, 8)) { r ->
-            Thread(r, "psphere-search").apply { isDaemon = true }
-        }
-        val answers = ArrayList<Pair<String, List<Pair<String, Float>>>>()
-        try {
-            val askers = targets.map { dev -> pool.submit<List<Pair<String, Float>>?> { askSearch(dev.id, listOfNotNull(online[dev.id]), q, limit) } }
-            searchHere(q, limit)?.let { answers += id to it }
-            val deadline = System.currentTimeMillis() + SEARCH_TIMEOUT_MS
-            targets.zip(askers).forEach { (dev, f) ->
-                val wait = (deadline - System.currentTimeMillis()).coerceAtLeast(1)
-                val hits = runCatching { f.get(wait, java.util.concurrent.TimeUnit.MILLISECONDS) }.getOrNull()
-                if (hits != null) answers += dev.id to hits
+        var answer: SmartAnswer? = null
+        if (targets.isNotEmpty()) {
+            val pool = java.util.concurrent.Executors.newFixedThreadPool(targets.size.coerceAtMost(8)) { r ->
+                Thread(r, "psphere-smart").apply { isDaemon = true }
             }
-        } finally {
-            pool.shutdownNow()
+            try {
+                val service = java.util.concurrent.ExecutorCompletionService<Pair<LinkedDevice, List<SmartItem>?>>(pool)
+                targets.forEach { dev -> service.submit { dev to askDevice(dev, listOfNotNull(online[dev.id]), op, args) } }
+                val deadline = System.currentTimeMillis() + SEARCH_TIMEOUT_MS
+                for (n in targets.indices) {
+                    val wait = (deadline - System.currentTimeMillis()).coerceAtLeast(1)
+                    val (dev, items) = service.poll(wait, java.util.concurrent.TimeUnit.MILLISECONDS)?.get() ?: break
+                    if (items != null) { answer = SmartAnswer(items, listOf(dev.name)); break }
+                }
+            } finally {
+                pool.shutdownNow()
+            }
         }
-        val best = HashMap<String, Float>()
-        answers.forEach { (_, hits) -> hits.forEach { (h, score) -> if (score > (best[h] ?: Float.NEGATIVE_INFINITY)) best[h] = score } }
-        val byHash = library().groupBy { it.item.hash }
-        val items = best.entries.sortedByDescending { it.value }.mapNotNull { byHash[it.key]?.first() }.take(limit)
-        return PhotoSearch(items, answers.map { nameOf(it.first) })
+        answer?.let { if (op in SmartOps.CACHED) smartCache.put(op, args, it.items); return it }
+        smartCache.get(op, args)?.let { return SmartAnswer(it, emptyList(), saved = true) }
+        return SmartAnswer(emptyList(), emptyList())
     }
 
-    /** Null if [deviceId] can't be reached or has no smart search (including older versions). */
-    private fun askSearch(deviceId: String, addresses: List<HostPort>, query: String, limit: Int): List<Pair<String, Float>>? {
-        val dev = device(deviceId) ?: return null
+    /** Library photos for the PHOTO rows of a smart answer, in the same order. */
+    fun photosOf(items: List<SmartItem>): List<LibraryItem> {
+        val byHash = library().groupBy { it.item.hash }
+        return items.filter { it.kind == SmartItem.Kind.PHOTO }.mapNotNull { byHash[it.id]?.first() }
+    }
+
+    /** "1 year ago today" and so on, newest year first. */
+    fun memories(): List<Memory> = memoriesOf(library(), now())
+
+    /** Null if the device can't be reached or has no smart features (including older versions). */
+    private fun askDevice(dev: LinkedDevice, addresses: List<HostPort>, op: String, args: List<String>): List<SmartItem>? {
         val (socket, _) = connectTo(dev, addresses) ?: return null
         return socket.use {
             runCatching {
                 val wire = Wire(socket.inputStream, socket.outputStream) { dev.name }
                 handshake(wire, dev)
                 socket.soTimeout = SEARCH_TIMEOUT_MS.toInt()
-                wire.send(Msg.Search(query, limit))
-                val reply = wire.expect<Msg.SearchReply>()
-                if (reply.ready) reply.hits.filter { isValidHash(it.first) } else null
+                wire.send(Msg.Smart(op, args))
+                val reply = wire.expect<Msg.SmartReply>()
+                if (reply.ready) reply.items.filter { it.kind != SmartItem.Kind.PHOTO || isValidHash(it.id) } else null
             }.getOrNull()
         }
     }
@@ -989,6 +979,5 @@ class Node(
         const val PAIRING_TIMEOUT_MS = 180_000
         const val PAIRING_WINDOW_MS = 10 * 60_000L
         const val SEARCH_TIMEOUT_MS = 15_000L
-        const val MAX_SEARCH_HITS = 1_000
     }
 }

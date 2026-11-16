@@ -5,7 +5,9 @@ import com.psphere.core.node.HostPort
 import com.psphere.core.node.Node
 import com.psphere.core.node.NodeServer
 import com.psphere.core.node.Platform
-import com.psphere.core.node.SmartSearch
+import com.psphere.core.node.SmartItem
+import com.psphere.core.node.SmartLibrary
+import com.psphere.core.node.SmartOps
 import com.psphere.core.storage.FileSystemFolder
 import com.psphere.core.storage.Folder
 import com.psphere.desktop.engine.DesktopPlatform
@@ -50,17 +52,19 @@ class SmartSearchEndToEndTest {
                     laptop.previews.get(li.item.hash)?.let { p -> clip.embedImage(p)?.let { index.put(li.item.hash, it) } }
                 }
                 assertEquals(10, index.size())
-                laptop.smartSearch = SmartSearch { q, limit ->
-                    val hits = index.search(clip.embedText(q), limit, 0.20f)
-                    val best = hits.firstOrNull()?.second ?: return@SmartSearch emptyList()
-                    hits.filter { it.second >= best - 0.05f }
+                laptop.smart = SmartLibrary { op, args ->
+                    if (op != SmartOps.SEARCH) return@SmartLibrary emptyList()
+                    val hits = index.search(clip.embedText(args[0]), 100, 0.20f)
+                    val best = hits.firstOrNull()?.second ?: return@SmartLibrary emptyList()
+                    hits.filter { it.second >= best - 0.05f }.map { SmartItem(SmartItem.Kind.PHOTO, it.first, score = it.second) }
                 }
                 val online = mapOf(laptop.id to HostPort("127.0.0.1", laptopServer.localPort))
                 for ((q, want) in listOf("eiffel tower" to "eiffel.jpg", "a bear" to "bear.jpg", "pizza" to "pizza.jpg", "yellow flower" to "flower.jpg")) {
-                    val found = phone.searchPhotos(q, online)
-                    println("'$q' -> ${found.items.map { it.item.relPath }} via ${found.searchedBy}")
-                    assertEquals(listOf("Laptop"), found.searchedBy)
-                    assertEquals(want, found.items.first().item.relPath)
+                    val found = phone.smartAsk(SmartOps.SEARCH, listOf(q), online)
+                    val photos = phone.photosOf(found.items)
+                    println("'$q' -> ${photos.map { it.item.relPath }} via ${found.from}")
+                    assertEquals(listOf("Laptop"), found.from)
+                    assertEquals(want, photos.first().item.relPath)
                 }
             }
         } finally {

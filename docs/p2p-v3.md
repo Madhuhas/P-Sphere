@@ -148,23 +148,40 @@ One timeline on every device, showing the photos and videos from the backup fold
 - **Share:** shares the full file if it's available, otherwise it offers to download it first.
 - Freed items don't appear in other gallery apps on the device, because the files are no longer there. Only PSphere shows them.
 
-### 6.3c Smart search (optional)
-Find photos by describing them ("dog on the beach", "birthday cake", "snow"). Off until the user turns it on, because it needs a download and keeps the computer busy for a while the first time.
+### 6.3c Photos timeline, Memories and Smart photos
+
+**Timeline (every device, no download needed)**
+- Photos newest first under date headings: "Today", "Yesterday", "Sat, 14 Nov", "3 Jan 2025".
+- Pinch (phone) or the zoom buttons / Ctrl + mouse wheel (computer) change the grid size; the densest size groups by month.
+- **Memories** on top: "1 year ago", "3 years ago", photos taken within a day of today in earlier years. Built from the library on each device; no AI.
+- The From / Folder / Show deleted filters moved into a filter menu on the phone.
+- The full-size viewer steps through photos (swipe on the phone, arrows or arrow keys on the computer) and shows who is in the photo and where it was taken.
+
+**Smart photos (optional, runs on the computer)**
+Off until the user turns it on, because it needs a download and keeps the computer busy for a while the first time. Settings → Photos → **Smart photos** → **Download (197 MB)**. Then:
+- **Search by describing** a photo: "dog on the beach", "birthday cake", "snow".
+- **People:** faces are found and grouped by person automatically. Tap a face to see all their photos; **Add a name**. Using a name you already gave someone joins the two. People show once they're in two or more photos, so strangers in the background don't.
+- **Places:** from the photo's GPS position, offline: the most important town within 30 km, or the region for countryside (for example "Bern"). Uses a bundled list of towns over 15,000 people (GeoNames, CC BY 4.0). Nothing is looked up online.
+- **Text in photos:** words in receipts, signs, documents and screenshots are read, so "invoice" or "latte macchiato" finds them.
+- **Things:** Explore groups photos into kinds of things (Food, Pets, Beaches, Mountains, Sunsets, Screenshots and more), each shown only when it has photos.
+- **One search box** for all of it: names of people and places narrow the photos down ("Barack", "food in Paris"), words written in photos come next, then photos that look like the description.
+- **Explore**: tapping the search box (computer) or the search button (phone) opens People, Places and Things.
 
 **Where it runs**
-- On the **computer** (Windows, macOS, Linux). Settings → Photos → **Smart search** → **Download (148 MB)**.
-- The computer looks at each photo's **preview** once (the previews every device already keeps, 6.3b), so it can search phone photos too, including HEIC photos, videos, and photos that are only on the phone.
-- Phones and tablets don't run the model. Their Photos tab gets a search button; the search is sent to the computer, which answers with the matching photos. This works while the computer is on and on the same Wi-Fi. Otherwise the phone says that smart search runs on the computer.
+- On the **computer** (Windows, macOS, Linux). It looks at each photo once: what's in it from the **preview** every device already keeps (so phone photos, HEIC and videos work, even ones only on the phone), and faces, text and place from the full photo when the computer has it (backups it keeps, or its own folders), otherwise from the preview.
+- Phones and tablets don't run any models. They ask the computer over Wi-Fi and show its answers. The last People, Places and Explore answers are **kept on the phone**, so they still show away from home ("Your computer isn't reachable, so this is from last time"). Search itself needs the computer.
 
 **Being gentle with the computer**
-- Scanning uses one processor core on a low-priority thread, with a short rest between photos. About 0.3 s per photo, so 10,000 photos take about an hour, once. New photos after that take seconds.
-- **Pause** / **Resume** while it scans. Search already works for the photos done.
-- The model is unloaded after a few idle minutes (it takes about 400 MB of memory while loaded) and comes back on the next search.
-- **Remove** deletes the model and what it learned. Photos are never touched.
+- Scanning uses one processor core on a low-priority thread, with a short rest between photos. About 1 second per photo, so 10,000 photos take about three hours, once. New photos after that take seconds.
+- **Pause** / **Resume** while it scans. Everything already works for the photos done.
+- The models are unloaded after a few idle minutes and come back on the next search.
+- **Remove** deletes the models and what they learned, including names. Photos are never touched.
 
-**The model**
-- OpenAI CLIP ViT-B/32 (MIT licence), 8-bit ONNX export, run with ONNX Runtime. Downloaded from a pinned revision, and every file is checked against its SHA-256 before use.
-- The download, and Check for updates, are the only times PSphere goes online, and only when the user taps them.
+**The models** (each downloaded from a pinned revision and checked against its SHA-256 before use)
+- Search: OpenAI CLIP ViT-B/32 (MIT), 8-bit ONNX, 148 MB.
+- Faces: OpenCV YuNet to find them (MIT, 0.2 MB) and SFace to tell them apart (Apache 2.0, 39 MB).
+- Text: PaddleOCR PP-OCRv3 line finder and PP-OCRv5 English reader (Apache 2.0), 10 MB.
+- All run with ONNX Runtime. The download, and Check for updates, are the only times PSphere goes online, and only when the user taps them.
 
 ### 6.4 Receiving
 - **Backup location**, with a button to change it.
@@ -212,7 +229,7 @@ Find photos by describing them ("dog on the beach", "birthday cake", "snow"). Of
 - **Library catalog:** each device keeps a list of the photos and videos in its shared folders. Each entry has the hash, original device, folder, path, date taken, type, size, and which devices hold a copy.
   - Linked devices exchange changes to this list, plus the previews, every time they connect. This is how every device can show the whole library.
   - When a backup is confirmed, the "which devices hold a copy" part is updated, so any device knows where to fetch the full size from.
-- **On request:** a device can ask a linked device for one file by its hash, to show a full-size freed photo or to download it back (6.3b). It can also ask "do you still have these?" (the free-up-space re-check, 6.3a), and "which photos match this search?" (6.3c). A device without smart search, or an older version, simply doesn't answer the search, so this needed no protocol version change.
+- **On request:** a device can ask a linked device for one file by its hash, to show a full-size freed photo or to download it back (6.3b). It can also ask "do you still have these?" (the free-up-space re-check, 6.3a), and smart photos questions (6.3c): a search, the Explore page, one person's or place's photos, the people and place in one photo, or to name a person. A device without smart photos, or an older version, simply doesn't answer them, so this needed no protocol version change.
 
 ### 7.4 Edits and name clashes
 - A **file changed on the source** (same name, new content): the new version replaces the backup copy. The old version is moved to `<backup location>/.psphere/old/<date>/` and deleted after 30 days.
@@ -248,8 +265,8 @@ Each step ends with something you can test on your own devices.
 | 2 | Android: linking, Sending, Receiving, Devices screens | Phone ↔ tablet backups both ways, multiple folders, choice of destination |
 | 3 | Windows app | Phone/tablet → laptop to a drive you pick, tray icon, start with Windows |
 | 4 | Photos (combined library on Android and Windows) and Free up space; relay, resume and full-disk handling on real devices; polish | See the tablet's photos on the phone. Free 8 GB on the phone, still browse those photos, open one full-size from the laptop, download it back. Laptop off → phone to tablet → laptop catches up from the tablet |
-| 5 | Smart search (6.3c): optional model on the computer, search from every device | Download it on the laptop, search "dog" on the laptop and on the phone |
-| Later | Laptop photo-library extras: albums, faces, text in photos | n/a |
+| 5 | Timeline with dates and Memories, and Smart photos (6.3c): search, people, places, text, things; optional models on the computer, used from every device | Download it on the laptop; name a person; search "dog", a name, a town, or words on a receipt, on the laptop and on the phone |
+| Later | Albums, a map of places, more languages for text in photos | n/a |
 
 ## 9. Decisions I made (say if any are wrong)
 
@@ -267,5 +284,5 @@ Each step ends with something you can test on your own devices.
 
 - Backups over the internet or mobile data when you're away from home.
 - iPhone and Mac.
-- Albums, faces and text in photos. The timeline (6.3b) and smart search (6.3c) are in this version.
+- Albums and a map of places. The timeline (6.3b) and smart photos (6.3c) are in this version.
 - Two-way sync where deletes and edits travel both ways.

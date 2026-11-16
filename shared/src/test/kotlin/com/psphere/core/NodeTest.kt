@@ -5,6 +5,9 @@ import com.psphere.core.model.ItemState
 import com.psphere.core.net.OfferEntry
 import com.psphere.core.node.CodeConfirmer
 import com.psphere.core.node.PairingOffer
+import com.psphere.core.node.SmartItem
+import com.psphere.core.node.SmartLibrary
+import com.psphere.core.node.SmartOps
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -337,24 +340,49 @@ class NodeTest {
         assertFalse("the tablet's photo isn't stored on the phone", onPhone.single { it.originName == "Tablet" }.onThisDevice)
     }
 
-    @Test fun thePhoneSearchesItsPhotosOnTheLaptop() {
+    @Test fun thePhoneUsesTheLaptopsSmartFeaturesAndKeepsPeopleForLater() {
         phone.linkTo(laptop)
         laptop.receiveInto()
         phone.backUp("Camera", phone.folder("Camera").apply { write("dog.jpg", "D"); write("beach.jpg", "B") }, listOf(laptop))
         phone.node.scan()
         phone.syncWith(laptop)
-        // Stand-in for the laptop's search models: matches photos whose name contains the query.
-        laptop.node.smartSearch = com.psphere.core.node.SmartSearch { query, _ ->
-            laptop.node.library().filter { query in it.item.relPath }.map { it.item.hash to 0.3f }
+        // Stand-in for the laptop's models: search matches file names; Explore lists one person.
+        laptop.node.smart = SmartLibrary { op, args ->
+            when (op) {
+                SmartOps.SEARCH -> laptop.node.library().filter { args[0] in it.item.relPath }.map { SmartItem(SmartItem.Kind.PHOTO, it.item.hash, score = 0.3f) }
+                SmartOps.EXPLORE -> listOf(SmartItem(SmartItem.Kind.PERSON, "1", "Mom", count = 2, image = byteArrayOf(1, 2, 3)))
+                else -> emptyList()
+            }
         }
 
-        val found = phone.node.searchPhotos("dog", online(laptop))
-        assertEquals(listOf("dog.jpg"), found.items.map { it.item.relPath })
-        assertEquals(listOf("Laptop"), found.searchedBy)
+        val found = phone.node.smartAsk(SmartOps.SEARCH, listOf("dog"), online(laptop))
+        assertEquals(listOf("dog.jpg"), phone.node.photosOf(found.items).map { it.item.relPath })
+        assertEquals(listOf("Laptop"), found.from)
+        val people = phone.node.smartAsk(SmartOps.EXPLORE, online = online(laptop))
+        assertEquals("Mom", people.items.single().title)
 
-        laptop.node.smartSearch = null
-        val none = phone.node.searchPhotos("dog", online(laptop))
-        assertTrue("no device can search", none.searchedBy.isEmpty() && none.items.isEmpty())
+        // The laptop goes away: People still shows from what the phone kept; search can't run.
+        laptop.close()
+        val later = phone.node.smartAsk(SmartOps.EXPLORE, online = online(laptop))
+        assertTrue(later.saved)
+        assertEquals("Mom", later.items.single().title)
+        assertEquals(listOf<Byte>(1, 2, 3), later.items.single().image!!.toList())
+        val noSearch = phone.node.smartAsk(SmartOps.SEARCH, listOf("dog"), online(laptop))
+        assertTrue("nothing can search", noSearch.from.isEmpty() && noSearch.items.isEmpty() && !noSearch.saved)
+    }
+
+    @Test fun memoriesShowThisDayInEarlierYears() {
+        val zone = java.time.ZoneId.of("UTC")
+        fun at(date: String) = java.time.LocalDate.parse(date).atTime(12, 0).atZone(zone).toInstant().toEpochMilli()
+        fun item(name: String, date: String) = com.psphere.core.node.LibraryItem(
+            com.psphere.core.model.ItemRec("o", 1, "r", name, "h$name", 1, at(date), at(date), com.psphere.core.model.Media.PHOTO, ItemState.PRESENT),
+            "Phone", true, emptySet(),
+        )
+        val lib = listOf(item("a", "2025-11-16"), item("b", "2025-11-15"), item("c", "2023-11-17"), item("d", "2025-11-10"), item("e", "2026-11-16"))
+        val m = com.psphere.core.node.memoriesOf(lib, at("2026-11-16"), zone)
+        assertEquals(listOf(1, 3), m.map { it.yearsAgo })
+        assertEquals(listOf("b", "a"), m[0].items.map { it.item.relPath })
+        assertEquals("3 years ago", m[1].title)
     }
 
     @Test fun photosNoLinkedDeviceCanProvideAreHidden() {

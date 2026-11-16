@@ -38,6 +38,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,7 +83,9 @@ fun App() {
     val screen = stack.last()
     fun go(s: Screen) { stack.add(s) }
     fun back() { if (stack.size > 1) stack.removeAt(stack.lastIndex) }
-    fun tab(t: Tab) { stack.clear(); stack.add(t.root) }
+    // Bumped on every tab click, so tapping Photos again goes back to the timeline.
+    var tabTaps by remember { mutableIntStateOf(0) }
+    fun tab(t: Tab) { stack.clear(); stack.add(t.root); tabTaps++ }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         val compact = maxWidth < 860.dp
@@ -92,7 +96,7 @@ fun App() {
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 when (val s = screen) {
                     Screen.Welcome -> WelcomeScreen(onDone = { tab(Tab.DEVICES) })
-                    Screen.Photos -> PhotosScreen()
+                    Screen.Photos -> key(tabTaps) { PhotosScreen(onOpenSettings = { tab(Tab.SETTINGS) }) }
                     Screen.Devices -> DevicesScreen(onOpenDevice = { go(Screen.Device(it)) }, onLink = { go(Screen.Link) }, onOpenReceiving = { tab(Tab.RECEIVING) })
                     is Screen.Device -> DeviceScreen(s.id, onBack = ::back)
                     Screen.Link -> LinkScreen(onBack = ::back)

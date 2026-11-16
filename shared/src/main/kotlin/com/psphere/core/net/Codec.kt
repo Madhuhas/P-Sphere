@@ -67,6 +67,15 @@ internal object Codec {
         }
     }
 
+    fun DataOutput.smartItem(it: com.psphere.core.node.SmartItem) {
+        enum(it.kind); str(it.id); str(it.title); str(it.subtitle); writeInt(it.count); str(it.cover)
+        writeFloat(it.score); bytes(it.image ?: ByteArray(0))
+    }
+
+    fun DataInput.smartItem() = com.psphere.core.node.SmartItem(
+        enum(), str(), str(), str(), readInt(), str(), readFloat(), bytes(256 * 1024).takeIf { it.isNotEmpty() },
+    )
+
     fun DataInput.rec(): Rec = when (val kind = readByte().toInt()) {
         1 -> DeviceRec(str(), readLong(), str())
         2 -> RuleRec(str(), readLong(), str(), str(), strList(64).toSet(), enum<Include>(), readBoolean(), readBoolean())

@@ -4,6 +4,7 @@ import com.psphere.core.ProtocolException
 import com.psphere.core.model.Rec
 import com.psphere.core.net.Codec.bytes
 import com.psphere.core.net.Codec.rec
+import com.psphere.core.net.Codec.smartItem
 import com.psphere.core.net.Codec.str
 import com.psphere.core.net.Codec.strList
 import java.io.BufferedInputStream
@@ -54,12 +55,13 @@ sealed class Msg {
      * never records a one-sided link when the initiator has already given up. */
     object PairDone : Msg() { override fun toString() = "PairDone" }
     /**
-     * Smart search: asks a device that has the optional search models to find photos matching
-     * [query] ("dog on the beach"). Devices without it, or older versions, just don't answer it.
+     * Smart photos: asks a device that has the optional smart features (a computer) something
+     * about the library: a search, the Explore page, one person's or place's photos, or to name
+     * a person. See [com.psphere.core.node.SmartOps]. Older versions just don't answer it.
      */
-    data class Search(val query: String, val limit: Int) : Msg()
-    /** [ready] is false when this device has no search models. [hits] are best first. */
-    data class SearchReply(val ready: Boolean, val hits: List<Pair<String, Float>>) : Msg()
+    data class Smart(val op: String, val args: List<String>) : Msg()
+    /** [ready] is false when that device has no smart features. */
+    data class SmartReply(val ready: Boolean, val items: List<com.psphere.core.node.SmartItem>) : Msg()
     data class Error(val message: String) : Msg()
     object End : Msg() { override fun toString() = "End" }
     object Bye : Msg() { override fun toString() = "Bye" }
@@ -125,10 +127,10 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         Msg.End -> 17
         Msg.Bye -> 18
         Msg.PairDone -> 19
-        is Msg.Search -> { o.str(m.query.take(MAX_QUERY)); o.writeInt(m.limit); 20 }
-        is Msg.SearchReply -> {
-            o.writeBoolean(m.ready); o.writeInt(m.hits.size)
-            m.hits.forEach { (h, score) -> o.str(h); o.writeFloat(score) }
+        is Msg.Smart -> { o.str(m.op); o.strList(m.args.map { it.take(MAX_QUERY) }); 20 }
+        is Msg.SmartReply -> {
+            o.writeBoolean(m.ready); o.writeInt(m.items.size)
+            m.items.forEach { o.smartItem(it) }
             21
         }
     }
@@ -153,8 +155,8 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         17 -> Msg.End
         18 -> Msg.Bye
         19 -> Msg.PairDone
-        20 -> Msg.Search(i.str(), i.readInt())
-        21 -> Msg.SearchReply(i.readBoolean(), List(count(i)) { i.str() to i.readFloat() })
+        20 -> Msg.Smart(i.str(), i.strList(16))
+        21 -> Msg.SmartReply(i.readBoolean(), List(count(i)) { i.smartItem() })
         else -> throw ProtocolException("Unknown message type $type from ${peerLabel()}")
     }
 
