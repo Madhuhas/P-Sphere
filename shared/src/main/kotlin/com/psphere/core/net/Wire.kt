@@ -6,6 +6,7 @@ import com.psphere.core.net.Codec.bytes
 import com.psphere.core.net.Codec.rec
 import com.psphere.core.net.Codec.shelfItem
 import com.psphere.core.net.Codec.smartItem
+import com.psphere.core.net.Codec.status
 import com.psphere.core.net.Codec.str
 import com.psphere.core.net.Codec.strList
 import java.io.BufferedInputStream
@@ -74,6 +75,16 @@ sealed class Msg {
      */
     data class Shelf(val items: List<com.psphere.core.shelf.ShelfItem>) : Msg()
     data class ShelfReply(val items: List<com.psphere.core.shelf.ShelfItem>) : Msg()
+    /**
+     * Device status: the sender's battery and free space. The other device keeps it and answers
+     * with its own in a [StatusReply]. Older versions just don't answer.
+     */
+    data class Status(val status: com.psphere.core.node.DeviceStatus) : Msg()
+    data class StatusReply(val status: com.psphere.core.node.DeviceStatus) : Msg()
+    /** Starts ([on]) or stops the other device ringing, so it can be found. Older versions don't answer. */
+    data class Ring(val on: Boolean) : Msg()
+    /** [allowed] is false when that device has ringing turned off. */
+    data class RingReply(val allowed: Boolean) : Msg()
     data class Error(val message: String) : Msg()
     object End : Msg() { override fun toString() = "End" }
     object Bye : Msg() { override fun toString() = "Bye" }
@@ -147,6 +158,10 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         }
         is Msg.Shelf -> { o.writeInt(m.items.size); m.items.forEach { o.shelfItem(it) }; 22 }
         is Msg.ShelfReply -> { o.writeInt(m.items.size); m.items.forEach { o.shelfItem(it) }; 23 }
+        is Msg.Status -> { o.status(m.status); 24 }
+        is Msg.StatusReply -> { o.status(m.status); 25 }
+        is Msg.Ring -> { o.writeBoolean(m.on); 26 }
+        is Msg.RingReply -> { o.writeBoolean(m.allowed); 27 }
     }
 
     private fun decode(type: Int, i: DataInputStream): Msg = when (type) {
@@ -173,6 +188,10 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         21 -> Msg.SmartReply(i.readBoolean(), List(count(i)) { i.smartItem() })
         22 -> Msg.Shelf(List(count(i)) { i.shelfItem() })
         23 -> Msg.ShelfReply(List(count(i)) { i.shelfItem() })
+        24 -> Msg.Status(i.status())
+        25 -> Msg.StatusReply(i.status())
+        26 -> Msg.Ring(i.readBoolean())
+        27 -> Msg.RingReply(i.readBoolean())
         else -> throw ProtocolException("Unknown message type $type from ${peerLabel()}")
     }
 

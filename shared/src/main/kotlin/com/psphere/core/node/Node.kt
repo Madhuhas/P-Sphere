@@ -141,6 +141,15 @@ class Node(
     private val shelfWorker = Executors.newSingleThreadExecutor { r -> Thread(r, "psphere-shelf").apply { isDaemon = true } }
     private val shelfLocks = ConcurrentHashMap<String, Any>()
 
+    /** This device's battery and free space, sent to linked devices. Set by the app. */
+    @Volatile var statusProvider: (() -> DeviceStatus)? = null
+    /**
+     * Called (on a network thread) when a linked device asks this one to start ([on]) or stop
+     * ringing. Returns false if the user turned ringing off. Unset means this device can't ring.
+     */
+    @Volatile var onRing: ((deviceId: String, deviceName: String, on: Boolean) -> Boolean)? = null
+    private val statuses = StatusStore(File(dataDir, "status.bin"))
+
     @Volatile private var pairing: PairingWindow? = null
     private class PairingWindow(val token: String, val expiresAt: Long, val allowCode: Boolean)
 
@@ -209,6 +218,7 @@ class Node(
         smartCache.forget(deviceId)
         // And what it put on the Shelf.
         shelf.forgetOrigin(deviceId)
+        statuses.remove(deviceId)
         save()
     }
 
@@ -598,6 +608,11 @@ class Node(
                         mergeShelf(req.items, addressOf(ssl, hello)?.let { mapOf(dev.id to it) } ?: emptyMap())
                         wire.send(Msg.ShelfReply(shelf.all()))
                     }
+                    is Msg.Status -> {
+                        noteStatus(dev.id, req.status)
+                        wire.send(Msg.StatusReply(ownStatus()))
+                    }
+                    is Msg.Ring -> wire.send(Msg.RingReply(onRing?.invoke(dev.id, dev.name, req.on) ?: false))
                     else -> wire.send(Msg.Error("Unexpected request"))
                 }
             }
@@ -1041,6 +1056,66 @@ class Node(
         // Small files come over straight away, so they're ready when the user looks.
         shelf.live().filter { it.isFile && it.size <= ShelfStore.AUTO_FETCH_BYTES && !shelf.hasFile(it.hash) }.forEach { item ->
             runCatching { shelfWorker.execute { runCatching { shelfFile(item, online) } } }
+        }
+    }
+
+    // ── Device status and ringing ────────────────────────────────────────────
+
+    /** The last battery and free space seen from [deviceId], with when it arrived. */
+    fun status(deviceId: String): DeviceStatus? = statuses.get(deviceId)
+
+    fun ownStatus(): DeviceStatus = runCatching { statusProvider?.invoke() }.getOrNull() ?: DeviceStatus.UNKNOWN
+
+    private fun noteStatus(deviceId: String, s: DeviceStatus) {
+        statuses.put(deviceId, s.copy(at = now()))
+        onChange?.invoke()
+    }
+
+    /**
+     * Swaps status with every linked device in [online] (at that address or its last known one).
+     * Each also learns this device's status. Returns how many answered. Blocking.
+     */
+    fun statusSync(online: Map<String, HostPort>): Int {
+        val targets = devices().filter { it.id in online }
+        if (targets.isEmpty()) return 0
+        val pool = Executors.newFixedThreadPool(targets.size.coerceAtMost(8)) { r -> Thread(r, "psphere-status").apply { isDaemon = true } }
+        try {
+            val jobs = targets.map { dev -> pool.submit<Boolean> { statusExchange(dev, listOfNotNull(online[dev.id])) } }
+            return jobs.count { runCatching { it.get(SEARCH_TIMEOUT_MS, TimeUnit.MILLISECONDS) }.getOrDefault(false) }
+        } finally {
+            pool.shutdownNow()
+        }
+    }
+
+    private fun statusExchange(dev: LinkedDevice, addresses: List<HostPort>): Boolean {
+        val (socket, address) = connectTo(dev, addresses) ?: return false
+        val theirs = socket.use {
+            runCatching {
+                val wire = Wire(socket.inputStream, socket.outputStream) { dev.name }
+                handshake(wire, dev)
+                socket.soTimeout = SEARCH_TIMEOUT_MS.toInt()
+                wire.send(Msg.Status(ownStatus()))
+                wire.expect<Msg.StatusReply>().status
+            }.getOrNull()
+        } ?: return false
+        noteAddress(dev.id, address)
+        noteStatus(dev.id, theirs)
+        return true
+    }
+
+    /** Asks [deviceId] to start ([on]) or stop ringing. Blocking. */
+    fun ring(deviceId: String, on: Boolean, online: Map<String, HostPort>): RingResult {
+        val dev = device(deviceId) ?: return RingResult.UNREACHABLE
+        val (socket, address) = connectTo(dev, listOfNotNull(online[deviceId])) ?: return RingResult.UNREACHABLE
+        socket.use {
+            val wire = Wire(socket.inputStream, socket.outputStream) { dev.name }
+            runCatching { handshake(wire, dev) }.onFailure { return RingResult.UNREACHABLE }
+            noteAddress(dev.id, address)
+            socket.soTimeout = SEARCH_TIMEOUT_MS.toInt()
+            // An older version drops the connection on a message it doesn't know.
+            val reply = runCatching { wire.send(Msg.Ring(on)); wire.expect<Msg.RingReply>() }.getOrNull()
+                ?: return RingResult.NEEDS_UPDATE
+            return if (reply.allowed) RingResult.OK else RingResult.TURNED_OFF
         }
     }
 

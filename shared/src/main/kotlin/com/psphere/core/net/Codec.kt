@@ -76,6 +76,14 @@ internal object Codec {
         enum(), str(), str(), str(), readInt(), str(), readFloat(), bytes(256 * 1024).takeIf { it.isNotEmpty() },
     )
 
+    fun DataOutput.status(s: com.psphere.core.node.DeviceStatus) {
+        writeInt(s.battery); writeBoolean(s.charging); writeLong(s.freeBytes); writeLong(s.totalBytes)
+    }
+
+    fun DataInput.status() = com.psphere.core.node.DeviceStatus(
+        battery = readInt().coerceIn(-1, 100), charging = readBoolean(), freeBytes = readLong(), totalBytes = readLong(),
+    )
+
     fun DataOutput.shelfItem(it: com.psphere.core.shelf.ShelfItem) {
         str(it.id); str(it.origin); enum(it.kind); str(it.text); str(it.hash); writeLong(it.size)
         writeLong(it.addedAt); writeBoolean(it.pinned); writeBoolean(it.removed); writeLong(it.changedAt)
