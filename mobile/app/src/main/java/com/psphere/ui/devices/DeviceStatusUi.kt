@@ -55,7 +55,8 @@ internal fun DeviceStats(status: DeviceStatus?, online: Boolean, modifier: Modif
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (!online && status.at > 0) {
+        // A reading from the last two minutes is as good as live, even if discovery missed the device.
+        if (!online && status.at > 0 && System.currentTimeMillis() - status.at > 2 * 60_000) {
             Text("As of ${timeAgo(status.at)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -82,7 +83,9 @@ private fun Stat(icon: ImageVector, text: String, fraction: Float, warning: Bool
 
 @Composable
 internal fun RingButton(deviceId: String, online: Boolean, ringing: Boolean, modifier: Modifier = Modifier) {
-    OutlinedButton(onClick = { Engine.ring(deviceId, on = !ringing) }, enabled = online || ringing, modifier = modifier) {
+    // Also tried at the last known address: discovery often fails on home routers.
+    val reachable = online || Engine.node.device(deviceId)?.lastHost != null
+    OutlinedButton(onClick = { Engine.ring(deviceId, on = !ringing) }, enabled = reachable || ringing, modifier = modifier) {
         Icon(if (ringing) Icons.Default.NotificationsOff else Icons.Default.NotificationsActive, null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
         Text(if (ringing) "Stop ringing" else "Ring")

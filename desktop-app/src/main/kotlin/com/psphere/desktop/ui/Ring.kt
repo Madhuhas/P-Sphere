@@ -66,7 +66,8 @@ internal fun DeviceStats(status: DeviceStatus?, online: Boolean, modifier: Modif
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (!online && status.at > 0) {
+        // A reading from the last two minutes is as good as live, even if discovery missed the device.
+        if (!online && status.at > 0 && System.currentTimeMillis() - status.at > 2 * 60_000) {
             Text("As of ${timeAgo(status.at)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

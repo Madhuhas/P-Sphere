@@ -284,7 +284,7 @@ private fun DeviceCard(row: DeviceRow, ringing: Boolean, note: Engine.RingNote?,
 
 @Composable
 internal fun RingButton(row: DeviceRow, ringing: Boolean, modifier: Modifier = Modifier) {
-    OutlinedButton(onClick = { Engine.ring(row.device.id, on = !ringing) }, enabled = row.online || ringing, modifier = modifier) {
+    OutlinedButton(onClick = { Engine.ring(row.device.id, on = !ringing) }, enabled = row.online || ringing || row.device.lastHost != null, modifier = modifier) {
         Icon(if (ringing) Icons.Default.NotificationsOff else Icons.Default.NotificationsActive, null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
         Text(if (ringing) "Stop ringing" else "Ring")
