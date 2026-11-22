@@ -230,9 +230,9 @@ class ShelfStore(private val dir: File, private val now: () -> Long) {
     }
 
     private fun load() {
-        if (!listFile.isFile) return
+        val saved = com.psphere.core.savedFile(listFile) ?: return
         runCatching {
-            DataInputStream(BufferedInputStream(listFile.inputStream())).use { input ->
+            DataInputStream(BufferedInputStream(saved.inputStream())).use { input ->
                 if (input.readInt() != FORMAT) return
                 keptOldAt = input.readLong()
                 repeat(input.readInt()) { input.shelfItem().let { items[it.id] = it } }
@@ -253,7 +253,7 @@ class ShelfStore(private val dir: File, private val now: () -> Long) {
                 out.writeInt(items.size)
                 items.values.forEach { com.psphere.core.net.Codec.run { out.shelfItem(it) } }
             }
-            if (!tmp.renameTo(listFile)) { listFile.delete(); tmp.renameTo(listFile) }
+            com.psphere.core.replaceFile(tmp, listFile)
         }
     }
 

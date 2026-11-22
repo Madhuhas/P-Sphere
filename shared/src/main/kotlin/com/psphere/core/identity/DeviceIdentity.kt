@@ -50,7 +50,7 @@ class DeviceIdentity private constructor(
         file.parentFile?.mkdirs()
         val tmp = File(file.path + ".tmp")
         tmp.writeBytes(bytes)
-        if (!tmp.renameTo(file)) { file.delete(); tmp.renameTo(file) }
+        com.psphere.core.replaceFile(tmp, file)
     }
 
     companion object {
@@ -77,7 +77,7 @@ class DeviceIdentity private constructor(
 
         /** Loads the identity in [file], creating and saving a new one the first time. */
         fun loadOrCreate(file: File): DeviceIdentity =
-            if (file.isFile) load(file) else generate().also { it.save(file) }
+            com.psphere.core.savedFile(file)?.let(::load) ?: generate().also { it.save(file) }
 
         fun parseCertificate(der: ByteArray): X509Certificate =
             CertificateFactory.getInstance("X.509").generateCertificate(ByteArrayInputStream(der)) as X509Certificate

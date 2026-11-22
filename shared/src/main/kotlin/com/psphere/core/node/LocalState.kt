@@ -60,15 +60,15 @@ class LocalState(
                 o.str(r.ruleId); o.str(r.location); o.writeBoolean(r.freeNeedsAllDestinations); o.writeInt(r.keepRecentDays)
             }
         }
-        if (!tmp.renameTo(file)) { file.delete(); if (!tmp.renameTo(file)) error("Couldn't save ${file.name}") }
+        com.psphere.core.replaceFile(tmp, file)
     }
 
     companion object {
         private const val FORMAT = 1
 
         fun load(file: File, defaultName: String): LocalState {
-            if (!file.isFile) return LocalState(defaultName)
-            DataInputStream(BufferedInputStream(file.inputStream())).use { i ->
+            val saved = com.psphere.core.savedFile(file) ?: return LocalState(defaultName)
+            DataInputStream(BufferedInputStream(saved.inputStream())).use { i ->
                 require(i.readInt() == FORMAT) { "Unknown settings format" }
                 val s = LocalState(i.str(), i.str().ifEmpty { null }, i.readLong(), i.readBoolean())
                 repeat(i.readInt()) {

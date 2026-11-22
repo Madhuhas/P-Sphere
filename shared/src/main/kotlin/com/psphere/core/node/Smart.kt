@@ -145,7 +145,7 @@ internal class SmartCache(private val file: File) {
                 out.writeInt(answers.size)
                 answers.forEach { (k, v) -> out.str(k); out.str(v.device); out.writeInt(v.items.size); v.items.forEach { out.smartItem(it) } }
             }
-            if (!tmp.renameTo(file)) { file.delete(); tmp.renameTo(file) }
+            com.psphere.core.replaceFile(tmp, file)
         }
     }
 

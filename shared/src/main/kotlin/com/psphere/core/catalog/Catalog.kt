@@ -49,7 +49,8 @@ class Catalog(val selfId: String) {
     fun apply(r: Rec): Boolean {
         val existing = records[id(r.origin, r.key)]
         if (existing != null && existing.seq >= r.seq) return false
-        // Our own records only come back to us if this device's data was lost; take them back then.
+        // Our own records only come back to us if this device's data was lost; take them back then
+        // (RecoveryTest checks that a device recovers its folders and keeps backing up).
         store(r)
         return true
     }
@@ -146,7 +147,7 @@ class Catalog(val selfId: String) {
             // Ordered so a partly written file still loads consistently.
             records.values.sortedWith(compareBy<Rec>({ it.origin }, { it.seq })).forEach { out.rec(it) }
         }
-        if (!tmp.renameTo(file)) { file.delete(); if (!tmp.renameTo(file)) error("Couldn't save ${file.name}") }
+        com.psphere.core.replaceFile(tmp, file)
     }
 
     companion object {
@@ -161,9 +162,9 @@ class Catalog(val selfId: String) {
          */
         fun load(file: File, selfId: String): Catalog {
             val cat = Catalog(selfId)
-            if (!file.isFile) return cat
+            val saved = com.psphere.core.savedFile(file) ?: return cat
             runCatching {
-                DataInputStream(BufferedInputStream(file.inputStream())).use { input ->
+                DataInputStream(BufferedInputStream(saved.inputStream())).use { input ->
                     if (input.readInt() != FORMAT) return cat          // unknown format → start fresh
                     if (input.str() != selfId) return cat              // belongs to another identity → start fresh
                     repeat(input.readInt()) { cat.apply(input.rec()) }

@@ -37,6 +37,23 @@ fun sha256Hex(input: InputStream): String {
 private val HASH = Regex("^[0-9a-f]{64}$")
 fun isValidHash(h: String) = HASH.matches(h)
 
+/**
+ * Puts the freshly written [tmp] in place of [target] in one step, so an app killed or a power cut
+ * mid-save never leaves neither file (deleting first and renaming after would).
+ */
+internal fun replaceFile(tmp: java.io.File, target: java.io.File) {
+    val from = tmp.toPath(); val to = target.toPath()
+    try {
+        java.nio.file.Files.move(from, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE)
+    } catch (e: Exception) {
+        java.nio.file.Files.move(from, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+    }
+}
+
+/** The saved [file], or the new copy an interrupted save left next to it. Null if neither is there. */
+internal fun savedFile(file: java.io.File): java.io.File? =
+    file.takeIf { it.isFile } ?: java.io.File(file.path + ".tmp").takeIf { it.isFile }
+
 /** Copies exactly [size] bytes, failing if the stream ends early. */
 internal fun copyExactly(from: InputStream, to: OutputStream, size: Long, digest: MessageDigest? = null) {
     val buf = ByteArray(BUFFER)
