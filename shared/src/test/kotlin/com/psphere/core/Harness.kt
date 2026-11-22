@@ -64,6 +64,8 @@ fun main(args: Array<String>) {
             val a = com.psphere.core.node.NodeServer(node).apply { start() }
             val b = com.psphere.core.node.NodeServer(other).apply { start() }
             node.linkWithQr(other.openPairing(listOf("127.0.0.1"), b.localPort).toUri())
+            // Send this device's folder to the newly linked one too, as "link" does.
+            node.ownRules().forEach { (rule, _) -> node.updateRule(rule.ruleId, destinations = node.devices().map { it.id }.toSet()) }
             other.save(); a.stop(); b.stop()
             println("Linked ${node.deviceName} with ${other.deviceName}")
         }
