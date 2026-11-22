@@ -1,6 +1,8 @@
 package com.psphere.desktop.engine
 
 import com.psphere.core.node.CodeConfirmer
+import com.psphere.core.node.DeviceStatus
+import com.psphere.core.node.RingResult
 import com.psphere.core.node.HostPort
 import com.psphere.core.node.LinkedDevice
 import com.psphere.core.node.Node
@@ -100,6 +102,8 @@ object Engine {
         node.onIncomingProgress = { p -> _state.update { it.copy(activity = Activity.Serving(p.peerName, p)) } }
         node.onIncomingDone = { r -> onIncomingDone(r) }
         node.onShelfAdded = { added -> com.psphere.core.shelf.shelfNotice(added)?.let { (title, text) -> notify(Notice(title, text)) } }
+        node.statusProvider = ::ownStatus
+        node.onRing = { _, name, on -> onRingRequest(name, on) }
 
         val srv = runCatching { NodeServer(node, PREFERRED_PORT).also { it.start() } }
             .getOrElse { NodeServer(node, 0).also { it.start() } }
@@ -122,6 +126,7 @@ object Engine {
     }
 
     fun stop() {
+        Ringer.stop()
         shelfHidden.value.takeIf { it.isNotEmpty() }?.let { runCatching { node.shelfRemove(it) } }
         runCatching { discovery?.stop() }
         runCatching { server?.stop() }
@@ -152,6 +157,7 @@ object Engine {
         val linked = node.device(d.id) ?: return
         if (!d.compatible) return
         node.noteAddress(d.id, HostPort(d.host, d.port))
+        refreshStatus()
         val now = System.currentTimeMillis()
         synchronized(lastAuto) {
             if (now - (lastAuto[d.id] ?: 0) < AUTO_SYNC_GAP_MS) return
@@ -304,6 +310,73 @@ object Engine {
         node.shelfRemove(ids)
         shelfHidden.update { it - ids }
         shareShelf()
+    }
+
+    // ── Device status and ringing ────────────────────────────────────────────
+
+    /** Battery, and free space where backups are kept (or in the home folder before one is chosen). */
+    private fun ownStatus(): DeviceStatus {
+        val b = Battery.read()
+        val dir = node.backupFolder()?.displayName?.let(::File)?.takeIf { it.exists() } ?: File(System.getProperty("user.home"))
+        return DeviceStatus(b?.percent ?: -1, b?.charging ?: false, dir.usableSpace, dir.totalSpace)
+    }
+
+    /** Asks the devices on this Wi-Fi for their battery and free space, in the background. */
+    fun refreshStatus() { scope.launch { runCatching { node.statusSync(onlineLinked()) } } }
+
+    /** The name of the device ringing this computer right now, or null. */
+    val ringingFrom = MutableStateFlow<String?>(null)
+    /** Devices this computer is ringing (shown as "Stop ringing"). */
+    val ringingOut = MutableStateFlow<Set<String>>(emptySet())
+    /** A short message about ringing a device ("Ringing Tablet…", "Tablet has ringing turned off"). */
+    data class RingNote(val deviceId: String, val text: String, val problem: Boolean)
+    private val _ringNotes = MutableSharedFlow<RingNote>(extraBufferCapacity = 4)
+    val ringNotes: SharedFlow<RingNote> = _ringNotes
+    private var ringTimeout: Job? = null
+    private val ringOutTimeouts = HashMap<String, Job>()
+    const val RING_MS = 60_000L
+
+    private fun onRingRequest(name: String, on: Boolean): Boolean {
+        if (!prefs.allowRing) return false
+        if (on) startRinging(name) else stopRinging()
+        return true
+    }
+
+    @Synchronized
+    private fun startRinging(name: String) {
+        ringingFrom.value = name
+        Ringer.start()
+        ringTimeout?.cancel()
+        ringTimeout = scope.launch { delay(RING_MS); stopRinging() }
+    }
+
+    @Synchronized
+    fun stopRinging() {
+        ringTimeout?.cancel()
+        Ringer.stop()
+        ringingFrom.value = null
+    }
+
+    /** Starts or stops [deviceId] ringing. */
+    fun ring(deviceId: String, on: Boolean = true) {
+        val name = node.device(deviceId)?.name ?: "That device"
+        if (on) ringingOut.update { it + deviceId } else ringingOut.update { it - deviceId }
+        synchronized(ringOutTimeouts) {
+            ringOutTimeouts.remove(deviceId)?.cancel()
+            if (on) ringOutTimeouts[deviceId] = scope.launch { delay(RING_MS); ringingOut.update { it - deviceId } }
+        }
+        scope.launch {
+            val r = node.ring(deviceId, on, onlineLinked())
+            if (r != RingResult.OK) ringingOut.update { it - deviceId }
+            val note = when (r) {
+                RingResult.OK -> if (on) "Ringing $name…" else null
+                RingResult.TURNED_OFF -> "$name has ringing turned off. You can turn it on in PSphere's Settings on $name."
+                RingResult.NEEDS_UPDATE -> "Update PSphere on $name to ring it."
+                RingResult.UNREACHABLE -> "Couldn't reach $name. PSphere needs to be running on it, on this Wi-Fi."
+            }
+            if (note != null) _ringNotes.tryEmit(RingNote(deviceId, note, r != RingResult.OK))
+            else _ringNotes.tryEmit(RingNote(deviceId, "", false))
+        }
     }
 
     // ── Settings ─────────────────────────────────────────────────────────────

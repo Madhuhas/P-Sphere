@@ -31,7 +31,9 @@ fun main(args: Array<String>) {
     }
     // HARNESS_DAYS_AGO=8 makes this run's changes look 8 days old (to test "old items" on the Shelf).
     val shift = (System.getenv("HARNESS_DAYS_AGO")?.toLongOrNull() ?: 0) * 24 * 3600 * 1000
-    val node = Node(File(dir, "data"), args.getOrElse(2) { "Laptop" }, platform) { System.currentTimeMillis() - shift }
+    // ("pair" passes the other device's folder third, so this one is just "Laptop".)
+    val name = if (args[1] == "pair") "Laptop" else args.getOrElse(2) { "Laptop" }
+    val node = Node(File(dir, "data"), name, platform) { System.currentTimeMillis() - shift }
     when (args[1]) {
         "init" -> {
             val backups = File(dir, "Backups").apply { mkdirs() }

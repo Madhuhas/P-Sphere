@@ -2,6 +2,8 @@ package com.psphere.desktop.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +22,8 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.LinkOff
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.Sync
@@ -38,6 +42,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,10 +54,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.psphere.core.model.RuleRec
+import com.psphere.core.node.DeviceStatus
 import com.psphere.core.node.KeptGroup
 import com.psphere.core.node.LinkedDevice
 import com.psphere.desktop.engine.Activity
 import com.psphere.desktop.engine.Engine
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -65,6 +72,8 @@ internal data class DeviceRow(
     val isDestination: Boolean,
     val keptFiles: Int,
     val keptBytes: Long,
+    /** Its battery and free space, live or last known. */
+    val status: DeviceStatus? = null,
 )
 
 private data class Overview(
@@ -89,6 +98,7 @@ internal fun deviceRows(): List<DeviceRow> {
             isDestination = rules.any { d.id in it.destinations },
             keptFiles = kept.filter { it.origin == d.id }.sumOf { it.files },
             keptBytes = kept.filter { it.origin == d.id }.sumOf { it.bytes },
+            status = node.status(d.id),
         )
     }
 }
@@ -96,6 +106,12 @@ internal fun deviceRows(): List<DeviceRow> {
 @Composable
 fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenReceiving: () -> Unit) {
     val state by Engine.state.collectAsState()
+    val ringingOut by Engine.ringingOut.collectAsState()
+    var ringNote by remember { mutableStateOf<Engine.RingNote?>(null) }
+    LaunchedEffect(Unit) { Engine.ringNotes.collect { ringNote = it.takeIf { n -> n.text.isNotEmpty() } } }
+    LaunchedEffect(ringNote) { if (ringNote != null) { delay(8_000); ringNote = null } }
+    // Battery and free space stay fresh while this screen is open.
+    LaunchedEffect(Unit) { while (true) { Engine.refreshStatus(); delay(30_000) } }
     val overview by rememberEngineData(Overview()) {
         val node = Engine.node
         val rows = deviceRows()
@@ -130,8 +146,10 @@ fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenRece
 
             SectionLabel("My devices")
             overview.rows.chunked(2).forEach { pair ->
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    pair.forEach { row -> DeviceCard(row, Modifier.weight(1f)) { onOpenDevice(row.device.id) } }
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.height(IntrinsicSize.Max)) {
+                    pair.forEach { row ->
+                        DeviceCard(row, row.device.id in ringingOut, ringNote?.takeIf { it.deviceId == row.device.id }, Modifier.weight(1f).fillMaxHeight()) { onOpenDevice(row.device.id) }
+                    }
                     if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
             }
@@ -229,9 +247,10 @@ private fun lastBackupText(rows: List<DeviceRow>): String {
 }
 
 @Composable
-private fun DeviceCard(row: DeviceRow, modifier: Modifier, onClick: () -> Unit) {
+private fun DeviceCard(row: DeviceRow, ringing: Boolean, note: Engine.RingNote?, modifier: Modifier, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Card(onClick = onClick, modifier = modifier, colors = CardDefaults.cardColors(containerColor = cs.surfaceContainerLow)) {
+      Column(Modifier.fillMaxHeight().padding(bottom = 14.dp)) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             IconBadge(Icons.Default.Devices, container = cs.primaryContainer, content = cs.onPrimaryContainer)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -249,6 +268,26 @@ private fun DeviceCard(row: DeviceRow, modifier: Modifier, onClick: () -> Unit) 
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = cs.onSurfaceVariant)
         }
+        DeviceStats(row.status, row.online, Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp))
+        Spacer(Modifier.weight(1f))
+        RingButton(row, ringing, Modifier.padding(horizontal = 16.dp))
+        if (note != null) {
+            Text(
+                note.text, style = MaterialTheme.typography.bodySmall,
+                color = if (note.problem) PSphereTheme.status.warning else cs.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp),
+            )
+        }
+      }
+    }
+}
+
+@Composable
+internal fun RingButton(row: DeviceRow, ringing: Boolean, modifier: Modifier = Modifier) {
+    OutlinedButton(onClick = { Engine.ring(row.device.id, on = !ringing) }, enabled = row.online || ringing, modifier = modifier) {
+        Icon(if (ringing) Icons.Default.NotificationsOff else Icons.Default.NotificationsActive, null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(if (ringing) "Stop ringing" else "Ring")
     }
 }
 

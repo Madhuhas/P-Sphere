@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.WebAsset
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -58,6 +59,7 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
     val installed = remember { DesktopSystem.installedExe() != null }
     var startup by remember { mutableStateOf(installed && DesktopSystem.startsAtLogin()) }
     var keepInTray by remember { mutableStateOf(Engine.prefs.keepInTray) }
+    var allowRing by remember { mutableStateOf(Engine.prefs.allowRing) }
     val name = remember(state.revision) { Engine.node.deviceName }
     val devices = remember(state.revision) { Engine.linked() }
 
@@ -93,6 +95,12 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
                     else "This desktop has no tray, so closing the window quits PSphere.",
                     keepInTray && DesktopSystem.hasTray, enabled = DesktopSystem.hasTray,
                 ) { keepInTray = it; Engine.prefs.keepInTray = it }
+                HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
+                ToggleRow(
+                    Icons.Default.NotificationsActive, "Let my devices ring this computer",
+                    "A linked device on this Wi-Fi can make PSphere come to the front and play a sound, to help you find it.",
+                    allowRing,
+                ) { allowRing = it; Engine.prefs.allowRing = it }
                 HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
                 InfoBlock(Icons.Default.Wifi, "Backs up automatically", "Whenever a linked device is on the same Wi-Fi and PSphere is running. Use “Back up now” to start it yourself.")
             }

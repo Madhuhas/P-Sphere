@@ -72,6 +72,9 @@ fun main(args: Array<String>) {
         val scope = rememberCoroutineScope()
         val trayState = rememberTrayState()
         val shows by showRequests.collectAsState()
+        // Another device is looking for this computer: show the window, in front.
+        val ringing by Engine.ringingFrom.collectAsState()
+        LaunchedEffect(ringing) { if (ringing != null) visible = true }
         LaunchedEffect(shows) { if (shows > 0) visible = true }
 
         LaunchedEffect(Unit) {
@@ -143,9 +146,19 @@ fun main(args: Array<String>) {
         ) {
             LaunchedEffect(Unit) { window.minimumSize = Dimension(720, 520) }
             LaunchedEffect(visible) { if (visible) { window.isMinimized = false; window.toFront() } }
+            LaunchedEffect(ringing) {
+                if (ringing != null) {
+                    // Windows only flashes the taskbar for toFront(); briefly staying on top brings it forward.
+                    window.isMinimized = false
+                    window.isAlwaysOnTop = true
+                    window.toFront(); window.requestFocus()
+                    kotlinx.coroutines.delay(1_500)
+                    window.isAlwaysOnTop = false
+                }
+            }
             PSphereTheme {
                 Surface {
-                    if (started) App() else Starting()
+                    if (started) { App(); com.psphere.desktop.ui.RingingDialog(ringing) } else Starting()
                 }
             }
         }

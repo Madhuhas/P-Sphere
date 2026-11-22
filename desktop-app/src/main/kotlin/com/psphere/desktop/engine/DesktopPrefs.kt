@@ -13,6 +13,11 @@ class DesktopPrefs(private val file: File) {
         set(v) = put("onboarded", if (v) "1" else "0")
 
     /** Closing the window leaves PSphere running in the tray. On by default. */
+    /** "Let my devices ring this laptop". On by default. */
+    var allowRing: Boolean
+        get() = props.getProperty("allowRing") != "0"
+        set(v) = put("allowRing", if (v) "1" else "0")
+
     var keepInTray: Boolean
         get() = props.getProperty("keepInTray") != "0"
         set(v) = put("keepInTray", if (v) "1" else "0")
