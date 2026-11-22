@@ -76,6 +76,16 @@ internal object Codec {
         enum(), str(), str(), str(), readInt(), str(), readFloat(), bytes(256 * 1024).takeIf { it.isNotEmpty() },
     )
 
+    fun DataOutput.shelfItem(it: com.psphere.core.shelf.ShelfItem) {
+        str(it.id); str(it.origin); enum(it.kind); str(it.text); str(it.hash); writeLong(it.size)
+        writeLong(it.addedAt); writeBoolean(it.pinned); writeBoolean(it.removed); writeLong(it.changedAt)
+    }
+
+    fun DataInput.shelfItem() = com.psphere.core.shelf.ShelfItem(
+        id = str(), origin = str(), kind = enum(), text = str(), hash = str(), size = readLong(),
+        addedAt = readLong(), pinned = readBoolean(), removed = readBoolean(), changedAt = readLong(),
+    )
+
     fun DataInput.rec(): Rec = when (val kind = readByte().toInt()) {
         1 -> DeviceRec(str(), readLong(), str())
         2 -> RuleRec(str(), readLong(), str(), str(), strList(64).toSet(), enum<Include>(), readBoolean(), readBoolean())

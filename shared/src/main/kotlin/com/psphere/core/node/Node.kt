@@ -18,6 +18,9 @@ import com.psphere.core.net.OfferEntry
 import com.psphere.core.net.Tls
 import com.psphere.core.net.Wire
 import com.psphere.core.sha256Hex
+import com.psphere.core.shelf.ShelfEntry
+import com.psphere.core.shelf.ShelfItem
+import com.psphere.core.shelf.ShelfStore
 import com.psphere.core.storage.FileInfo
 import com.psphere.core.storage.Folder
 import com.psphere.core.storage.Incoming
@@ -33,6 +36,8 @@ import java.net.Socket
 import java.security.MessageDigest
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import javax.net.ssl.SSLSocket
 
@@ -129,6 +134,13 @@ class Node(
     @Volatile var smart: SmartLibrary? = null
     private val smartCache = SmartCache(File(dataDir, "smart-answers.bin"))
 
+    /** Text, links and files put on the Shelf by any linked device. */
+    val shelf = ShelfStore(File(dataDir, "shelf"), now)
+    /** Called (on any thread) when another device puts something on the Shelf, e.g. to notify. */
+    @Volatile var onShelfAdded: ((List<ShelfEntry>) -> Unit)? = null
+    private val shelfWorker = Executors.newSingleThreadExecutor { r -> Thread(r, "psphere-shelf").apply { isDaemon = true } }
+    private val shelfLocks = ConcurrentHashMap<String, Any>()
+
     @Volatile private var pairing: PairingWindow? = null
     private class PairingWindow(val token: String, val expiresAt: Long, val allowCode: Boolean)
 
@@ -195,6 +207,8 @@ class Node(
         }
         // And the people, places and searches it answered: they're its photos too.
         smartCache.forget(deviceId)
+        // And what it put on the Shelf.
+        shelf.forgetOrigin(deviceId)
         save()
     }
 
@@ -382,8 +396,10 @@ class Node(
             if (folder.length(item.relPath) != item.size) continue
             return runCatching { LocalSource(item.size, folder.openRead(item.relPath)) }.getOrNull() ?: continue
         }
-        val (entry, stream) = kept?.openRead(hash) ?: return null
-        return LocalSource(entry.size, stream)
+        kept?.openRead(hash)?.let { (entry, stream) -> return LocalSource(entry.size, stream) }
+        // A file on the Shelf, so other devices can fetch it with Get.
+        shelf.file(hash)?.let { f -> return runCatching { LocalSource(f.length(), f.inputStream()) }.getOrNull() }
+        return null
     }
 
     fun holdsLocally(hash: String): Boolean {
@@ -493,7 +509,8 @@ class Node(
                     handshake(wire, dev)
                     noteAddress(deviceId, address)
                     socket.soTimeout = SESSION_TIMEOUT_MS
-                    session.run().also { markSynced(deviceId) }
+                    // Swap Shelves too, so a device that was away catches up on what was shared.
+                    session.run().also { markSynced(deviceId); runCatching { shelfExchange(dev, listOf(address)) } }
                 } catch (e: Exception) {
                     session.result(describe(e, dev.name))
                 } finally {
@@ -549,6 +566,10 @@ class Node(
                     is Msg.Get -> serveGet(wire, req)
                     is Msg.Has -> wire.send(Msg.HasReply(req.hashes.filter { isValidHash(it) && holdsLocally(it) }))
                     is Msg.Smart -> wire.send(askHere(req.op, req.args)?.let { Msg.SmartReply(true, it) } ?: Msg.SmartReply(false, emptyList()))
+                    is Msg.Shelf -> {
+                        mergeShelf(req.items, addressOf(ssl, hello)?.let { mapOf(dev.id to it) } ?: emptyMap())
+                        wire.send(Msg.ShelfReply(shelf.all()))
+                    }
                     else -> wire.send(Msg.Error("Unexpected request"))
                 }
             }
@@ -878,6 +899,126 @@ class Node(
             }.getOrNull()
         }
     }
+
+    // ── Shelf ────────────────────────────────────────────────────────────────
+
+    /** What's on the Shelf: pinned first, then newest first. */
+    fun shelfItems(): List<ShelfEntry> = shelf.live().map(::shelfEntry)
+
+    private fun shelfEntry(item: ShelfItem) = ShelfEntry(item, nameOf(item.origin), !item.isFile || shelf.hasFile(item.hash))
+
+    /** Puts text or a link on the Shelf. Very long text goes on as a .txt file. Null if it's blank. */
+    fun shelfAddText(text: String): ShelfItem? {
+        val clean = text.trim().ifEmpty { return null }
+        val item = if (clean.toByteArray(Charsets.UTF_8).size > ShelfStore.MAX_TEXT_BYTES) {
+            shelf.addFile(id, "Text ${fileStamp()}.txt", clean.byteInputStream(Charsets.UTF_8))
+        } else {
+            shelf.addText(id, clean)
+        }
+        onChange?.invoke()
+        return item
+    }
+
+    /** Copies a file onto the Shelf. Blocking for big files. */
+    fun shelfAddFile(name: String, input: InputStream): ShelfItem = shelf.addFile(id, name, input).also { onChange?.invoke() }
+
+    fun shelfPin(itemId: String, pinned: Boolean) { if (shelf.setPinned(itemId, pinned) != null) onChange?.invoke() }
+
+    /** Takes items off the Shelf on every device. */
+    fun shelfRemove(ids: Collection<String>) { if (shelf.remove(ids) > 0) onChange?.invoke() }
+
+    /** Unpinned items more than a week old. They stay until the user clears them. */
+    fun shelfOld(): List<ShelfItem> = shelf.old()
+
+    /** True when the Shelf should suggest clearing old items. */
+    fun shelfShouldAskAboutOld(): Boolean = shelf.shouldAskAboutOld()
+
+    /** The user chose to keep the old items: don't ask again for a week. */
+    fun shelfKeepOld() { shelf.keepOld(); onChange?.invoke() }
+
+    /**
+     * A Shelf file on this device, fetched from another device first if it isn't here: the device
+     * that put it there, then any other. Null if no device that has it can be reached. Blocking.
+     */
+    fun shelfFile(item: ShelfItem, online: Map<String, HostPort> = emptyMap()): File? {
+        if (!item.isFile || !isValidHash(item.hash)) return null
+        shelf.file(item.hash)?.let { return it }
+        synchronized(shelfLocks.getOrPut(item.hash) { Any() }) {
+            shelf.file(item.hash)?.let { return it }
+            val sources = (listOf(item.origin) + devices().map { it.id }).distinct()
+                .mapNotNull { if (it == id) null else device(it) }
+                .filter { it.id in online || it.lastHost != null }
+                .sortedBy { if (it.id in online) 0 else 1 }
+            for (dev in sources) {
+                val (socket, _) = connectTo(dev, listOfNotNull(online[dev.id])) ?: continue
+                val file = socket.use {
+                    runCatching {
+                        val wire = Wire(socket.inputStream, socket.outputStream) { dev.name }
+                        handshake(wire, dev)
+                        socket.soTimeout = SESSION_TIMEOUT_MS
+                        wire.send(Msg.Get(item.hash, 0))
+                        val fd = wire.expect<Msg.FileData>()
+                        if (fd.length != item.size) throw IOException("size mismatch")
+                        shelf.storeFetched(item.hash) { out -> copyExactly(wire.input, out, fd.length) }
+                            ?.also { runCatching { wire.send(Msg.Bye) } }
+                    }.getOrNull()
+                }
+                if (file != null) { onChange?.invoke(); return file }
+            }
+            return null
+        }
+    }
+
+    /**
+     * Swaps Shelves with every linked device that can be reached, at its address in [online] or
+     * its last known one. Call after a change so the other devices see it now. Returns how many
+     * devices answered (older versions don't). Blocking.
+     */
+    fun shelfSync(online: Map<String, HostPort> = emptyMap()): Int {
+        val targets = devices().filter { it.id in online || it.lastHost != null }
+        if (targets.isEmpty()) return 0
+        val pool = Executors.newFixedThreadPool(targets.size.coerceAtMost(8)) { r -> Thread(r, "psphere-shelf-sync").apply { isDaemon = true } }
+        try {
+            val jobs = targets.map { dev -> pool.submit<Boolean> { shelfExchange(dev, listOfNotNull(online[dev.id])) } }
+            return jobs.count { runCatching { it.get(SEARCH_TIMEOUT_MS, TimeUnit.MILLISECONDS) }.getOrDefault(false) }
+        } finally {
+            pool.shutdownNow()
+        }
+    }
+
+    /** One swap with [dev]: send this Shelf, merge the one it sends back. False if it couldn't be done. */
+    private fun shelfExchange(dev: LinkedDevice, addresses: List<HostPort>): Boolean {
+        val (socket, address) = connectTo(dev, addresses) ?: return false
+        val theirs = socket.use {
+            runCatching {
+                val wire = Wire(socket.inputStream, socket.outputStream) { dev.name }
+                handshake(wire, dev)
+                socket.soTimeout = SEARCH_TIMEOUT_MS.toInt()
+                wire.send(Msg.Shelf(shelf.all()))
+                wire.expect<Msg.ShelfReply>().items
+            }.getOrNull()
+        } ?: return false
+        noteAddress(dev.id, address)
+        mergeShelf(theirs, mapOf(dev.id to address))
+        return true
+    }
+
+    private fun mergeShelf(items: List<ShelfItem>, online: Map<String, HostPort>) {
+        val accepted = synchronized(this) { state.devices.keys + id }
+        val result = shelf.merge(items, accepted)
+        if (!result.changed) return
+        onChange?.invoke()
+        val fromOthers = result.added.filter { it.origin != id }
+        if (fromOthers.isNotEmpty()) onShelfAdded?.invoke(fromOthers.map(::shelfEntry))
+        // Small files come over straight away, so they're ready when the user looks.
+        shelf.live().filter { it.isFile && it.size <= ShelfStore.AUTO_FETCH_BYTES && !shelf.hasFile(it.hash) }.forEach { item ->
+            runCatching { shelfWorker.execute { runCatching { shelfFile(item, online) } } }
+        }
+    }
+
+    private fun fileStamp(): String =
+        java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm")
+            .format(java.time.Instant.ofEpochMilli(now()).atZone(java.time.ZoneId.systemDefault()))
 
     // ── Linking ──────────────────────────────────────────────────────────────
 

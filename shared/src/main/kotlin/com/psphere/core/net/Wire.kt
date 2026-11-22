@@ -4,6 +4,7 @@ import com.psphere.core.ProtocolException
 import com.psphere.core.model.Rec
 import com.psphere.core.net.Codec.bytes
 import com.psphere.core.net.Codec.rec
+import com.psphere.core.net.Codec.shelfItem
 import com.psphere.core.net.Codec.smartItem
 import com.psphere.core.net.Codec.str
 import com.psphere.core.net.Codec.strList
@@ -67,6 +68,12 @@ sealed class Msg {
     data class Smart(val op: String, val args: List<String>) : Msg()
     /** [ready] is false when that device has no smart features. */
     data class SmartReply(val ready: Boolean, val items: List<com.psphere.core.node.SmartItem>) : Msg()
+    /**
+     * Shelf: everything on the sender's Shelf, removal markers included. The other device merges
+     * it and answers with a [ShelfReply] of its own Shelf. Older versions just don't answer.
+     */
+    data class Shelf(val items: List<com.psphere.core.shelf.ShelfItem>) : Msg()
+    data class ShelfReply(val items: List<com.psphere.core.shelf.ShelfItem>) : Msg()
     data class Error(val message: String) : Msg()
     object End : Msg() { override fun toString() = "End" }
     object Bye : Msg() { override fun toString() = "Bye" }
@@ -138,6 +145,8 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
             m.items.forEach { o.smartItem(it) }
             21
         }
+        is Msg.Shelf -> { o.writeInt(m.items.size); m.items.forEach { o.shelfItem(it) }; 22 }
+        is Msg.ShelfReply -> { o.writeInt(m.items.size); m.items.forEach { o.shelfItem(it) }; 23 }
     }
 
     private fun decode(type: Int, i: DataInputStream): Msg = when (type) {
@@ -162,6 +171,8 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         19 -> Msg.PairDone
         20 -> Msg.Smart(i.str(), i.strList(16))
         21 -> Msg.SmartReply(i.readBoolean(), List(count(i)) { i.smartItem() })
+        22 -> Msg.Shelf(List(count(i)) { i.shelfItem() })
+        23 -> Msg.ShelfReply(List(count(i)) { i.shelfItem() })
         else -> throw ProtocolException("Unknown message type $type from ${peerLabel()}")
     }
 
