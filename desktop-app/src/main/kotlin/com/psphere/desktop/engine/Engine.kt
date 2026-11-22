@@ -318,7 +318,8 @@ object Engine {
     private fun ownStatus(): DeviceStatus {
         val b = Battery.read()
         val dir = node.backupFolder()?.displayName?.let(::File)?.takeIf { it.exists() } ?: File(System.getProperty("user.home"))
-        return DeviceStatus(b?.percent ?: -1, b?.charging ?: false, dir.usableSpace, dir.totalSpace)
+        val (main, others) = Drives.list(dir)
+        return DeviceStatus(b?.percent ?: -1, b?.charging ?: false, main.freeBytes, main.totalBytes, driveName = main.name, otherDrives = others)
     }
 
     /** Asks the devices on this Wi-Fi for their battery and free space, in the background. */

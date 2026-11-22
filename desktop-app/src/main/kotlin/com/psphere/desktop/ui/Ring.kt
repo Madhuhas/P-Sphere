@@ -56,8 +56,15 @@ internal fun DeviceStats(status: DeviceStatus?, online: Boolean, modifier: Modif
             }
             if (status.hasSpace) {
                 val used = 1f - status.freeBytes.toFloat() / status.totalBytes
-                Stat(Icons.Default.Storage, "${formatBytes(status.freeBytes)} free", used, used > .9f, Modifier.weight(1f))
+                val drive = if (status.driveName.isNotEmpty()) "${status.driveName} " else ""
+                Stat(Icons.Default.Storage, "$drive${formatBytes(status.freeBytes)} free", used, used > .9f, Modifier.weight(1f))
             }
+        }
+        if (status.otherDrives.isNotEmpty()) {
+            Text(
+                "Other drives: " + status.otherDrives.joinToString(" · ") { "${it.name} ${formatBytes(it.freeBytes)} free" },
+                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         if (!online && status.at > 0) {
             Text("As of ${timeAgo(status.at)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

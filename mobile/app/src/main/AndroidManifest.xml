@@ -13,6 +13,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Ringing this phone when a linked device is looking for it. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- Folders are picked with the system folder picker, so no storage permissions are needed.
          Cleartext stays allowed for the parked PSphere Core server screens (plain http on the LAN). -->
@@ -55,6 +58,22 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+
+        <!-- Shown while a linked device rings this phone, also over the lock screen. -->
+        <activity
+            android:name=".ui.RingActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.PSphere" />
+
+        <!-- The Stop button on the ringing notification. -->
+        <receiver
+            android:name=".backup.RingStopReceiver"
+            android:exported="false" />
 
         <!-- The Copy button on a Shelf notification. -->
         <receiver

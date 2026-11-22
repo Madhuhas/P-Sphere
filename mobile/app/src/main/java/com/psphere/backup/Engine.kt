@@ -12,6 +12,7 @@ import com.psphere.core.node.LinkedDevice
 import com.psphere.core.node.Node
 import com.psphere.core.node.NodeServer
 import com.psphere.core.node.PairingOffer
+import com.psphere.core.node.RingResult
 import com.psphere.core.node.SyncProgress
 import com.psphere.core.node.SyncResult
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -108,6 +110,8 @@ object Engine {
         node.onChange = { bump() }
         node.codeConfirmer = CodeConfirmer { name, code -> askUser(name, code) }
         node.onShelfAdded = { added -> ShelfNotify.show(app, added) }
+        node.statusProvider = { phoneStatus(app) }
+        node.onRing = { _, name, on -> if (on) PhoneRinger.start(app, name) else PhoneRinger.stop(app); true }
 
         val srv = runCatching { NodeServer(node, PREFERRED_PORT).also { it.start() } }
             .getOrElse { NodeServer(node, 0).also { it.start() } }
@@ -150,6 +154,7 @@ object Engine {
         val linked = node.device(d.id) ?: return
         if (!d.compatible) return
         node.noteAddress(d.id, HostPort(d.host, d.port))
+        refreshStatus()
         val now = System.currentTimeMillis()
         synchronized(lastAuto) {
             if (now - (lastAuto[d.id] ?: 0) < AUTO_SYNC_GAP_MS) return
@@ -285,6 +290,40 @@ object Engine {
         node.shelfRemove(ids)
         shelfHidden.update { it - ids }
         shareShelf()
+    }
+
+    // ── Device status and ringing ────────────────────────────────────────────
+
+    /** Asks the devices on this Wi-Fi for their battery and free space, in the background. */
+    fun refreshStatus() { scope.launch { runCatching { node.statusSync(onlineLinked()) } } }
+
+    /** Devices this phone is ringing (shown as "Stop ringing"). */
+    val ringingOut = MutableStateFlow<Set<String>>(emptySet())
+    /** A short message about ringing a device ("Ringing Laptop…", "Laptop has ringing turned off"). */
+    data class RingNote(val deviceId: String, val text: String, val problem: Boolean)
+    val ringNotes = MutableSharedFlow<RingNote>(extraBufferCapacity = 4)
+    private val ringOutTimeouts = HashMap<String, Job>()
+    private const val RING_MS = 60_000L
+
+    /** Starts or stops [deviceId] ringing. */
+    fun ring(deviceId: String, on: Boolean = true) {
+        val name = node.device(deviceId)?.name ?: "That device"
+        if (on) ringingOut.update { it + deviceId } else ringingOut.update { it - deviceId }
+        synchronized(ringOutTimeouts) {
+            ringOutTimeouts.remove(deviceId)?.cancel()
+            if (on) ringOutTimeouts[deviceId] = scope.launch { delay(RING_MS); ringingOut.update { it - deviceId } }
+        }
+        scope.launch {
+            val r = node.ring(deviceId, on, onlineLinked())
+            if (r != RingResult.OK) ringingOut.update { it - deviceId }
+            val note = when (r) {
+                RingResult.OK -> if (on) "Ringing $name…" else ""
+                RingResult.TURNED_OFF -> "$name has ringing turned off. You can turn it on in PSphere's Settings on $name."
+                RingResult.NEEDS_UPDATE -> "Update PSphere on $name to ring it."
+                RingResult.UNREACHABLE -> "Couldn't reach $name. PSphere needs to be running on it, on this Wi-Fi."
+            }
+            ringNotes.tryEmit(RingNote(deviceId, note, r != RingResult.OK))
+        }
     }
 
     // ── Settings ─────────────────────────────────────────────────────────────

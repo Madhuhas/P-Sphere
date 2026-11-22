@@ -37,7 +37,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.psphere.backup.Activity
 import com.psphere.backup.Engine
+import com.psphere.core.node.DeviceStatus
 import com.psphere.core.node.LinkedDevice
 import com.psphere.ui.components.ContentColumn
 import com.psphere.ui.components.EmptyState
@@ -58,6 +63,7 @@ import com.psphere.ui.components.plural
 import com.psphere.ui.components.rememberEngineData
 import com.psphere.ui.components.timeAgo
 import com.psphere.ui.theme.PSphereTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 internal data class DeviceRow(
@@ -69,6 +75,8 @@ internal data class DeviceRow(
     val isDestination: Boolean,
     val keptFiles: Int,
     val keptBytes: Long,
+    /** Its battery and free space, live or last known. */
+    val status: DeviceStatus? = null,
 )
 
 private data class Overview(val rows: List<DeviceRow> = emptyList(), val hasFolders: Boolean = true, val loaded: Boolean = false)
@@ -85,6 +93,7 @@ internal fun deviceRows(): List<DeviceRow> {
             isDestination = rules.any { d.id in it.destinations },
             keptFiles = kept.filter { it.origin == d.id }.sumOf { it.files },
             keptBytes = kept.filter { it.origin == d.id }.sumOf { it.bytes },
+            status = node.status(d.id),
         )
     }
 }
@@ -96,6 +105,12 @@ fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenSend
     val overview by rememberEngineData(Overview()) {
         Overview(deviceRows(), Engine.node.ownRules().isNotEmpty(), loaded = true)
     }
+    val ringingOut by Engine.ringingOut.collectAsState()
+    var ringNote by remember { mutableStateOf<Engine.RingNote?>(null) }
+    LaunchedEffect(Unit) { Engine.ringNotes.collect { ringNote = it } }
+    LaunchedEffect(ringNote) { if (ringNote != null) { delay(8_000); ringNote = null } }
+    // Battery and free space stay fresh while this screen is open.
+    LaunchedEffect(Unit) { while (true) { Engine.refreshStatus(); delay(30_000) } }
 
     Scaffold(topBar = { TopAppBar(title = { Text(Engine.node.deviceName, fontWeight = FontWeight.SemiBold) }) }) { padding ->
         PullToRefreshBox(
@@ -119,7 +134,9 @@ fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenSend
                     NotesCard(notes)
 
                     SectionLabel("My devices")
-                    overview.rows.forEach { row -> DeviceCard(row) { onOpenDevice(row.device.id) } }
+                    overview.rows.forEach { row ->
+                        DeviceCard(row, row.device.id in ringingOut, ringNote?.takeIf { it.deviceId == row.device.id }) { onOpenDevice(row.device.id) }
+                    }
                     OutlinedButton(onClick = onLink, modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
@@ -198,9 +215,10 @@ private fun lastBackupText(rows: List<DeviceRow>): String {
 }
 
 @Composable
-internal fun DeviceCard(row: DeviceRow, onClick: () -> Unit) {
+internal fun DeviceCard(row: DeviceRow, ringing: Boolean = false, note: Engine.RingNote? = null, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = cs.surfaceContainerLow)) {
+      Column(Modifier.padding(bottom = 14.dp)) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             IconBadge(Icons.Default.Devices, container = cs.primaryContainer, content = cs.onPrimaryContainer)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -218,6 +236,10 @@ internal fun DeviceCard(row: DeviceRow, onClick: () -> Unit) {
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = cs.onSurfaceVariant)
         }
+        DeviceStats(row.status, row.online, Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp))
+        RingButton(row.device.id, row.online, ringing, Modifier.padding(horizontal = 16.dp))
+        RingNoteText(note, Modifier.padding(horizontal = 16.dp).padding(top = 8.dp))
+      }
     }
 }
 

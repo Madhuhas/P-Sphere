@@ -1,5 +1,6 @@
 package com.psphere.desktop.engine
 
+import com.psphere.core.node.DriveSpace
 import java.io.File
 import java.lang.foreign.Arena
 import java.lang.foreign.FunctionDescriptor
@@ -66,6 +67,32 @@ object Battery {
         val state = m.groupValues[2].trim().lowercase()
         return Reading(m.groupValues[1].toInt().coerceIn(0, 100), state.startsWith("charging") || state == "charged" || "ac attached" in state)
     }
+}
+
+/** Free space on this computer's drives. */
+object Drives {
+    private const val MIN_SIZE = 1L shl 30
+
+    /**
+     * The drive holding [main] (where backups go) and, on Windows, the other drives. A virtual
+     * drive that reports the same size as one already listed (Google Drive's "G:" mirrors the
+     * drive its files are cached on) is left out, so the same space isn't counted twice.
+     */
+    fun list(main: File): Pair<DriveSpace, List<DriveSpace>> {
+        if (DesktopSystem.os != Os.WINDOWS) return DriveSpace("", main.usableSpace, main.totalSpace) to emptyList()
+        val path = runCatching { main.canonicalPath }.getOrDefault(main.absolutePath)
+        val roots = File.listRoots().filter { runCatching { it.totalSpace >= MIN_SIZE }.getOrDefault(false) }
+        val mainRoot = roots.firstOrNull { path.startsWith(it.path, ignoreCase = true) }
+        val first = DriveSpace(mainRoot?.let(::nameOf) ?: "", main.usableSpace, main.totalSpace)
+        val seenSizes = mutableSetOf(first.totalBytes)
+        val others = roots.filter { it != mainRoot }.mapNotNull { r ->
+            val total = r.totalSpace
+            if (!seenSizes.add(total)) null else DriveSpace(nameOf(r), r.usableSpace, total)
+        }
+        return first to others
+    }
+
+    private fun nameOf(root: File) = root.path.trimEnd('\\', '/')
 }
 
 /** The sound this computer plays while another device is looking for it. */

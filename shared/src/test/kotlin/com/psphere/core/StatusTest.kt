@@ -1,6 +1,7 @@
 package com.psphere.core
 
 import com.psphere.core.node.DeviceStatus
+import com.psphere.core.node.DriveSpace
 import com.psphere.core.node.Node
 import com.psphere.core.node.RingResult
 import org.junit.After
@@ -26,7 +27,10 @@ class StatusTest {
         laptop = TestDevice("Laptop", tmp.root)
         phone.linkTo(laptop)
         phone.node.statusProvider = { DeviceStatus(64, false, 38_000_000_000, 128_000_000_000) }
-        laptop.node.statusProvider = { DeviceStatus(-1, false, 212_000_000_000, 480_000_000_000) }
+        laptop.node.statusProvider = {
+            DeviceStatus(-1, false, 212_000_000_000, 480_000_000_000, driveName = "K:",
+                otherDrives = listOf(DriveSpace("C:", 10_000_000_000, 256_000_000_000)))
+        }
     }
 
     @After fun tearDown() { listOf(phone, laptop).forEach { it.close() } }
@@ -39,6 +43,8 @@ class StatusTest {
         val ofLaptop = phone.node.status(laptop.id)!!
         assertFalse("a desktop PC has no battery", ofLaptop.hasBattery)
         assertEquals(212_000_000_000, ofLaptop.freeBytes)
+        assertEquals("K:", ofLaptop.driveName)
+        assertEquals(listOf(DriveSpace("C:", 10_000_000_000, 256_000_000_000)), ofLaptop.otherDrives)
         assertTrue(ofLaptop.at >= before)
 
         // The asking device sent its own along, so the laptop knows the phone's too.
@@ -55,6 +61,7 @@ class StatusTest {
             override fun openFolder(location: String) = null
         })
         assertEquals(212_000_000_000, again.status(laptop.id)?.freeBytes)
+        assertEquals("C:", again.status(laptop.id)?.otherDrives?.single()?.name)
         again.unlink(laptop.id)
         assertNull(again.status(laptop.id))
     }

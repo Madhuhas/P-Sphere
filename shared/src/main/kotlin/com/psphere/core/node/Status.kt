@@ -20,6 +20,10 @@ data class DeviceStatus(
     val totalBytes: Long,
     /** When this device received it. Not sent over the wire. */
     val at: Long = 0,
+    /** The drive [freeBytes] is about, e.g. "K:" (empty on a phone). */
+    val driveName: String = "",
+    /** A computer's other drives. */
+    val otherDrives: List<DriveSpace> = emptyList(),
 ) {
     val hasBattery: Boolean get() = battery in 0..100
     val hasSpace: Boolean get() = freeBytes >= 0 && totalBytes > 0
@@ -28,6 +32,8 @@ data class DeviceStatus(
         val UNKNOWN = DeviceStatus(-1, false, -1, -1)
     }
 }
+
+data class DriveSpace(val name: String, val freeBytes: Long, val totalBytes: Long)
 
 /** What happened when this device asked another to ring. */
 enum class RingResult {
@@ -51,7 +57,9 @@ internal class StatusStore(private val file: File) {
                 DataInputStream(f.inputStream().buffered()).use { i ->
                     if (i.readInt() != FORMAT) return@use
                     repeat(i.readInt()) {
-                        map[i.readUTF()] = DeviceStatus(i.readInt(), i.readBoolean(), i.readLong(), i.readLong(), i.readLong())
+                        val id = i.readUTF()
+                        val s = DeviceStatus(i.readInt(), i.readBoolean(), i.readLong(), i.readLong(), i.readLong(), i.readUTF())
+                        map[id] = s.copy(otherDrives = List(i.readInt()) { DriveSpace(i.readUTF(), i.readLong(), i.readLong()) })
                     }
                 }
             }
@@ -73,12 +81,14 @@ internal class StatusStore(private val file: File) {
                 o.writeInt(map.size)
                 map.forEach { (id, s) ->
                     o.writeUTF(id); o.writeInt(s.battery); o.writeBoolean(s.charging)
-                    o.writeLong(s.freeBytes); o.writeLong(s.totalBytes); o.writeLong(s.at)
+                    o.writeLong(s.freeBytes); o.writeLong(s.totalBytes); o.writeLong(s.at); o.writeUTF(s.driveName)
+                    o.writeInt(s.otherDrives.size)
+                    s.otherDrives.forEach { d -> o.writeUTF(d.name); o.writeLong(d.freeBytes); o.writeLong(d.totalBytes) }
                 }
             }
             replaceFile(tmp, file)
         }
     }
 
-    private companion object { const val FORMAT = 1 }
+    private companion object { const val FORMAT = 2 }
 }

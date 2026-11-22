@@ -77,12 +77,22 @@ internal object Codec {
     )
 
     fun DataOutput.status(s: com.psphere.core.node.DeviceStatus) {
-        writeInt(s.battery); writeBoolean(s.charging); writeLong(s.freeBytes); writeLong(s.totalBytes)
+        writeInt(s.battery); writeBoolean(s.charging); writeLong(s.freeBytes); writeLong(s.totalBytes); str(s.driveName.take(40))
+        val drives = s.otherDrives.take(MAX_DRIVES)
+        writeInt(drives.size)
+        drives.forEach { str(it.name.take(40)); writeLong(it.freeBytes); writeLong(it.totalBytes) }
     }
 
-    fun DataInput.status() = com.psphere.core.node.DeviceStatus(
-        battery = readInt().coerceIn(-1, 100), charging = readBoolean(), freeBytes = readLong(), totalBytes = readLong(),
-    )
+    fun DataInput.status(): com.psphere.core.node.DeviceStatus {
+        val s = com.psphere.core.node.DeviceStatus(
+            battery = readInt().coerceIn(-1, 100), charging = readBoolean(), freeBytes = readLong(), totalBytes = readLong(), driveName = str(),
+        )
+        val n = readInt()
+        if (n < 0 || n > MAX_DRIVES) throw ProtocolException("Invalid drive count ($n)")
+        return s.copy(otherDrives = List(n) { com.psphere.core.node.DriveSpace(str(), readLong(), readLong()) })
+    }
+
+    private const val MAX_DRIVES = 26
 
     fun DataOutput.shelfItem(it: com.psphere.core.shelf.ShelfItem) {
         str(it.id); str(it.origin); enum(it.kind); str(it.text); str(it.hash); writeLong(it.size)
