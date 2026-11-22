@@ -32,4 +32,7 @@ tasks.register<JavaExec>("harness") {
 
 tasks.test {
     testLogging { events("failed"); exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
+    // Long and big tests are opt-in: -Dsoak.minutes=120, -Dbig.files=20000 (see SoakTest, BigLibraryTest).
+    listOf("soak.minutes", "soak.seed", "soak.log", "big.files").forEach { k -> System.getProperty(k)?.let { systemProperty(k, it) } }
+    maxHeapSize = "1g"
 }

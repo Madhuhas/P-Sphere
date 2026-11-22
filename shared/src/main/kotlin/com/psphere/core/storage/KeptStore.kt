@@ -64,6 +64,8 @@ class KeptStore(
     private val originFolders = HashMap<String, String>()
     private val ruleFolders = HashMap<String, String>()
     private val oldVersions = ArrayList<Pair<String, Long>>()
+    /** Interrupted downloads kept for resuming, by hash, with when they were last written. */
+    private val partials = HashMap<String, Long>()
     private val inFlight = HashSet<String>()
     private var dirty = false
 
@@ -118,6 +120,7 @@ class KeptStore(
             return ReceiveResult.Rejected("size mismatch")
         }
 
+        notePartial(meta.hash)
         val digest = MessageDigest.getInstance("SHA-256")
         if (offset > 0) root.openRead(part).use { copyExactly(it, NullOut, offset, digest) }
         root.openWrite(part, append = offset > 0).use { out ->
@@ -125,10 +128,14 @@ class KeptStore(
         }
         if (digest.digest().toHex() != meta.hash) {
             root.delete(part)
+            forgetPartial(meta.hash)
             return ReceiveResult.Rejected("checksum mismatch")
         }
-        return commit(meta, part)
+        return commit(meta, part).also { forgetPartial(meta.hash) }
     }
+
+    @Synchronized private fun notePartial(hash: String) { partials[hash] = now(); dirty = true }
+    @Synchronized private fun forgetPartial(hash: String) { if (partials.remove(hash) != null) dirty = true }
 
     @Synchronized
     private fun commit(meta: Incoming, part: String): ReceiveResult {
@@ -189,13 +196,20 @@ class KeptStore(
 
     // ── Housekeeping ─────────────────────────────────────────────────────────
 
-    /** Deletes replaced versions older than [OLD_VERSION_DAYS]. */
+    /**
+     * Deletes replaced versions older than [OLD_VERSION_DAYS], and interrupted downloads nobody
+     * resumed within [PARTIAL_DAYS] (for example because the file changed in the meantime).
+     */
     @Synchronized
-    fun purgeOldVersions() {
-        val cutoff = now() - OLD_VERSION_DAYS * 24L * 3600 * 1000
+    fun purgeExpired() {
+        val day = 24L * 3600 * 1000
+        val cutoff = now() - OLD_VERSION_DAYS * day
         val expired = oldVersions.filter { it.second < cutoff }
         expired.forEach { root.delete(it.first) }
         if (expired.isNotEmpty()) { oldVersions -= expired.toSet(); dirty = true }
+        val stale = partials.filter { (hash, at) -> at < now() - PARTIAL_DAYS * day && hash !in inFlight }.keys
+        stale.forEach { root.delete(partPath(it)); partials -= it }
+        if (stale.isNotEmpty()) dirty = true
     }
 
     @Synchronized
@@ -211,6 +225,8 @@ class KeptStore(
                 out.str(e.hash); out.str(e.path); out.str(e.origin); out.str(e.ruleId); out.str(e.relPath); out.writeLong(e.size)
             }
             out.writeInt(oldVersions.size); oldVersions.forEach { (p, t) -> out.str(p); out.writeLong(t) }
+            // Added after the format was fixed: older versions stop reading before this.
+            out.writeInt(partials.size); partials.forEach { (h, t) -> out.str(h); out.writeLong(t) }
         }
         root.openWrite(INDEX_TMP).use { it.write(buf.toByteArray()) }
         root.delete(INDEX)
@@ -231,6 +247,7 @@ class KeptStore(
                 byHash.getOrPut(e.hash) { HashSet() } += key
             }
             repeat(input.readInt()) { oldVersions += input.str() to input.readLong() }
+            if (input.available() > 0) repeat(input.readInt()) { partials[input.str()] = input.readLong() }
         }
     }
 
@@ -244,6 +261,7 @@ class KeptStore(
     companion object {
         const val DEFAULT_RESERVE = 1L shl 30
         const val OLD_VERSION_DAYS = 30
+        const val PARTIAL_DAYS = 7
         private const val FORMAT = 1
         private const val WORK_DIR = ".psphere"
         private const val TMP_DIR = "$WORK_DIR/tmp"

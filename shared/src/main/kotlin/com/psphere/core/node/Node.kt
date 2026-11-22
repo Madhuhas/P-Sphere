@@ -336,6 +336,8 @@ class Node(
     private fun scanLocked(budgetMs: Long?, onProgress: (done: Int, total: Int) -> Unit): ScanResult {
         val deadline = budgetMs?.let { System.nanoTime() + it * 1_000_000 }
         fun outOfTime() = deadline != null && System.nanoTime() > deadline
+        // Catching up on missing previews is spread over scans, so one scan never takes too long.
+        val previewDeadline = minOf(deadline ?: Long.MAX_VALUE, System.nanoTime() + PREVIEW_CATCH_UP_MS * 1_000_000)
         var files = 0; var changed = 0; var deleted = 0
         val errors = ArrayList<String>()
         for ((rule, local) in ownRules()) {
@@ -354,6 +356,9 @@ class Node(
                 val existing = catalog.item(id, rule.ruleId, f.relPath)
                 if (existing != null && existing.state == ItemState.PRESENT && existing.size == f.size && existing.modified == f.modified) {
                     refreshHold(existing.hash)
+                    if (existing.media != Media.OTHER && rule.showInLibrary && !previews.has(existing.hash) && !previewsOutOfTime(previewDeadline)) {
+                        makePreview(folder, f.relPath, existing.media, existing.hash)
+                    }
                     return@forEachIndexed
                 }
                 if (outOfTime()) { complete = false; return@forEachIndexed }
@@ -377,9 +382,32 @@ class Node(
                 deleted++
             }
         }
+        keptHousekeeping(previewDeadline)
         save()
         if (changed + deleted > 0) onChange?.invoke()
         return ScanResult(files, changed, deleted, errors)
+    }
+
+    private fun previewsOutOfTime(deadline: Long) = System.nanoTime() > deadline
+
+    /**
+     * Backups kept here that have no preview (received before previews existed, or from a device
+     * that couldn't make one) get one made here, and expired old versions and abandoned partial
+     * downloads are deleted.
+     */
+    private fun keptHousekeeping(previewDeadline: Long) {
+        val store = kept ?: return
+        runCatching {
+            for (e in store.entries()) {
+                if (previewsOutOfTime(previewDeadline)) break
+                val media = Media.of(e.relPath)
+                if (media == Media.OTHER || previews.has(e.hash)) continue
+                if (catalog.rule(e.origin, e.ruleId)?.showInLibrary != true) continue
+                makePreview(store.root, e.path, media, e.hash)
+            }
+            store.purgeExpired()
+            store.flush()
+        }
     }
 
     private fun makePreview(folder: Folder, relPath: String, media: Media, hash: String) {
@@ -1147,5 +1175,7 @@ class Node(
         const val PAIRING_TIMEOUT_MS = 180_000
         const val PAIRING_WINDOW_MS = 10 * 60_000L
         const val SEARCH_TIMEOUT_MS = 15_000L
+        /** At most this long per scan making previews that are missing. */
+        const val PREVIEW_CATCH_UP_MS = 60_000L
     }
 }
