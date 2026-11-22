@@ -85,6 +85,14 @@ sealed class Msg {
     data class Ring(val on: Boolean) : Msg()
     /** [allowed] is false when that device has ringing turned off. */
     data class RingReply(val allowed: Boolean) : Msg()
+    /**
+     * Connection check: "try to connect back to me at one of [hosts] on [port]". Tells a device
+     * whether others can reach it (a firewall can block incoming connections while outgoing ones
+     * work). The answering device only accepts the sender's own key at that address. Older
+     * versions don't answer.
+     */
+    data class Probe(val hosts: List<String>, val port: Int) : Msg()
+    data class ProbeReply(val reached: Boolean) : Msg()
     data class Error(val message: String) : Msg()
     object End : Msg() { override fun toString() = "End" }
     object Bye : Msg() { override fun toString() = "Bye" }
@@ -162,6 +170,8 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         is Msg.StatusReply -> { o.status(m.status); 25 }
         is Msg.Ring -> { o.writeBoolean(m.on); 26 }
         is Msg.RingReply -> { o.writeBoolean(m.allowed); 27 }
+        is Msg.Probe -> { o.strList(m.hosts.take(8)); o.writeInt(m.port); 28 }
+        is Msg.ProbeReply -> { o.writeBoolean(m.reached); 29 }
     }
 
     private fun decode(type: Int, i: DataInputStream): Msg = when (type) {
@@ -192,6 +202,8 @@ class Wire(rawIn: InputStream, rawOut: OutputStream, private val peerLabel: () -
         25 -> Msg.StatusReply(i.status())
         26 -> Msg.Ring(i.readBoolean())
         27 -> Msg.RingReply(i.readBoolean())
+        28 -> Msg.Probe(i.strList(8), i.readInt())
+        29 -> Msg.ProbeReply(i.readBoolean())
         else -> throw ProtocolException("Unknown message type $type from ${peerLabel()}")
     }
 

@@ -539,7 +539,7 @@ class Node(
         val lock = peerLocks.getOrPut(deviceId) { ReentrantLock() }
         if (!lock.tryLock()) return SyncResult(deviceId, dev.name, notes = listOf("Already syncing with ${dev.name}"))
         try {
-            val (socket, address) = connectTo(dev, addresses) ?: return SyncResult(deviceId, dev.name, error = "Couldn't reach ${dev.name}")
+            val (socket, address) = connectTo(dev, addresses) ?: return SyncResult(deviceId, dev.name, error = unreachableText(dev.name, seen = addresses.isNotEmpty()))
             socket.use {
                 val wire = Wire(socket.inputStream, socket.outputStream) { dev.name }
                 val session = Session(this, wire, dev, initiator = true, onProgress = onProgress)
@@ -597,6 +597,7 @@ class Node(
                 if (dev == null) { handlePairing(ssl, wire, fp, hello); return }
                 // Remember where it can be reached, so this device can start syncs with it too.
                 addressOf(ssl, hello)?.let { noteAddress(dev.id, it) }
+                lastIncoming[dev.id] = now()
 
                 ssl.soTimeout = SESSION_TIMEOUT_MS
                 when (val req = wire.receive()) {
@@ -613,6 +614,8 @@ class Node(
                         wire.send(Msg.StatusReply(ownStatus()))
                     }
                     is Msg.Ring -> wire.send(Msg.RingReply(onRing?.invoke(dev.id, dev.name, req.on) ?: false))
+                    is Msg.Probe -> wire.send(Msg.ProbeReply(probeBack(dev, req.hosts, req.port)))
+                    Msg.Bye -> Unit // A connection check: it only had to get through.
                     else -> wire.send(Msg.Error("Unexpected request"))
                 }
             }
@@ -1103,6 +1106,58 @@ class Node(
         return true
     }
 
+    // ── Connection checks ────────────────────────────────────────────────────
+
+    /** When each linked device last connected to this one (this run only). */
+    private val lastIncoming = ConcurrentHashMap<String, Long>()
+
+    /** When [deviceId] last connected to this device since it started, or null. */
+    fun lastIncomingFrom(deviceId: String): Long? = lastIncoming[deviceId]
+
+    /** Whether [deviceId] answers at its address in [online] (or its last known one). Blocking. */
+    fun canReach(deviceId: String, online: Map<String, HostPort>): Boolean {
+        val dev = device(deviceId) ?: return false
+        return statusExchange(dev, listOfNotNull(online[deviceId]))
+    }
+
+    /**
+     * Asks [deviceId] to connect back to this device at [hosts] on [port]: true if it got through,
+     * false if it couldn't (something blocks incoming connections here), null if it couldn't be
+     * asked (not reachable, or an older version). Blocking.
+     */
+    fun askToConnectBack(deviceId: String, online: Map<String, HostPort>, hosts: List<String>, port: Int): Boolean? {
+        val dev = device(deviceId) ?: return null
+        val (socket, address) = connectTo(dev, listOfNotNull(online[deviceId])) ?: return null
+        return socket.use {
+            runCatching {
+                val wire = Wire(socket.inputStream, socket.outputStream) { dev.name }
+                handshake(wire, dev)
+                noteAddress(dev.id, address)
+                socket.soTimeout = SEARCH_TIMEOUT_MS.toInt()
+                wire.send(Msg.Probe(hosts, port))
+                wire.expect<Msg.ProbeReply>().reached
+            }.getOrNull()
+        }
+    }
+
+    /** Answers a [Msg.Probe]: connects to the asking device and checks it's really that device. */
+    private fun probeBack(dev: LinkedDevice, hosts: List<String>, port: Int): Boolean {
+        if (port !in 1..65535) return false
+        return hosts.take(8).any { host ->
+            runCatching {
+                tls.connect(host, port).use { s ->
+                    if (Tls.peerFingerprint(s) != dev.fingerprint) return@runCatching false
+                    // Say hello properly, so the asking device sees that a connection got through.
+                    s.soTimeout = SEARCH_TIMEOUT_MS.toInt()
+                    val wire = Wire(s.inputStream, s.outputStream) { dev.name }
+                    handshake(wire, dev)
+                    wire.send(Msg.Bye)
+                    true
+                }
+            }.getOrDefault(false)
+        }
+    }
+
     /** Asks [deviceId] to start ([on]) or stop ringing. Blocking. */
     fun ring(deviceId: String, on: Boolean, online: Map<String, HostPort>): RingResult {
         val dev = device(deviceId) ?: return RingResult.UNREACHABLE
@@ -1242,6 +1297,11 @@ class Node(
         is java.io.EOFException, is java.net.SocketException -> "The connection to $peer was lost"
         else -> e.message ?: e.javaClass.simpleName
     }
+
+    /** Why a sync couldn't start, in words that point at the fix. */
+    private fun unreachableText(name: String, seen: Boolean) =
+        if (seen) "$name is on this Wi-Fi but isn't accepting connections. On $name, open PSphere › Settings › Check connection."
+        else "Couldn't reach $name. PSphere needs to be open on it, on the same Wi-Fi."
 
     companion object {
         const val SESSION_TIMEOUT_MS = 60_000
