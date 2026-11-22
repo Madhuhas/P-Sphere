@@ -17,12 +17,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Devices
+import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
@@ -51,6 +53,7 @@ import com.psphere.desktop.engine.Engine
 sealed class Screen {
     object Welcome : Screen()
     object Photos : Screen()
+    object Shelf : Screen()
     object Devices : Screen()
     data class Device(val id: String) : Screen()
     object Link : Screen()
@@ -62,6 +65,7 @@ sealed class Screen {
 
 private enum class Tab(val label: String, val on: ImageVector, val off: ImageVector, val root: Screen) {
     PHOTOS("Photos", Icons.Filled.PhotoLibrary, Icons.Outlined.PhotoLibrary, Screen.Photos),
+    SHELF("Shelf", Icons.Filled.Inventory2, Icons.Outlined.Inventory2, Screen.Shelf),
     DEVICES("Devices", Icons.Filled.Devices, Icons.Outlined.Devices, Screen.Devices),
     SENDING("Sending", Icons.Filled.CloudUpload, Icons.Outlined.CloudUpload, Screen.Sending),
     RECEIVING("Receiving", Icons.Filled.CloudDownload, Icons.Outlined.CloudDownload, Screen.Receiving),
@@ -71,6 +75,7 @@ private enum class Tab(val label: String, val on: ImageVector, val off: ImageVec
 private fun tabOf(s: Screen): Tab? = when (s) {
     Screen.Welcome -> null
     Screen.Photos -> Tab.PHOTOS
+    Screen.Shelf -> Tab.SHELF
     Screen.Devices, is Screen.Device, Screen.Link -> Tab.DEVICES
     Screen.Sending, is Screen.Folder -> Tab.SENDING
     Screen.Receiving -> Tab.RECEIVING
@@ -97,6 +102,7 @@ fun App() {
                 when (val s = screen) {
                     Screen.Welcome -> WelcomeScreen(onDone = { tab(Tab.DEVICES) })
                     Screen.Photos -> key(tabTaps) { PhotosScreen(onOpenSettings = { tab(Tab.SETTINGS) }) }
+                    Screen.Shelf -> ShelfScreen()
                     Screen.Devices -> DevicesScreen(onOpenDevice = { go(Screen.Device(it)) }, onLink = { go(Screen.Link) }, onOpenReceiving = { tab(Tab.RECEIVING) })
                     is Screen.Device -> DeviceScreen(s.id, onBack = ::back)
                     Screen.Link -> LinkScreen(onBack = ::back)

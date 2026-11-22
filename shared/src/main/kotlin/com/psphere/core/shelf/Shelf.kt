@@ -278,3 +278,19 @@ class ShelfStore(private val dir: File, private val now: () -> Long) {
             com.psphere.core.SafeNames.segment(name.substringAfterLast('/').substringAfterLast('\\'), "File")
     }
 }
+
+/** Title and text for a notification about things another device put on the Shelf. Null if there's nothing. */
+fun shelfNotice(added: List<ShelfEntry>): Pair<String, String>? {
+    if (added.isEmpty()) return null
+    val from = added.map { it.originName }.distinct().singleOrNull() ?: "Your devices"
+    if (added.size == 1) {
+        val item = added[0].item
+        return when (item.kind) {
+            ShelfItem.Kind.TEXT -> "$from put text on the Shelf" to item.text.take(200)
+            ShelfItem.Kind.LINK -> "$from put a link on the Shelf" to item.text.take(200)
+            ShelfItem.Kind.FILE -> "$from put a file on the Shelf" to item.text
+        }
+    }
+    return "$from put ${added.size} things on the Shelf" to
+        added.joinToString(", ") { if (it.item.kind == ShelfItem.Kind.TEXT) "text" else it.item.text }.take(200)
+}

@@ -99,6 +99,7 @@ object Engine {
         node.codeConfirmer = CodeConfirmer { name, code -> askUser(name, code) }
         node.onIncomingProgress = { p -> _state.update { it.copy(activity = Activity.Serving(p.peerName, p)) } }
         node.onIncomingDone = { r -> onIncomingDone(r) }
+        node.onShelfAdded = { added -> com.psphere.core.shelf.shelfNotice(added)?.let { (title, text) -> notify(Notice(title, text)) } }
 
         val srv = runCatching { NodeServer(node, PREFERRED_PORT).also { it.start() } }
             .getOrElse { NodeServer(node, 0).also { it.start() } }
@@ -266,6 +267,11 @@ object Engine {
             codeRequest.value = null
         }
     }
+
+    // ── Shelf ────────────────────────────────────────────────────────────────
+
+    /** Tells the other devices about a change on the Shelf right away, in the background. */
+    fun shareShelf() { scope.launch { runCatching { node.shelfSync(onlineLinked()) } } }
 
     // ── Settings ─────────────────────────────────────────────────────────────
 
