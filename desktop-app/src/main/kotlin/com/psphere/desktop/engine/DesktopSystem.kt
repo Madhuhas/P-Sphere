@@ -87,11 +87,24 @@ object DesktopSystem {
         val exe = if (on) installedExe() ?: return false else ""
         when (os) {
             Os.WINDOWS -> {
-                val cmd = if (on) listOf("reg", "add", RUN_KEY, "/v", RUN_VALUE, "/t", "REG_SZ", "/d", "\"$exe\" $TRAY_ARG", "/f")
-                else listOf("reg", "delete", RUN_KEY, "/v", RUN_VALUE, "/f")
-                val p = ProcessBuilder(cmd).redirectErrorStream(true).start()
-                p.inputStream.readAllBytes()
-                p.waitFor(5, TimeUnit.SECONDS) && (p.exitValue() == 0 || !on)
+                if (on) {
+                    // Through a .reg file: passing the value on reg.exe's command line lost the quotes
+                    // around the path, so a path with a space (C:\Users\John Smith\...) wouldn't start.
+                    val reg = File.createTempFile("psphere-startup", ".reg")
+                    try {
+                        reg.writeText(windowsRunEntry(exe), Charsets.UTF_16LE)
+                        val p = ProcessBuilder("reg", "import", reg.path).redirectErrorStream(true).start()
+                        p.inputStream.readAllBytes()
+                        p.waitFor(10, TimeUnit.SECONDS) && p.exitValue() == 0
+                    } finally {
+                        reg.delete()
+                    }
+                } else {
+                    val p = ProcessBuilder("reg", "delete", RUN_KEY, "/v", RUN_VALUE, "/f").redirectErrorStream(true).start()
+                    p.inputStream.readAllBytes()
+                    p.waitFor(5, TimeUnit.SECONDS)
+                    true
+                }
             }
             Os.MAC -> writeOrDelete(macAgent, on) { macAgentPlist(exe) }
             Os.LINUX -> writeOrDelete(linuxAutostart, on) { linuxAutostartEntry(exe) }
@@ -106,6 +119,17 @@ object DesktopSystem {
         }
         file.delete()
         return true
+    }
+
+    /**
+     * A .reg file that sets the Windows sign-in entry to `"<exe>" --tray`, quotes included, so a
+     * path with spaces still starts. UTF-16 with a byte-order mark, as reg import expects.
+     */
+    internal fun windowsRunEntry(exe: String): String {
+        fun esc(s: String) = s.replace("\\", "\\\\").replace("\"", "\\\"")
+        val key = RUN_KEY.replaceFirst("HKCU", "HKEY_CURRENT_USER")
+        val value = esc("\"$exe\" $TRAY_ARG")
+        return "\uFEFF" + listOf("Windows Registry Editor Version 5.00", "", "[$key]", "\"$RUN_VALUE\"=\"$value\"", "").joinToString("\r\n")
     }
 
     /** The Linux autostart entry (~/.config/autostart/psphere.desktop). */

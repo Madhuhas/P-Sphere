@@ -51,6 +51,11 @@ class DesktopPartsTest {
         assertTrue("<string>/Applications/PSphere &amp; Co.app/Contents/MacOS/PSphere</string>" in mac)
         assertTrue("<string>--tray</string>" in mac)
         assertTrue("<key>RunAtLoad</key><true/>" in mac)
+        // Windows: the path stays quoted, so a user name with a space still starts PSphere.
+        val win = DesktopSystem.windowsRunEntry("""C:\Users\John Smith\AppData\Local\PSphere\PSphere.exe""")
+        assertTrue(win.startsWith("\uFEFFWindows Registry Editor Version 5.00\r\n"))
+        assertTrue("[HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run]" in win)
+        assertTrue("\"PSphere\"=\"\\\"C:\\\\Users\\\\John Smith\\\\AppData\\\\Local\\\\PSphere\\\\PSphere.exe\\\" --tray\"" in win, win)
     }
 
     @Test
