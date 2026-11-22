@@ -61,6 +61,7 @@ sealed class Screen {
     data class Folder(val ruleId: String?) : Screen()
     object Receiving : Screen()
     object Settings : Screen()
+    object Connection : Screen()
 }
 
 private enum class Tab(val label: String, val on: ImageVector, val off: ImageVector, val root: Screen) {
@@ -79,7 +80,7 @@ private fun tabOf(s: Screen): Tab? = when (s) {
     Screen.Devices, is Screen.Device, Screen.Link -> Tab.DEVICES
     Screen.Sending, is Screen.Folder -> Tab.SENDING
     Screen.Receiving -> Tab.RECEIVING
-    Screen.Settings -> Tab.SETTINGS
+    Screen.Settings, Screen.Connection -> Tab.SETTINGS
 }
 
 @Composable
@@ -103,13 +104,14 @@ fun App() {
                     Screen.Welcome -> WelcomeScreen(onDone = { tab(Tab.DEVICES) })
                     Screen.Photos -> key(tabTaps) { PhotosScreen(onOpenSettings = { tab(Tab.SETTINGS) }) }
                     Screen.Shelf -> ShelfScreen()
-                    Screen.Devices -> DevicesScreen(onOpenDevice = { go(Screen.Device(it)) }, onLink = { go(Screen.Link) }, onOpenReceiving = { tab(Tab.RECEIVING) })
+                    Screen.Devices -> DevicesScreen(onOpenDevice = { go(Screen.Device(it)) }, onLink = { go(Screen.Link) }, onOpenReceiving = { tab(Tab.RECEIVING) }, onCheckConnection = { go(Screen.Connection) })
                     is Screen.Device -> DeviceScreen(s.id, onBack = ::back)
                     Screen.Link -> LinkScreen(onBack = ::back)
                     Screen.Sending -> SendingScreen(onAdd = { go(Screen.Folder(null)) }, onEdit = { go(Screen.Folder(it)) })
                     is Screen.Folder -> FolderScreen(s.ruleId, onBack = ::back, onLinkDevice = { go(Screen.Link) })
                     Screen.Receiving -> ReceivingScreen()
-                    Screen.Settings -> SettingsScreen(onOpenDevice = { go(Screen.Device(it)) }, onLink = { go(Screen.Link) })
+                    Screen.Settings -> SettingsScreen(onOpenDevice = { go(Screen.Device(it)) }, onLink = { go(Screen.Link) }, onCheckConnection = { go(Screen.Connection) })
+                    Screen.Connection -> ConnectionScreen(onBack = ::back)
                 }
             }
         }

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.WebAsset
+import androidx.compose.material.icons.filled.WifiFind
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -52,7 +53,7 @@ import com.psphere.desktop.engine.DesktopSystem
 const val APP_VERSION = "2.5.1"
 
 @Composable
-fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
+fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onCheckConnection: () -> Unit = {}) {
     val state by Engine.state.collectAsState()
     val cs = MaterialTheme.colorScheme
     var renaming by remember { mutableStateOf(false) }
@@ -116,6 +117,8 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
                 }
                 if (devices.isNotEmpty()) HorizontalDivider(color = cs.outlineVariant)
                 NavRow(Icons.Default.QrCode2, "Link a device", "Show a code to scan") { onLink() }
+                HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
+                NavRow(Icons.Default.WifiFind, "Check connection", "Find out why a device can't connect, and fix it") { onCheckConnection() }
             }
 
             AboutLinks()

@@ -104,9 +104,11 @@ internal fun deviceRows(): List<DeviceRow> {
 }
 
 @Composable
-fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenReceiving: () -> Unit) {
+fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenReceiving: () -> Unit, onCheckConnection: () -> Unit = {}) {
     val state by Engine.state.collectAsState()
     val ringingOut by Engine.ringingOut.collectAsState()
+    val connection by Engine.connection.collectAsState()
+    val checking by Engine.checkingConnection.collectAsState()
     var ringNote by remember { mutableStateOf<Engine.RingNote?>(null) }
     LaunchedEffect(Unit) { Engine.ringNotes.collect { ringNote = it.takeIf { n -> n.text.isNotEmpty() } } }
     LaunchedEffect(ringNote) { if (ringNote != null) { delay(8_000); ringNote = null } }
@@ -143,6 +145,8 @@ fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenRece
             val noLocation = if (!overview.hasLocation && overview.hasFolders)
                 listOf("Backups from your other devices can't be saved on this laptop until you choose a folder in Receiving.") else emptyList()
             NotesCard(noLocation + notes)
+            // Something keeps devices from connecting here (firewall, public network): say so with the fix.
+            connection?.verdict?.takeIf { !it.ok && it.fixes.isNotEmpty() }?.let { VerdictCard(it, checking, onOpenDetails = onCheckConnection) }
 
             SectionLabel("My devices")
             overview.rows.chunked(2).forEach { pair ->

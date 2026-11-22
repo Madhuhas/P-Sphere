@@ -117,6 +117,8 @@ object Engine {
 
         com.psphere.desktop.smart.Smart.start(dataDir)
         scope.launch { scan() }
+        // Once things have settled, look for anything that keeps devices from connecting here.
+        scope.launch { delay(30_000); checkConnection() }
         scope.launch {
             while (isActive) {
                 delay(PERIODIC_MS)
@@ -377,6 +379,31 @@ object Engine {
             }
             if (note != null) _ringNotes.tryEmit(RingNote(deviceId, note, r != RingResult.OK))
             else _ringNotes.tryEmit(RingNote(deviceId, "", false))
+        }
+    }
+
+    // ── Connection check ─────────────────────────────────────────────────────
+
+    /** The latest connection check, or null before the first one. */
+    val connection = MutableStateFlow<ConnectionCheck.Result?>(null)
+    val checkingConnection = MutableStateFlow(false)
+
+    /** Runs the connection check in the background. */
+    fun checkConnection() {
+        if (!checkingConnection.compareAndSet(false, true)) return
+        scope.launch {
+            try { connection.value = runCatching { ConnectionCheck.run() }.getOrNull() ?: connection.value }
+            finally { checkingConnection.value = false }
+        }
+    }
+
+    /** Applies a fix (Windows asks for permission), then checks again. */
+    fun applyFix(fix: ConnectionCheck.Fix, done: (Boolean) -> Unit) {
+        scope.launch {
+            val ok = ConnectionCheck.apply(fix)
+            done(ok)
+            if (ok) { searchAgain(); delay(3_000) }
+            checkConnection()
         }
     }
 
