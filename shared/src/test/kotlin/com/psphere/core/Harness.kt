@@ -86,6 +86,18 @@ fun main(args: Array<String>) {
             println("Swapped with $reached device(s). On the Shelf:")
             node.shelfItems().forEach { println("  ${it.originName}: ${it.item.kind} \"${it.item.text}\" ${it.item.size} B pinned=${it.item.pinned} here=${it.here}") }
         }
+        "ring", "unring" -> {
+            // Also tells the other device this one's battery and drives, as a real computer would.
+            node.statusProvider = {
+                com.psphere.core.node.DeviceStatus(-1, false, 212_000_000_000, 480_000_000_000, driveName = "D:",
+                    otherDrives = listOf(com.psphere.core.node.DriveSpace("C:", 40_000_000_000, 256_000_000_000)))
+            }
+            val at = HostPort(args[2], args[3].toInt())
+            node.devices().forEach { d ->
+                node.statusSync(mapOf(d.id to at))
+                println("${args[1]} ${d.name}: ${node.ring(d.id, args[1] == "ring", mapOf(d.id to at))}; its status: ${node.status(d.id)}")
+            }
+        }
         "status" -> {
             println("Linked: " + node.devices().joinToString { "${it.name} (${it.id})" })
             println("Library:")
