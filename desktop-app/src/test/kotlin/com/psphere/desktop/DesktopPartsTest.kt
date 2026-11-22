@@ -59,6 +59,27 @@ class DesktopPartsTest {
     }
 
     @Test
+    fun firewallRulesAreReadFromTheRegistryListing() {
+        val listing = """
+            HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules
+                {A1}    REG_SZ    v2.30|Action=Allow|Active=TRUE|Dir=In|App=C:\Program Files\PSphere\PSphere.exe|Name=PSphere|
+                {B2}    REG_SZ    v2.10|Action=Block|Active=TRUE|Dir=In|Protocol=6|Profile=Public|App=c:\program files\psphere\psphere.exe|Name=psphere.exe|
+                {C3}    REG_SZ    v2.10|Action=Allow|Active=FALSE|Dir=Out|Profile=Private|App=C:\Other.exe|Name=Other|
+                {D4}    REG_SZ    not a rule
+        """.trimIndent()
+        val rules = com.psphere.desktop.engine.ConnectionCheck.parseFirewallRules(listing)
+        assertEquals(3, rules.size)
+        val (allow, block, other) = rules
+        assertTrue(allow.allow && allow.inbound && allow.active)
+        assertTrue(allow.covers("Public") && allow.covers("Private"), "no Profile means every network")
+        assertFalse(block.allow)
+        assertTrue(block.covers("Public"))
+        assertFalse(block.covers("Private"))
+        assertTrue(block.app.equals("""C:\Program Files\PSphere\PSphere.exe""", ignoreCase = true), "paths are compared ignoring case")
+        assertFalse(other.active || other.inbound)
+    }
+
+    @Test
     fun deviceIdComesFromTheServiceName() {
         assertEquals("ab12cd34", Discovery.idOf("PSphere-ab12cd34"))
         // 1.x devices used "PSphere-<model>-<id>".

@@ -398,11 +398,11 @@ object Engine {
     }
 
     /** Applies a fix (Windows asks for permission), then checks again. */
-    fun applyFix(fix: ConnectionCheck.Fix, done: (Boolean) -> Unit) {
+    fun applyFix(fix: ConnectionCheck.Fix, done: (ConnectionCheck.FixResult) -> Unit) {
         scope.launch {
-            val ok = ConnectionCheck.apply(fix)
-            done(ok)
-            if (ok) { searchAgain(); delay(3_000) }
+            val r = ConnectionCheck.apply(fix)
+            done(r)
+            if (r.ok) { searchAgain(); delay(3_000) }
             checkConnection()
         }
     }

@@ -77,12 +77,18 @@ object ConnectionCheck {
             )
         }
 
-        // Outgoing: can this computer reach the devices it sees?
-        val reachable = online.keys.filter { node.canReach(it, online) }
-        online.keys.forEach { id ->
+        // Outgoing: can this computer reach its devices? Also at their last known address, because
+        // finding devices by their announcements is the part some networks get in the way of.
+        val candidates = linked.filter { it.id in online || it.lastHost != null }.map { it.id }
+        val reachable = candidates.filter { node.canReach(it, online) }
+        candidates.forEach { id ->
             val name = node.device(id)?.name ?: "A device"
-            steps += if (id in reachable) Step("Reach $name", "Connected", State.OK)
-            else Step("Reach $name", "It's on this network but didn't answer", State.WARN)
+            steps += when {
+                id in reachable && id in online -> Step("Reach $name", "Connected", State.OK)
+                id in reachable -> Step("Reach $name", "Connected at its last known address (it wasn't found by its announcements)", State.OK)
+                id in online -> Step("Reach $name", "It's on this network but didn't answer", State.WARN)
+                else -> Step("Reach $name", "Not at its last known address: it may be off, or on another network", State.INFO)
+            }
         }
 
         // Incoming: ask a reachable device to connect back. That's what a firewall blocks.
@@ -95,9 +101,15 @@ object ConnectionCheck {
             else Step("$name can reach this computer", "It tried and was blocked", State.FAIL)
             break
         }
-        if (incoming == null && linked.any { node.lastIncomingFrom(it.id) != null }) incoming = true
+        if (incoming == null && linked.any { node.lastIncomingFrom(it.id) != null }) {
+            incoming = true
+            steps += Step("Your devices can reach this computer", "A linked device connected here recently", State.OK)
+        } else if (incoming == null && reachable.isNotEmpty()) {
+            val names = reachable.mapNotNull { node.device(it)?.name }.joinToString(", ")
+            steps += Step("$names can reach this computer", "Couldn't test: update PSphere on $names to check this direction too", State.INFO)
+        }
 
-        return Result(verdict(firewall, network, linked.isNotEmpty(), online.isNotEmpty(), incoming), steps)
+        return Result(verdict(firewall, network, linked.isNotEmpty(), online.isNotEmpty() || reachable.isNotEmpty(), incoming), steps)
     }
 
     private fun verdict(firewall: Firewall, network: Network?, hasLinked: Boolean, seesDevices: Boolean, incoming: Boolean?): Verdict {
@@ -130,7 +142,13 @@ object ConnectionCheck {
                 ok = false,
             )
             !hasLinked -> Verdict("Ready to link", "Nothing is blocking PSphere. Link a device to start backing up.", ok = true)
-            else -> Verdict("Everything looks fine", "Your devices and this computer can reach each other.", ok = true)
+            incoming == true -> Verdict("Everything looks fine", "Your devices and this computer can reach each other.", ok = true)
+            seesDevices -> Verdict(
+                "This computer can reach your devices",
+                "The other direction couldn't be tested, because your other devices need a newer PSphere for that. Update them and check again.",
+                ok = true, fixes = if (firewall == Firewall.ALLOWED) emptyList() else fixes,
+            )
+            else -> Verdict("Everything looks fine", "Nothing is blocking PSphere here.", ok = true)
         }
     }
 
@@ -149,52 +167,85 @@ object ConnectionCheck {
     /** Whether Windows Firewall lets [exe] receive connections on the current network. */
     fun firewallFor(exe: String): Firewall {
         if (exe.isBlank()) return Firewall.UNKNOWN
-        val script = "Get-NetFirewallApplicationFilter -Program '${exe.replace("'", "''")}' -ErrorAction SilentlyContinue | Get-NetFirewallRule | " +
-            "Where-Object { \$_.Direction -eq 'Inbound' -and \$_.Enabled -eq 'True' } | ForEach-Object { \"$(\$_.Action)|$(\$_.Profile)\" }; 'DONE'"
-        // DONE only appears if the query itself ran, so a failure isn't mistaken for "no rule".
-        val out = powershell(script)?.takeIf { it.lines().any { l -> l.trim() == "DONE" } } ?: return Firewall.UNKNOWN
-        val rules = out.lines().map { it.trim() }.filter { '|' in it }
+        // Windows only lets administrators query rules through PowerShell ("Access is denied"),
+        // but the rules themselves are stored in the registry, which anyone can read.
+        val out = runCatching {
+            val p = ProcessBuilder("reg", "query", FIREWALL_RULES_KEY).redirectErrorStream(true).start()
+            val text = p.inputStream.bufferedReader().readText()
+            if (!p.waitFor(20, TimeUnit.SECONDS) || p.exitValue() != 0) null else text
+        }.getOrNull() ?: return Firewall.UNKNOWN
+        val rules = parseFirewallRules(out).filter { it.app.equals(exe, ignoreCase = true) && it.inbound && it.active }
         val profile = windowsNetwork()?.category ?: "Public"
-        fun covers(p: String) = p.contains("Any", true) || p.contains(profile, true) || (profile.startsWith("Domain", true) && p.contains("Domain", true))
-        val relevant = rules.map { it.split('|') }.filter { covers(it[1]) }
+        val relevant = rules.filter { it.covers(profile) }
         return when {
-            relevant.any { it[0].equals("Block", true) } -> Firewall.BLOCKED
-            relevant.any { it[0].equals("Allow", true) } -> Firewall.ALLOWED
+            relevant.any { !it.allow } -> Firewall.BLOCKED
+            relevant.any { it.allow } -> Firewall.ALLOWED
             else -> Firewall.NO_RULE
         }
     }
+
+    /** One firewall rule as Windows stores it: "v2.30|Action=Allow|Active=TRUE|Dir=In|Profile=Public|App=…|Name=…|". */
+    internal data class FirewallRule(val allow: Boolean, val active: Boolean, val inbound: Boolean, val profiles: Set<String>, val app: String) {
+        /** No Profile entry means the rule applies on every type of network. */
+        fun covers(profile: String) = profiles.isEmpty() || profiles.any { it.equals(profile, true) } ||
+            (profile.startsWith("Domain", true) && profiles.any { it.equals("Domain", true) })
+    }
+
+    internal fun parseFirewallRules(regOutput: String): List<FirewallRule> = regOutput.lines().mapNotNull { line ->
+        val data = line.substringAfter("REG_SZ", "").trim().takeIf { it.startsWith("v2.") } ?: return@mapNotNull null
+        val fields = data.split('|').mapNotNull { f -> f.split('=', limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] } }
+        fun one(k: String) = fields.firstOrNull { it.first.equals(k, true) }?.second
+        FirewallRule(
+            allow = one("Action").equals("Allow", true),
+            active = one("Active").equals("TRUE", true),
+            inbound = one("Dir").equals("In", true),
+            profiles = fields.filter { it.first.equals("Profile", true) }.map { it.second }.toSet(),
+            app = one("App") ?: return@mapNotNull null,
+        )
+    }
+
+    private const val FIREWALL_RULES_KEY = """HKLM\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules"""
 
     /**
      * Applies [fix] with a Windows permission prompt (it changes system settings). Returns
      * false if it couldn't run or the prompt was declined.
      */
-    fun apply(fix: Fix): Boolean {
-        val script = when (fix) {
+    /** What happened when a fix was applied: [error] says why it didn't work. */
+    data class FixResult(val ok: Boolean, val error: String? = null)
+
+    fun apply(fix: Fix): FixResult {
+        val log = File.createTempFile("psphere-fix", ".log").apply { delete() }
+        val logPath = log.absolutePath.replace("'", "''")
+        val change = when (fix) {
             Fix.ALLOW -> {
-                val exe = exePath().replace("'", "''")
-                // Drop rules that block PSphere (left by a Cancel on Windows' own prompt), then allow it.
-                "Get-NetFirewallApplicationFilter -Program '$exe' -ErrorAction SilentlyContinue | Get-NetFirewallRule | Where-Object { \$_.Action -eq 'Block' } | Remove-NetFirewallRule\n" +
-                    "New-NetFirewallRule -DisplayName 'PSphere' -Description 'Lets your linked devices back up to this computer' -Direction Inbound -Program '$exe' -Action Allow -Profile Any | Out-Null"
+                val exe = exePath().takeIf { it.isNotBlank() }?.replace("'", "''") ?: return FixResult(false, "Couldn't tell where PSphere is installed.")
+                // Drop rules that block PSphere (left by a Cancel on Windows' own prompt) and any
+                // earlier "PSphere" rule for it, so pressing Allow twice doesn't pile up copies; then allow it.
+                "Get-NetFirewallApplicationFilter -Program '$exe' -ErrorAction SilentlyContinue | Get-NetFirewallRule | " +
+                    "Where-Object { \$_.Action -eq 'Block' -or \$_.DisplayName -eq 'PSphere' } | Remove-NetFirewallRule; " +
+                    "New-NetFirewallRule -DisplayName 'PSphere' -Description 'Lets your linked devices back up to this computer' -Direction Inbound -Program '$exe' -Action Allow -Profile Any -ErrorAction Stop | Out-Null"
             }
             Fix.MAKE_PRIVATE -> {
-                val net = windowsNetwork() ?: return false
-                "Set-NetConnectionProfile -InterfaceIndex ${net.index} -NetworkCategory Private"
+                val net = windowsNetwork() ?: return FixResult(false, "Couldn't read this computer's network settings.")
+                "Set-NetConnectionProfile -InterfaceIndex ${net.index} -NetworkCategory Private -ErrorAction Stop"
             }
         }
-        val file = File.createTempFile("psphere-fix", ".ps1")
+        // The change runs as administrator and writes "OK" or the error to a log we can read back.
+        val elevated = "try { $change; Set-Content -LiteralPath '$logPath' -Value 'OK' } catch { Set-Content -LiteralPath '$logPath' -Value (\"ERROR: \" + \$_.Exception.Message) }"
+        val elevatedEncoded = java.util.Base64.getEncoder().encodeToString(elevated.toByteArray(Charsets.UTF_16LE))
+        // Start-Process -Verb RunAs shows Windows' permission prompt; -Wait returns when the change is done.
+        val launcher = "try { Start-Process powershell -Verb RunAs -Wait -WindowStyle Hidden -ArgumentList '-NoProfile','-EncodedCommand','$elevatedEncoded'; 'STARTED' } catch { 'DECLINED' }"
         return try {
-            file.writeText(script)
-            // Start-Process -Verb RunAs shows Windows' permission prompt; -Wait returns when it's done.
-            val launcher = "try { \$p = Start-Process powershell -Verb RunAs -Wait -PassThru -WindowStyle Hidden " +
-                "-ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','\"${file.absolutePath}\"'; exit \$p.ExitCode } catch { exit 1 }"
-            val encoded = java.util.Base64.getEncoder().encodeToString(launcher.toByteArray(Charsets.UTF_16LE))
-            val p = ProcessBuilder("powershell", "-NoProfile", "-EncodedCommand", encoded).redirectErrorStream(true).start()
-            p.inputStream.readAllBytes()
-            p.waitFor(3, TimeUnit.MINUTES) && p.exitValue() == 0
-        } catch (e: Exception) {
-            false
+            val out = powershell(launcher, timeoutSeconds = 180) ?: return FixResult(false, "Windows didn't respond in time.")
+            if ("DECLINED" in out) return FixResult(false, "Windows didn't get permission. Try again and choose Yes.")
+            val result = runCatching { log.readText().trim() }.getOrDefault("")
+            when {
+                result == "OK" -> FixResult(true)
+                result.startsWith("ERROR:") -> FixResult(false, "Windows couldn't make the change: " + result.removePrefix("ERROR:").trim())
+                else -> FixResult(false, "Windows didn't make the change.")
+            }
         } finally {
-            file.delete()
+            log.delete()
         }
     }
 
@@ -202,11 +253,11 @@ object ConnectionCheck {
      * Runs [command] in PowerShell. It's passed encoded (Base64 of UTF-16LE), because Java's
      * Windows command line mangles the double quotes PowerShell commands are full of.
      */
-    private fun powershell(command: String): String? = runCatching {
+    private fun powershell(command: String, timeoutSeconds: Long = 20): String? = runCatching {
         val encoded = java.util.Base64.getEncoder().encodeToString(command.toByteArray(Charsets.UTF_16LE))
         val p = ProcessBuilder("powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded).redirectErrorStream(true).start()
         val out = p.inputStream.bufferedReader().readText()
-        if (!p.waitFor(20, TimeUnit.SECONDS)) { p.destroyForcibly(); return null }
+        if (!p.waitFor(timeoutSeconds, TimeUnit.SECONDS)) { p.destroyForcibly(); return null }
         out
     }.getOrNull()
 }

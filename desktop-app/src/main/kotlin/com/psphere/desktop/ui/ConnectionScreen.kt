@@ -95,9 +95,9 @@ internal fun VerdictCard(v: ConnectionCheck.Verdict, checking: Boolean, onOpenDe
                         val busy = applying == fix
                         val onClick = {
                             applying = fix; note = null
-                            Engine.applyFix(fix) { ok ->
+                            Engine.applyFix(fix) { r ->
                                 applying = null
-                                note = if (ok) null else "Windows didn't make the change. If it asked for permission, choose Yes."
+                                note = r.error
                             }
                         }
                         if (i == 0) Button(onClick = onClick, enabled = applying == null) { Text(if (busy) "Waiting for Windows…" else fix.label) }
