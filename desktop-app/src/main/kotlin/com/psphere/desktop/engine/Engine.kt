@@ -122,6 +122,7 @@ object Engine {
     }
 
     fun stop() {
+        shelfHidden.value.takeIf { it.isNotEmpty() }?.let { runCatching { node.shelfRemove(it) } }
         runCatching { discovery?.stop() }
         runCatching { server?.stop() }
         runCatching { node.save() }
@@ -272,6 +273,38 @@ object Engine {
 
     /** Tells the other devices about a change on the Shelf right away, in the background. */
     fun shareShelf() { scope.launch { runCatching { node.shelfSync(onlineLinked()) } } }
+
+    /** Items just removed on this device, hidden while the user can still undo. */
+    val shelfHidden = MutableStateFlow<Set<String>>(emptySet())
+    private var shelfRemoval: Job? = null
+    private const val SHELF_UNDO_MS = 4_500L
+
+    /**
+     * Hides [ids] now and removes them on every device once the undo time is up, so an undo
+     * never reaches the other devices. A newer removal makes the previous one final at once.
+     */
+    @Synchronized
+    fun removeShelfLater(ids: Collection<String>) {
+        val previous = shelfHidden.value
+        shelfRemoval?.cancel()
+        if (previous.isNotEmpty()) scope.launch { commitShelfRemoval(previous) }
+        val now = ids.toSet()
+        shelfHidden.value = now
+        shelfRemoval = scope.launch { delay(SHELF_UNDO_MS); commitShelfRemoval(now) }
+    }
+
+    @Synchronized
+    fun undoShelfRemoval() {
+        shelfRemoval?.cancel()
+        shelfRemoval = null
+        shelfHidden.value = emptySet()
+    }
+
+    private fun commitShelfRemoval(ids: Set<String>) {
+        node.shelfRemove(ids)
+        shelfHidden.update { it - ids }
+        shareShelf()
+    }
 
     // ── Settings ─────────────────────────────────────────────────────────────
 
