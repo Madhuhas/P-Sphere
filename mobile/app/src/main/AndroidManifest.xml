@@ -36,6 +36,31 @@
             </intent-filter>
         </activity>
 
+        <!-- "PSphere Shelf" in the Share menu: puts what's shared on the Shelf, with no screen of its own. -->
+        <activity
+            android:name=".ShareActivity"
+            android:exported="true"
+            android:label="PSphere Shelf"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+
+        <!-- The Copy button on a Shelf notification. -->
+        <receiver
+            android:name=".backup.ShelfCopyReceiver"
+            android:exported="false" />
+
         <service
             android:name=".backup.ReadyService"
             android:exported="false"
@@ -55,7 +80,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Shares a full-size photo/video from the viewer. Points at the core cache. -->
+        <!-- Shares a full-size photo/video from the viewer, and Shelf files. -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

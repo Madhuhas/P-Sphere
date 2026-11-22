@@ -11,11 +11,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Devices
+import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
@@ -26,6 +28,7 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -39,6 +42,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.psphere.MainActivity
 import com.psphere.backup.Prefs
 import com.psphere.ui.components.CodeDialog
 import com.psphere.ui.devices.DeviceScreen
@@ -50,10 +54,12 @@ import com.psphere.ui.sending.FolderScreen
 import com.psphere.ui.sending.FreeUpScreen
 import com.psphere.ui.sending.SendingScreen
 import com.psphere.ui.settings.SettingsScreen
+import com.psphere.ui.shelf.ShelfScreen
 import com.psphere.ui.setup.WelcomeScreen
 
 private const val ROUTE_WELCOME   = "welcome"
 private const val ROUTE_PHOTOS    = "photos"
+private const val ROUTE_SHELF     = "shelf"
 private const val ROUTE_DEVICES   = "devices"
 private const val ROUTE_DEVICE    = "device/{id}"
 private const val ROUTE_LINK      = "link"
@@ -68,6 +74,7 @@ private fun folderRoute(id: String?) = if (id == null) "folder" else "folder?id=
 
 private enum class Tab(val route: String, val label: String, val icon: ImageVector, val selectedIcon: ImageVector) {
     Photos   (ROUTE_PHOTOS,    "Photos",    Icons.Outlined.PhotoLibrary,  Icons.Default.PhotoLibrary),
+    Shelf    (ROUTE_SHELF,     "Shelf",     Icons.Outlined.Inventory2,    Icons.Default.Inventory2),
     Devices  (ROUTE_DEVICES,   "Devices",   Icons.Outlined.Devices,       Icons.Default.Devices),
     Sending  (ROUTE_SENDING,   "Sending",   Icons.Outlined.CloudUpload,   Icons.Default.CloudUpload),
     Receiving(ROUTE_RECEIVING, "Receiving", Icons.Outlined.CloudDownload, Icons.Default.CloudDownload),
@@ -80,12 +87,20 @@ private val TAB_ROUTES = Tab.entries.map { it.route }.toSet()
 private val RAIL_BREAKPOINT = 600.dp
 
 @Composable
-fun AppNavigation(navController: NavHostController = rememberNavController()) {
+fun AppNavigation(openRequest: String? = null, onOpened: () -> Unit = {}, navController: NavHostController = rememberNavController()) {
     val context = LocalContext.current
     val start = remember { if (Prefs.onboarded(context)) ROUTE_DEVICES else ROUTE_WELCOME }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
     val showNav = currentRoute in TAB_ROUTES
+
+    // Opened from a notification: go to that screen once the app is past setup.
+    LaunchedEffect(openRequest, currentRoute) {
+        if (openRequest == MainActivity.OPEN_SHELF && currentRoute != null && currentRoute != ROUTE_WELCOME) {
+            onOpened()
+            navController.navigateTab(ROUTE_SHELF)
+        }
+    }
 
     CodeDialog()
 
@@ -129,6 +144,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                         })
                     }
                     composable(ROUTE_PHOTOS) { PhotosScreen() }
+                    composable(ROUTE_SHELF) { ShelfScreen() }
                     composable(ROUTE_DEVICES) {
                         DevicesScreen(
                             onOpenDevice = { navController.navigate(deviceRoute(it)) },

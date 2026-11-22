@@ -2,4 +2,6 @@
 <paths>
     <!-- The core's full-size view cache: filesDir/core/cache/<hash>. -->
     <files-path name="core-cache" path="core/cache/" />
+    <!-- Shelf files copied under their real names, for opening and sharing: cacheDir/shelf-open/. -->
+    <cache-path name="shelf-open" path="shelf-open/" />
 </paths>

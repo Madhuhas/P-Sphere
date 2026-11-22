@@ -107,6 +107,7 @@ object Engine {
         node = Node(File(app.filesDir, "core"), defaultDeviceName(app), AndroidPlatform(app))
         node.onChange = { bump() }
         node.codeConfirmer = CodeConfirmer { name, code -> askUser(name, code) }
+        node.onShelfAdded = { added -> ShelfNotify.show(app, added) }
 
         val srv = runCatching { NodeServer(node, PREFERRED_PORT).also { it.start() } }
             .getOrElse { NodeServer(node, 0).also { it.start() } }
@@ -248,6 +249,11 @@ object Engine {
             codeRequest.value = null
         }
     }
+
+    // ── Shelf ────────────────────────────────────────────────────────────────
+
+    /** Tells the other devices about a change on the Shelf right away, in the background. */
+    fun shareShelf() { scope.launch { runCatching { node.shelfSync(onlineLinked()) } } }
 
     // ── Settings ─────────────────────────────────────────────────────────────
 
