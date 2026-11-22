@@ -67,10 +67,14 @@ fun <T> rememberEngineData(initial: T, compute: () -> T): State<T> {
 }
 
 /**
- * Asks for a folder with Windows' folder picker. Blocks until the user chooses, like any
- * Windows dialog. Returns the chosen folder's path, or null if they cancelled.
+ * Asks for a folder. On Windows this is the standard Windows folder picker; elsewhere, or if that
+ * can't be shown, a Swing chooser. Blocks until the user chooses, like any dialog (the app keeps
+ * repainting meanwhile). Returns the chosen folder's path, or null if they cancelled.
  */
 fun pickFolder(title: String, startAt: String? = null): String? {
+    if (System.getProperty("os.name").startsWith("Windows")) {
+        runCatching { com.psphere.desktop.engine.WindowsFolderPicker.pick(title, startAt) }.onSuccess { return it }
+    }
     runCatching { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()) }
     val chooser = JFileChooser(startAt?.let { File(it) }?.takeIf { it.isDirectory }).apply {
         dialogTitle = title

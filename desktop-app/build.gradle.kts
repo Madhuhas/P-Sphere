@@ -71,6 +71,8 @@ compose.desktop {
         mainClass = "com.psphere.desktop.MainKt"
         // For testing: gradlew run -PdataDir=<folder> keeps the real %LOCALAPPDATA%\PSphere untouched.
         (project.findProperty("dataDir") as String?)?.let { jvmArgs("-Dpsphere.dataDir=$it") }
+        // The Windows folder picker calls Windows directly (WindowsFolderPicker); this allows it without a warning.
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
         nativeDistributions {
             // Each format is built on its own system: MSI on Windows, DEB/RPM on Linux, DMG on macOS.
             targetFormats(TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Rpm, TargetFormat.Dmg)
