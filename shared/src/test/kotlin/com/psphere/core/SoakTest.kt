@@ -81,9 +81,13 @@ class SoakTest {
 
         fun mutate(d: Device) {
             val files = d.source.walkTopDown().filter { it.isFile }.toList()
+            // Every file is stored three times (here and on two backups), so keep the total in
+            // bounds: past the cap, files are deleted instead of added. Never fills the drive.
+            val stored = files.sumOf { it.length() }
+            if (stored > SOURCE_CAP_BYTES) { files.randomOrNull(rnd)?.delete(); changes++; return }
             when (rnd.nextInt(10)) {
                 in 0..3 -> { // new file, mostly small, sometimes big
-                    val size = if (rnd.nextInt(20) == 0) rnd.nextInt(5_000_000, 30_000_000) else rnd.nextInt(1, 400_000)
+                    val size = if (rnd.nextInt(20) == 0) rnd.nextInt(2_000_000, 8_000_000) else rnd.nextInt(1, 400_000)
                     val f = File(d.source, "${if (rnd.nextBoolean()) "sub${rnd.nextInt(5)}/" else ""}f${round}-${rnd.nextInt(100000)}.bin")
                     f.parentFile.mkdirs(); f.writeBytes(rnd.nextBytes(size))
                 }
@@ -93,6 +97,8 @@ class SoakTest {
                 8 -> d.node.shelfAddFile("shelf-$round.bin", rnd.nextBytes(rnd.nextInt(1, 2_000_000)).inputStream())
                 9 -> d.node.shelfItems().randomOrNull(rnd)?.let { d.node.shelfRemove(listOf(it.item.id)) }
             }
+            // Keep the Shelf to a sensible size as well.
+            if (d.node.shelfItems().size > 120) d.node.shelfItems().last().let { d.node.shelfRemove(listOf(it.item.id)) }
             changes++
         }
 
@@ -149,6 +155,9 @@ class SoakTest {
 
         while (System.currentTimeMillis() < end) {
             round++
+            // Old versions of changed files are kept for 30 days on two devices, so data still grows:
+            // stop early rather than ever filling the drive.
+            if (tmp.root.usableSpace < MIN_FREE_BYTES) { say("Stopping early: under ${MIN_FREE_BYTES / 1_073_741_824} GB free on the drive"); break }
             // Someone sometimes leaves the network for a while, or comes back.
             if (rnd.nextInt(15) == 0) devices.filter { it.online }.randomOrNull(rnd)?.takeIf { devices.count { d -> d.online } > 1 }?.goAway()
             if (rnd.nextInt(6) == 0) devices.filter { !it.online }.randomOrNull(rnd)?.comeBack()
@@ -170,5 +179,11 @@ class SoakTest {
         say("Soak finished. Heap after each check (MB): $heap")
         problems.forEach { say("PROBLEM: $it") }
         assertTrue("Soak found ${problems.size} problems; see ${log.path}", problems.isEmpty())
+    }
+
+    companion object {
+        /** Per device. With three copies of everything, the whole test stays under about 1 GB. */
+        private const val SOURCE_CAP_BYTES = 100L * 1024 * 1024
+        private const val MIN_FREE_BYTES = 3L * 1024 * 1024 * 1024
     }
 }

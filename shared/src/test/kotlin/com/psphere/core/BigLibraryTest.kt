@@ -13,6 +13,7 @@ import kotlin.random.Random
 /**
  * A big library: many files and a few large ones. Times the first scan and backup, then a rescan
  * and a sync with nothing new, and checks memory. Skipped unless given: -Dbig.files=20000
+ * (optionally -Dbig.videoMb=150 for the size of each of the 3 large files).
  */
 class BigLibraryTest {
     @get:Rule val tmp = TemporaryFolder()
@@ -30,7 +31,8 @@ class BigLibraryTest {
                 val backups = laptop.receiveInto()
                 val camera = phone.folder("Camera")
                 repeat(n!!) { i -> File(camera, "y${i % 7}/m${i % 12}/IMG_$i.jpg").apply { parentFile.mkdirs(); writeBytes(rnd.nextBytes(rnd.nextInt(2_000, 20_000))) } }
-                repeat(3) { i -> File(camera, "VID_$i.mp4").writeBytes(rnd.nextBytes(150_000_000)) }
+                val videoBytes = (System.getProperty("big.videoMb")?.toIntOrNull() ?: 150) * 1_000_000
+                repeat(3) { i -> File(camera, "VID_$i.mp4").writeBytes(rnd.nextBytes(videoBytes)) }
                 phone.backUp("Camera", camera, listOf(laptop), Include.ALL)
 
                 var t = System.nanoTime()
