@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.FolderCopy
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
@@ -56,7 +57,8 @@ fun WelcomeScreen(onDone: () -> Unit) {
                 )
                 Point(Icons.Default.Devices, "Link your devices", "Your phone, tablet and laptop back up to each other.")
                 Point(Icons.Default.FolderCopy, "Choose folders", "Pick which folders go to which device.")
-                Point(Icons.Default.PhotoLibrary, "See everything anywhere", "Coming next: one photo library on every device, and Free up space.")
+                Point(Icons.Default.PhotoLibrary, "One photo library", "See the photos from all your devices, and free up space on your phone.")
+                Point(Icons.Default.Inventory2, "Shelf", "Put text, links and files on one device, pick them up on another.")
                 Point(Icons.Default.Lock, "Private", "Only your linked devices can connect, and everything is encrypted.")
 
                 Spacer(Modifier.height(4.dp))
