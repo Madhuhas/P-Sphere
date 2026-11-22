@@ -18,8 +18,9 @@ android {
         // 2.1: TLS 1.3 preferred, one-sided-link fix (protocol v4, not compatible with 2.0), check for updates.
         // 2.2: Photos library + Free up space (step 4); unlink purges the device's photos; reinstall & undecodable-file fixes. Still protocol v4 (links with 2.1).
         // 2.3: toolchain upgrade (AGP 9, Kotlin 2.4), Photos hides items no linked device can provide. Still protocol v4.
-        versionCode = 7
-        versionName = "2.4"
+        // 2.4: Smart photos (optional, on the computer), new Photos timeline. 2.5: Shelf. Still protocol v4 (links with 2.1+).
+        versionCode = 8
+        versionName = "2.5"
     }
 
     // Release signing: put storeFile/storePassword/keyAlias/keyPassword in mobile/keystore.properties

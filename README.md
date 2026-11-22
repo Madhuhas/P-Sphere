@@ -73,7 +73,7 @@ folders too. Runs in the tray.
 </table>
 </div>
 
-> **Early development.** Version 2.4 is a pre-release. Both apps are tested on real devices, but expect rough edges, and please [tell us what breaks](https://github.com/Madhuhas/P-Sphere/issues/new?template=bug_report.yml).
+> **Early development.** Version 2.5 is a pre-release. Both apps are tested on real devices, but expect rough edges, and please [tell us what breaks](https://github.com/Madhuhas/P-Sphere/issues/new?template=bug_report.yml).
 
 ---
 
@@ -101,6 +101,10 @@ The Photos tab shows the photos and videos from all your linked devices in one t
 An optional download on the computer (about 200 MB). It looks through your photos once and then lets you search by describing them ("dog on the beach"), see them by the people in them and where they were taken, and find words written in them, like a receipt. Your phone and tablet use it too while the computer is on, and keep People and Places for when you're away. Everything runs on your own computer; nothing is sent anywhere.
 
 The timeline itself has date headings, "1 year ago" memories and pinch to zoom on every device, with no download.
+
+## Shelf
+
+A shared board for all your linked devices. Put text, a link or a file on the Shelf on one device and pick it up on another: copy it, open it or save it. On Android, share from any app and pick **PSphere Shelf**; on the computer, drag files in or press Ctrl+V. Small files are copied over straight away, bigger ones when you open them. Nothing is cleared on its own; PSphere just lets you know when something has been there for more than a week.
 
 ## Free up space
 
