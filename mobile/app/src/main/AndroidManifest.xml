@@ -20,7 +20,7 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Folders are picked with the system folder picker, so no storage permissions are needed.
-         Cleartext stays allowed for the parked PSphere Core server screens (plain http on the LAN). -->
+         No plain http: devices talk over their own TLS connections, and update checks use https. -->
     <application
         android:name=".PSphereApp"
         android:allowBackup="false"
@@ -29,7 +29,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.PSphere"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
 
         <activity
             android:name=".MainActivity"
