@@ -53,6 +53,7 @@ import com.psphere.ui.receiving.ReceivingScreen
 import com.psphere.ui.sending.FolderScreen
 import com.psphere.ui.sending.FreeUpScreen
 import com.psphere.ui.sending.SendingScreen
+import com.psphere.ui.settings.ConnectionScreen
 import com.psphere.ui.settings.SettingsScreen
 import com.psphere.ui.shelf.ShelfScreen
 import com.psphere.ui.setup.WelcomeScreen
@@ -68,6 +69,7 @@ private const val ROUTE_FOLDER    = "folder?id={id}"
 private const val ROUTE_RECEIVING = "receiving"
 private const val ROUTE_FREEUP    = "freeup"
 private const val ROUTE_SETTINGS  = "settings"
+private const val ROUTE_CONNECTION = "connection"
 
 private fun deviceRoute(id: String) = "device/$id"
 private fun folderRoute(id: String?) = if (id == null) "folder" else "folder?id=$id"
@@ -150,6 +152,7 @@ fun AppNavigation(openRequest: String? = null, onOpened: () -> Unit = {}, navCon
                             onOpenDevice = { navController.navigate(deviceRoute(it)) },
                             onLink = { navController.navigate(ROUTE_LINK) },
                             onOpenSending = { navController.navigateTab(ROUTE_SENDING) },
+                            onCheckConnection = { navController.navigate(ROUTE_CONNECTION) },
                         )
                     }
                     composable(ROUTE_DEVICE) { entry ->
@@ -176,8 +179,10 @@ fun AppNavigation(openRequest: String? = null, onOpened: () -> Unit = {}, navCon
                         SettingsScreen(
                             onOpenDevice = { navController.navigate(deviceRoute(it)) },
                             onLink = { navController.navigate(ROUTE_LINK) },
+                            onCheckConnection = { navController.navigate(ROUTE_CONNECTION) },
                         )
                     }
+                    composable(ROUTE_CONNECTION) { ConnectionScreen(onBack = { navController.popBackStack() }) }
                 }
             }
         }

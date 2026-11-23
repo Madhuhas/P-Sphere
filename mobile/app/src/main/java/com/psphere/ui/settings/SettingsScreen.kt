@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.WifiFind
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -59,7 +60,7 @@ private val INTERVALS = listOf(1, 3, 6, 12, 24)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
+fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onCheckConnection: () -> Unit = {}) {
     val context = LocalContext.current
     val state by Engine.state.collectAsState()
     val cs = MaterialTheme.colorScheme
@@ -128,6 +129,8 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit) {
                     }
                     if (devices.isNotEmpty()) HorizontalDivider(color = cs.outlineVariant)
                     NavRow(Icons.Default.Devices, "Link a device", "Scan or show a code") { onLink() }
+                    HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
+                    NavRow(Icons.Default.WifiFind, "Check connection", "Find out why a device can't connect") { onCheckConnection() }
                 }
 
                 AboutLinks()

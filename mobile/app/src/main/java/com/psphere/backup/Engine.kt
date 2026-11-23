@@ -326,6 +326,21 @@ object Engine {
         }
     }
 
+    // ── Connection check ─────────────────────────────────────────────────────
+
+    /** The latest connection check, or null before the first one. */
+    val connection = MutableStateFlow<ConnectionCheck.Result?>(null)
+    val checkingConnection = MutableStateFlow(false)
+
+    /** Runs the connection check in the background. */
+    fun checkConnection() {
+        if (!checkingConnection.compareAndSet(false, true)) return
+        scope.launch {
+            try { connection.value = runCatching { ConnectionCheck.run(app) }.getOrNull() ?: connection.value }
+            finally { checkingConnection.value = false }
+        }
+    }
+
     // ── Settings ─────────────────────────────────────────────────────────────
 
     fun rename(name: String) {
@@ -336,7 +351,7 @@ object Engine {
 
     fun unlink(id: String) { node.unlink(id); bump() }
 
-    private fun localAddresses(): List<String> = runCatching {
+    fun localAddresses(): List<String> = runCatching {
         NetworkInterface.getNetworkInterfaces().toList()
             .filter { it.isUp && !it.isLoopback }
             .flatMap { it.inetAddresses.toList() }

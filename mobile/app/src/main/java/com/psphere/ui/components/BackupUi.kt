@@ -19,6 +19,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -100,7 +102,7 @@ fun plural(n: Int, word: String) = "%,d $word${if (n != 1) "s" else ""}".format(
 
 /** A card listing problems or things the user should know. */
 @Composable
-fun NotesCard(notes: List<String>, modifier: Modifier = Modifier) {
+fun NotesCard(notes: List<String>, modifier: Modifier = Modifier, action: Pair<String, () -> Unit>? = null) {
     if (notes.isEmpty()) return
     val warn = PSphereTheme.status
     Card(
@@ -112,6 +114,11 @@ fun NotesCard(notes: List<String>, modifier: Modifier = Modifier) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
                     Icon(Icons.Default.WarningAmber, null, modifier = Modifier.size(18.dp).padding(top = 1.dp))
                     Text(n, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            action?.let { (label, onClick) ->
+                TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 28.dp, vertical = 0.dp), colors = ButtonDefaults.textButtonColors(contentColor = warn.onWarningContainer)) {
+                    Text(label, fontWeight = FontWeight.SemiBold)
                 }
             }
         }

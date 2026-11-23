@@ -100,7 +100,7 @@ internal fun deviceRows(): List<DeviceRow> {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenSending: () -> Unit) {
+fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenSending: () -> Unit, onCheckConnection: () -> Unit = {}) {
     val state by Engine.state.collectAsState()
     val overview by rememberEngineData(Overview()) {
         Overview(deviceRows(), Engine.node.ownRules().isNotEmpty(), loaded = true)
@@ -131,7 +131,9 @@ fun DevicesScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onOpenSend
                     StatusCard(state.activity, overview, onBackUp = { Engine.scope.launch { Engine.backUp() } }, onOpenSending = onOpenSending)
 
                     val notes = state.results.values.flatMap { r -> listOfNotNull(r.error) + r.notes }.distinct() + state.scanErrors
-                    NotesCard(notes)
+                    // A device couldn't be reached: offer the check that says why.
+                    val unreachable = state.results.values.any { it.error?.let { e -> "is on this Wi-Fi but didn't answer" in e || e.startsWith("Couldn't reach") } == true }
+                    NotesCard(notes, action = if (unreachable) "Check connection" to onCheckConnection else null)
 
                     SectionLabel("My devices")
                     overview.rows.forEach { row ->
