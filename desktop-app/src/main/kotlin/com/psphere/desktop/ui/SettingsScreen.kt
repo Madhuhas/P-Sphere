@@ -131,7 +131,7 @@ fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onCheckCo
                 HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
                 InfoRow(Icons.Default.Folder, "PSphere's own data") { OpenFolderButton(Engine.dataDir.path) }
                 HorizontalDivider(Modifier.padding(start = 56.dp), color = cs.outlineVariant)
-                InfoBlock(Icons.Default.Lock, "Local only", "PSphere talks only to your linked devices on your own network, encrypted. It goes online only when you tap Check for updates or download Smart search.")
+                InfoBlock(Icons.Default.Lock, "Local only", "PSphere talks only to your linked devices on your own network, encrypted. It goes online only when you check for updates or update, or download Smart search.")
             }
             AboutFooter()
         }

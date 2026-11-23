@@ -39,6 +39,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Back from "Install unknown apps": carry on with the update.
+        com.psphere.backup.AppUpdate.onResume(this)
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleOpen(intent)

@@ -11,6 +11,7 @@ class PSphereApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Notifications.ensureChannel(this)
+        com.psphere.backup.AppUpdate.applyTestSetting()
         Engine.startInBackground(this)
         BackupScheduler.schedule(this)
         if (Prefs.stayReady(this)) runCatching { ReadyService.start(this) }

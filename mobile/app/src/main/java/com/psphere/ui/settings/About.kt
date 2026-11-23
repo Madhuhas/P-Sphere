@@ -62,6 +62,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.psphere.BuildConfig
 import com.psphere.core.update.UpdateCheck
+import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.platform.LocalContext
+import com.psphere.backup.AppUpdate
+import com.psphere.ui.components.formatBytes
 import com.psphere.ui.components.SectionLabel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -149,54 +158,87 @@ private fun LinkRow(icon: ImageVector, title: String, sub: String, onClick: () -
 }
 
 /**
- * "Check for updates" row. This is the only place the app reaches the internet, and only when
- * tapped: it asks GitHub for the newest release, compares it, and offers the download if newer.
+ * "Check for updates" row. With [AppUpdate] this is the only place the app reaches the internet,
+ * and only when tapped: it asks GitHub for the newest release and, if newer, offers to update.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CheckForUpdatesRow() {
     val uri = LocalUriHandler.current
-    val scope = rememberCoroutineScope()
-    var checking by remember { mutableStateOf(false) }
-    var status by remember { mutableStateOf<UpdateCheck.Status?>(null) }
+    val context = LocalContext.current
+    val state by AppUpdate.state.collectAsState()
+    val cs = MaterialTheme.colorScheme
     val current = BuildConfig.VERSION_NAME
+    val s = state
+    val busy = s is AppUpdate.State.Checking || s is AppUpdate.State.Downloading
 
-    val sub = when (val s = status) {
-        is UpdateCheck.Status.Available -> "Update available: ${s.version} · tap to download"
-        is UpdateCheck.Status.UpToDate -> "You're on the latest version ($current)"
-        is UpdateCheck.Status.Failed -> s.reason
-        else -> if (checking) "Checking…" else "You're on version $current"
+    val sub = when (s) {
+        is AppUpdate.State.Available -> "Version ${s.status.version} is available"
+        is AppUpdate.State.Downloading -> "Downloading version ${s.status.version} · ${formatBytes(s.done)} of ${formatBytes(s.total)}"
+        is AppUpdate.State.NeedsPermission -> "Downloaded. Allow PSphere to install updates, then come back here"
+        is AppUpdate.State.Installing -> "Tap Install on Android's screen to finish"
+        is AppUpdate.State.DownloadFailed -> s.reason
+        is AppUpdate.State.UpToDate -> "You're on the latest version ($current)"
+        is AppUpdate.State.Failed -> s.reason
+        AppUpdate.State.Checking -> "Checking…"
+        AppUpdate.State.Idle -> "You're on version $current"
+    }
+    val available = when (s) {
+        is AppUpdate.State.Available -> s.status
+        is AppUpdate.State.Downloading -> s.status
+        is AppUpdate.State.NeedsPermission -> s.status
+        is AppUpdate.State.Installing -> s.status
+        is AppUpdate.State.DownloadFailed -> s.status
+        else -> null
     }
 
-    val onClick: () -> Unit = {
-        val s = status
-        if (s is UpdateCheck.Status.Available) {
-            uri.openUri(s.url)
-        } else {
-            checking = true
-            status = null
-            scope.launch {
-                val result = withContext(Dispatchers.IO) { UpdateCheck.check(current) }
-                status = result
-                checking = false
+    Column {
+        Row(
+            Modifier.fillMaxWidth().clickable(enabled = !busy && available == null, role = Role.Button) { AppUpdate.check() }.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Icon(Icons.Default.SystemUpdateAlt, null, tint = cs.primary)
+            Column(Modifier.weight(1f)) {
+                Text("Check for updates", style = MaterialTheme.typography.bodyLarge)
+                Text(sub, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            }
+            when {
+                s is AppUpdate.State.Checking -> CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                available == null -> Icon(Icons.Default.Refresh, null, tint = cs.onSurfaceVariant, modifier = Modifier.size(18.dp))
             }
         }
-    }
-
-    Row(
-        Modifier.fillMaxWidth().clickable(enabled = !checking, role = Role.Button, onClick = onClick).padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Icon(Icons.Default.SystemUpdateAlt, null, tint = MaterialTheme.colorScheme.primary)
-        Column(Modifier.weight(1f)) {
-            Text("Check for updates", style = MaterialTheme.typography.bodyLarge)
-            Text(sub, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        when {
-            checking -> CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-            status is UpdateCheck.Status.Available ->
-                Icon(Icons.AutoMirrored.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-            else ->
-                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        if (available != null) {
+            val apk = available.assetEndingWith(".apk")
+            Column(Modifier.padding(start = 56.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                val notes = remember(available) { UpdateCheck.plainNotes(available.notes) }
+                if (notes.isNotBlank()) {
+                    Text("What's new", style = MaterialTheme.typography.labelLarge)
+                    Text(notes, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                }
+                when {
+                    s is AppUpdate.State.Downloading -> {
+                        LinearProgressIndicator(progress = { if (s.total > 0) (s.done.toFloat() / s.total).coerceIn(0f, 1f) else 0f }, modifier = Modifier.fillMaxWidth())
+                        OutlinedButton(onClick = { AppUpdate.cancel() }) { Text("Cancel") }
+                    }
+                    s is AppUpdate.State.NeedsPermission -> {
+                        Button(onClick = { AppUpdate.openPermission(context) }) { Text("Allow") }
+                        Text("Android asks once: turn on the switch for PSphere (“Allow apps from this source”), then press Back.", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                    }
+                    apk == null -> Button(onClick = { uri.openUri(available.url) }) { Text("Download") }
+                    else -> {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = { AppUpdate.update(context, available) }) {
+                                Text(when (s) { is AppUpdate.State.DownloadFailed -> "Try again"; is AppUpdate.State.Installing -> "Install again"; else -> "Update" })
+                            }
+                            OutlinedButton(onClick = { uri.openUri(available.url) }) { Text("Release page") }
+                        }
+                        Text(
+                            "Downloads the update (${formatBytes(apk.size)}) from GitHub and checks it. Android then asks you to tap Install. Your links and backups stay as they are.",
+                            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
         }
     }
 }

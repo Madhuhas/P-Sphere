@@ -26,12 +26,16 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SystemUpdateAlt
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +64,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.psphere.core.update.UpdateCheck
+import com.psphere.desktop.engine.AppUpdate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -148,56 +153,81 @@ private fun LinkRow(icon: ImageVector, title: String, sub: String, onClick: () -
 }
 
 /**
- * "Check for updates" row. This is the only place the app reaches the internet, and only when
- * clicked: it asks GitHub for the newest release, compares it, and offers the download if newer.
+ * "Check for updates" row. With [AppUpdate] this is the only place the app reaches the internet,
+ * and only when clicked: it asks GitHub for the newest release and, if newer, offers to update.
  */
 @Composable
 private fun CheckForUpdatesRow() {
     val uri = LocalUriHandler.current
-    val scope = rememberCoroutineScope()
-    var checking by remember { mutableStateOf(false) }
-    var status by remember { mutableStateOf<UpdateCheck.Status?>(null) }
+    val state by AppUpdate.state.collectAsState()
+    val cs = MaterialTheme.colorScheme
+    val s = state
+    val busy = s is AppUpdate.State.Checking || s is AppUpdate.State.Downloading || s is AppUpdate.State.Installing
 
-    val sub = when (val s = status) {
-        is UpdateCheck.Status.Available -> "Update available: ${s.version} · click to download"
-        is UpdateCheck.Status.UpToDate -> "You're on the latest version ($APP_VERSION)"
-        is UpdateCheck.Status.Failed -> s.reason
-        else -> if (checking) "Checking…" else "You're on version $APP_VERSION"
+    val sub = when (s) {
+        is AppUpdate.State.Available -> "Version ${s.status.version} is available"
+        is AppUpdate.State.Downloading -> "Downloading version ${s.status.version} · ${mb(s.done)} of ${mb(s.total)}"
+        is AppUpdate.State.DownloadFailed -> s.reason
+        AppUpdate.State.Installing -> "Installing… PSphere will close and open again"
+        is AppUpdate.State.UpToDate -> "You're on the latest version ($APP_VERSION)"
+        is AppUpdate.State.Failed -> s.reason
+        AppUpdate.State.Checking -> "Checking…"
+        AppUpdate.State.Idle -> "You're on version $APP_VERSION"
     }
 
-    val onClick: () -> Unit = {
-        val s = status
-        if (s is UpdateCheck.Status.Available) {
-            uri.openUri(s.url)
-        } else {
-            checking = true
-            status = null
-            scope.launch {
-                val result = withContext(Dispatchers.IO) { UpdateCheck.check(APP_VERSION) }
-                status = result
-                checking = false
+    Column {
+        Row(
+            Modifier.fillMaxWidth().clickable(enabled = !busy && s !is AppUpdate.State.Available && s !is AppUpdate.State.DownloadFailed, role = Role.Button) { AppUpdate.check() }.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Icon(Icons.Default.SystemUpdateAlt, null, tint = cs.primary)
+            Column(Modifier.weight(1f)) {
+                Text("Check for updates", style = MaterialTheme.typography.bodyLarge)
+                Text(sub, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            }
+            when (s) {
+                AppUpdate.State.Checking, AppUpdate.State.Installing -> CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                is AppUpdate.State.Available, is AppUpdate.State.Downloading, is AppUpdate.State.DownloadFailed -> {}
+                else -> Icon(Icons.Default.Refresh, null, tint = cs.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            }
+        }
+        val available = when (s) {
+            is AppUpdate.State.Available -> s.status
+            is AppUpdate.State.Downloading -> s.status
+            is AppUpdate.State.DownloadFailed -> s.status
+            else -> null
+        }
+        if (available != null) {
+            Column(Modifier.padding(start = 56.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                val notes = remember(available) { UpdateCheck.plainNotes(available.notes) }
+                if (notes.isNotBlank()) {
+                    Text("What's new", style = MaterialTheme.typography.labelLarge)
+                    Text(notes, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                }
+                if (s is AppUpdate.State.Downloading) {
+                    LinearProgressIndicator(progress = { if (s.total > 0) (s.done.toFloat() / s.total).coerceIn(0f, 1f) else 0f }, modifier = Modifier.fillMaxWidth())
+                    OutlinedButton(onClick = { AppUpdate.cancel() }) { Text("Cancel") }
+                } else {
+                    val oneClick = (s as? AppUpdate.State.Available)?.oneClick ?: (s is AppUpdate.State.DownloadFailed)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (oneClick) {
+                            Button(onClick = { AppUpdate.update(available) }) { Text(if (s is AppUpdate.State.DownloadFailed) "Try again" else "Update") }
+                            OutlinedButton(onClick = { uri.openUri(available.url) }) { Text("Release page") }
+                        } else {
+                            Button(onClick = { uri.openUri(available.url) }) { Text("Download") }
+                        }
+                    }
+                    if (oneClick) Text(
+                        "Downloads the update (${mb(available.assetEndingWith(".msi")?.size ?: 0)}) from GitHub, checks it, then PSphere closes for a moment and opens again. Your links and backups stay as they are.",
+                        style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
-
-    Row(
-        Modifier.fillMaxWidth().clickable(enabled = !checking, role = Role.Button, onClick = onClick).padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Icon(Icons.Default.SystemUpdateAlt, null, tint = MaterialTheme.colorScheme.primary)
-        Column(Modifier.weight(1f)) {
-            Text("Check for updates", style = MaterialTheme.typography.bodyLarge)
-            Text(sub, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        when {
-            checking -> CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-            status is UpdateCheck.Status.Available ->
-                Icon(Icons.AutoMirrored.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-            else ->
-                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-        }
-    }
 }
+
+private fun mb(bytes: Long): String = if (bytes < 1_000_000) "%.1f MB".format(bytes / 1e6) else "${(bytes + 500_000) / 1_000_000} MB"
 
 // The badge from kadhai.pages.dev/badges, drawn here so it needs no image file and no internet.
 private val steam = PathParser().parsePathString("M23 25c-3-3 3-6 0-9s3-6 0-9M32 25c-3-3 3-6 0-9s3-6 0-9M41 25c-3-3 3-6 0-9s3-6 0-9").toPath()

@@ -16,6 +16,8 @@
     <!-- Ringing this phone when a linked device is looking for it. -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- One-tap update: hands a downloaded, checked PSphere APK to Android's installer. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Folders are picked with the system folder picker, so no storage permissions are needed.
          Cleartext stays allowed for the parked PSphere Core server screens (plain http on the LAN). -->

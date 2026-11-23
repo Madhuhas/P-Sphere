@@ -4,4 +4,6 @@
     <files-path name="core-cache" path="core/cache/" />
     <!-- Shelf files copied under their real names, for opening and sharing: cacheDir/shelf-open/. -->
     <cache-path name="shelf-open" path="shelf-open/" />
+    <!-- A downloaded update, handed to Android's installer: cacheDir/updates/. -->
+    <cache-path name="updates" path="updates/" />
 </paths>

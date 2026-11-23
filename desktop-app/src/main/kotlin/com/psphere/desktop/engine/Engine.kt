@@ -93,6 +93,8 @@ object Engine {
     /** Starts the engine on the calling thread. Blocks for a few seconds; never call it on the UI thread. */
     @Synchronized
     fun start(dataDir: File) {
+        // Developer setting: read releases from a local copy, to test updating.
+        System.getenv("PSPHERE_UPDATE_API")?.takeIf { it.isNotBlank() }?.let { com.psphere.core.update.UpdateCheck.apiUrl = it }
         if (isStarted) return
         this.dataDir = dataDir
         prefs = DesktopPrefs(File(dataDir, "desktop.properties"))
