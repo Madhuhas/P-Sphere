@@ -1,0 +1,54 @@
+name: Virus scan
+
+# Scans every file of a release on VirusTotal and adds the results to the release notes,
+# where the website's Security page reads them. Runs when a release is published; run it
+# again by hand (Actions > Virus scan > Run workflow) after attaching more files.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to scan, for example v2.6
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: virustotal-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      VT_API_KEY: ${{ secrets.VT_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the API key is set
+        run: |
+          if [ -z "$VT_API_KEY" ]; then echo "::error::Add a VT_API_KEY secret (a free VirusTotal API key)"; exit 1; fi
+      - name: Download the release files
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir files
+      - name: Scan on VirusTotal
+        run: |
+          pip install --quiet requests
+          python .github/scripts/virustotal.py files > scan.md
+          cat scan.md
+      - name: Add the results to the release notes
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body -q .body > body.md
+          python - <<'EOF'
+          import re
+          body = open("body.md", encoding="utf-8").read()
+          scan = open("scan.md", encoding="utf-8").read().strip()
+          # Replace an earlier scan, if any; otherwise add it at the end.
+          body = re.sub(r"\n*<!-- virustotal -->.*?<!-- /virustotal -->", "", body, flags=re.S).rstrip()
+          open("body.md", "w", encoding="utf-8").write(body + "\n\n" + scan + "\n")
+          EOF
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file body.md
