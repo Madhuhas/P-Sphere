@@ -1,5 +1,6 @@
 package com.psphere.desktop.engine
 
+import com.psphere.core.net.Knock
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -81,12 +82,18 @@ object ConnectionCheck {
         // finding devices by their announcements is the part some networks get in the way of.
         val candidates = linked.filter { it.id in online || it.lastHost != null }.map { it.id }
         val reachable = candidates.filter { node.canReach(it, online) }
+        // Devices announced on this network that didn't answer, and what a plain knock said.
+        val silent = LinkedHashMap<String, Knock>()
         candidates.forEach { id ->
             val name = node.device(id)?.name ?: "A device"
             steps += when {
                 id in reachable && id in online -> Step("Reach $name", "Connected", State.OK)
                 id in reachable -> Step("Reach $name", "Connected at its last known address (it wasn't found by its announcements)", State.OK)
-                id in online -> Step("Reach $name", "It's on this network but didn't answer", State.WARN)
+                id in online -> when (Knock.at(online.getValue(id)).also { silent[name] = it }) {
+                    Knock.REFUSED -> Step("Reach $name", "$name is on this network, but PSphere isn't running on it", State.WARN)
+                    Knock.GONE -> Step("Reach $name", "$name doesn't answer at all: it may be off or asleep", State.INFO)
+                    Knock.SILENT -> Step("Reach $name", "$name didn't answer: PSphere may be closed on it", State.WARN)
+                }
                 else -> Step("Reach $name", "Not at its last known address: it may be off, or on another network", State.INFO)
             }
         }
@@ -101,14 +108,24 @@ object ConnectionCheck {
             else Step("$name can reach this computer", "It tried and was blocked", State.FAIL)
             break
         }
-        if (incoming == null && linked.any { node.lastIncomingFrom(it.id) != null }) {
+        val lastIn = linked.mapNotNull { d -> node.lastIncomingFrom(d.id)?.let { d.name to it } }.maxByOrNull { it.second }
+        if (incoming == null && lastIn != null) {
             incoming = true
-            steps += Step("Your devices can reach this computer", "A linked device connected here recently", State.OK)
+            val mins = ((System.currentTimeMillis() - lastIn.second) / 60_000).toInt()
+            steps += Step("Your devices can reach this computer", "${lastIn.first} connected here " + (if (mins < 1) "just now" else if (mins == 1) "1 min ago" else "$mins min ago"), State.OK)
         } else if (incoming == null && reachable.isNotEmpty()) {
             val names = reachable.mapNotNull { node.device(it)?.name }.joinToString(", ")
             steps += Step("$names can reach this computer", "Couldn't test: update PSphere on $names to check this direction too", State.INFO)
         }
 
+        if (reachable.isEmpty() && silent.isNotEmpty() && (firewall == Firewall.ALLOWED || firewall == Firewall.UNKNOWN)) {
+            val (name, knock) = silent.entries.firstOrNull { it.value != Knock.GONE } ?: silent.entries.first()
+            val v = when (knock) {
+                Knock.GONE -> Verdict("$name seems to be off or asleep", "It was on this network a moment ago but doesn't answer now. Wake it up, check PSphere is open on it, then check again.", ok = false)
+                else -> Verdict("$name isn't answering", "$name is on this network, but PSphere on it didn't answer. Open PSphere on $name, then check again.", ok = false)
+            }
+            return Result(v, steps)
+        }
         return Result(verdict(firewall, network, linked.isNotEmpty(), online.isNotEmpty() || reachable.isNotEmpty(), incoming), steps)
     }
 

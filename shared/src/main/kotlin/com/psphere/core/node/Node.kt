@@ -1300,7 +1300,7 @@ class Node(
 
     /** Why a sync couldn't start, in words that point at the fix. */
     private fun unreachableText(name: String, seen: Boolean) =
-        if (seen) "$name is on this Wi-Fi but isn't accepting connections. On $name, open PSphere › Settings › Check connection."
+        if (seen) "$name is on this Wi-Fi but didn't answer. Check PSphere is open on $name; if it is, open PSphere › Settings › Check connection on $name."
         else "Couldn't reach $name. PSphere needs to be open on it, on the same Wi-Fi."
 
     companion object {

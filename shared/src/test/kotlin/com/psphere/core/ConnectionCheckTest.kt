@@ -62,7 +62,7 @@ class ConnectionCheckTest {
         val gone = laptop.address
         laptop.close()
         val seen = phone.node.syncWith(laptop.id, listOf(gone))
-        assertTrue(seen.error!!, "isn't accepting connections" in seen.error!!)
+        assertTrue(seen.error!!, "didn't answer" in seen.error!!)
         assertTrue("Check connection" in seen.error!!)
         val unseen = phone.node.syncWith(laptop.id, listOf(HostPort("127.0.0.1", 1)).drop(1))
         assertTrue(unseen.error!!, "PSphere needs to be open" in unseen.error!!)
