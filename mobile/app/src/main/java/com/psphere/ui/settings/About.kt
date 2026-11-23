@@ -176,7 +176,7 @@ private fun CheckForUpdatesRow() {
         is AppUpdate.State.Available -> "Version ${s.status.version} is available"
         is AppUpdate.State.Downloading -> "Downloading version ${s.status.version} · ${formatBytes(s.done)} of ${formatBytes(s.total)}"
         is AppUpdate.State.NeedsPermission -> "Downloaded. Allow PSphere to install updates, then come back here"
-        is AppUpdate.State.Installing -> "Tap Install on Android's screen to finish"
+        is AppUpdate.State.Installing -> "Tap Update on Android's screen to finish"
         is AppUpdate.State.DownloadFailed -> s.reason
         is AppUpdate.State.UpToDate -> "You're on the latest version ($current)"
         is AppUpdate.State.Failed -> s.reason
@@ -233,7 +233,7 @@ private fun CheckForUpdatesRow() {
                             OutlinedButton(onClick = { uri.openUri(available.url) }) { Text("Release page") }
                         }
                         Text(
-                            "Downloads the update (${formatBytes(apk.size)}) from GitHub and checks it. Android then asks you to tap Install. Your links and backups stay as they are.",
+                            "Downloads the update (${formatBytes(apk.size)}) from GitHub and checks it. Android then asks you to confirm. Your links and backups stay as they are.",
                             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
                         )
                     }

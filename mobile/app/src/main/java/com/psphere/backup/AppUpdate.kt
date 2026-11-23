@@ -87,7 +87,10 @@ object AppUpdate {
     /** Opens Android's "Install unknown apps" page for PSphere. */
     fun openPermission(ctx: Context) {
         runCatching {
-            ctx.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            // From the app's own screen, so Back returns to PSphere (a new task would land in Settings' own history).
+            val i = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}"))
+            if (ctx !is android.app.Activity) i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(i)
         }
     }
 

@@ -42,8 +42,9 @@ object ConnectionCheck {
     }
 
     fun open(ctx: Context, fix: Fix) {
-        runCatching { ctx.startActivity(Intent(fix.action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-            .onFailure { runCatching { ctx.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } }
+        // From the app's own screen, so Back returns to PSphere.
+        fun go(action: String) = ctx.startActivity(Intent(action).apply { if (ctx !is android.app.Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
+        runCatching { go(fix.action) }.onFailure { runCatching { go(Settings.ACTION_SETTINGS) } }
     }
 
     /** Runs every check. Takes a few seconds (it asks the linked devices); call off the main thread. */
