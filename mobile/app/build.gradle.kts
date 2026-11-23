@@ -77,10 +77,8 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.work.runtime.ktx)
@@ -90,5 +88,4 @@ dependencies {
     implementation(libs.gms.code.scanner)
     implementation(libs.androidx.exifinterface)
     implementation("com.psphere:psphere-shared")
-    debugImplementation(libs.androidx.ui.tooling)
 }

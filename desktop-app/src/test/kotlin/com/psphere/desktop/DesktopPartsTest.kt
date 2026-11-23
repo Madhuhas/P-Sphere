@@ -108,14 +108,12 @@ class DesktopPartsTest {
         val dir = tempDir()
         val first = SingleInstance(dir)
         assertTrue(first.acquired)
-        var shown = 0
-        val lock = Object()
-        first.listen { synchronized(lock) { shown++; lock.notifyAll() } }
+        val shown = java.util.concurrent.CountDownLatch(1)
+        first.listen { shown.countDown() }
         val second = SingleInstance(dir)
         assertFalse(second.acquired)
         assertTrue(second.askRunningToShow())
-        synchronized(lock) { if (shown == 0) lock.wait(3_000) }
-        assertEquals(1, shown)
+        assertTrue(shown.await(3, java.util.concurrent.TimeUnit.SECONDS))
     }
 
     @Test

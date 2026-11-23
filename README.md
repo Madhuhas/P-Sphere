@@ -38,7 +38,7 @@ Back up folders between your own devices over your home Wi-Fi.
 
 <br>
 
-PSphere backs up folders between your Android phone, tablet and Windows laptop. The devices talk to each other directly, so there's no server, no account and no subscription, and your photos stay on your home network.
+PSphere backs up folders between your Android phone, tablet and computer (Windows, with Linux and macOS experimental). The devices talk to each other directly, so there's no server, no account and no subscription, and your photos stay on your home network.
 
 <div align="center">
 <table>
@@ -65,7 +65,7 @@ folders too. Runs in the tray.
 
 <a href="https://psphere.pages.dev/download">Download for Windows</a>
 <br>
-<sub>Linux and macOS: packages come with the next release.</sub>
+<sub>Linux and macOS: experimental packages on the download page.</sub>
 <br><br>
 
 </td>
@@ -134,7 +134,7 @@ Only devices you've linked can connect, by scanning a QR code or comparing a 6-d
 
 ## Building
 
-You need JDK 17 or newer (the one in Android Studio works) and, for the Android app, the Android SDK.
+You need JDK 17 or newer for the core and the Android app (the one in Android Studio works), the Android SDK for the Android app, and JDK 22 or newer for the desktop app.
 
 ```sh
 cd shared      && ./gradlew test            # the core's tests
@@ -177,8 +177,8 @@ In plain words: use it, change it and share it freely. If you share a changed ve
 - **[Kotlin](https://kotlinlang.org)**, **[Jetpack Compose](https://developer.android.com/jetpack/compose)**, **[Compose Multiplatform](https://www.jetbrains.com/compose-multiplatform/)**, **WorkManager**, **Navigation** and **ExifInterface** (Apache 2.0).
 - **[Coil](https://coil-kt.github.io/coil/)** loads photos on Android (Apache 2.0).
 - **[ZXing](https://github.com/zxing/zxing)** draws the linking QR codes (Apache 2.0).
-- **[JmDNS](https://github.com/jmdns/jmdns)** finds devices on the Wi-Fi in the Windows app (Apache 2.0).
-- **[metadata-extractor](https://github.com/drewnoakes/metadata-extractor)** reads when a photo was taken in the Windows app (Apache 2.0).
+- **[JmDNS](https://github.com/jmdns/jmdns)** finds devices on the Wi-Fi in the desktop app (Apache 2.0).
+- **[metadata-extractor](https://github.com/drewnoakes/metadata-extractor)** reads when a photo was taken in the desktop app (Apache 2.0).
 - Smart photos runs on **[ONNX Runtime](https://onnxruntime.ai)** (MIT) with these models, downloaded only when you ask: **[OpenAI CLIP](https://github.com/openai/CLIP)** ViT-B/32 for search (MIT), **[YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet)** (MIT) and **[SFace](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface)** (Apache 2.0) from OpenCV for faces, and **[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)** for text in photos (Apache 2.0).
 - Place names come from **[GeoNames](https://www.geonames.org)** (CC BY 4.0).
 - QR codes are scanned with Google's **ML Kit code scanner**, part of Google Play services, which is not open source and has its own [terms](https://developers.google.com/ml-kit/terms).

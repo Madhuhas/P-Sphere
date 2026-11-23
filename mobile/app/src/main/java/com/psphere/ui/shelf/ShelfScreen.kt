@@ -229,7 +229,7 @@ fun ShelfScreen() {
         val clip = context.getSystemService(ClipboardManager::class.java).primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)
         when {
             clip?.uri != null -> addUris(listOf(clip.uri))
-            !clip?.coerceToText(context).isNullOrBlank() -> addText(clip!!.coerceToText(context).toString())
+            clip != null && !clip.coerceToText(context).isNullOrBlank() -> addText(clip.coerceToText(context).toString())
             else -> message("There's nothing to paste")
         }
     }

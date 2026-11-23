@@ -113,8 +113,6 @@ class Catalog(val selfId: String) {
 
     @Synchronized fun deviceName(origin: String): String? = (records[id(origin, "d")] as? DeviceRec)?.name
 
-    @Synchronized fun origins(): Set<String> = records.values.mapTo(HashSet()) { it.origin }
-
     @Synchronized fun rule(origin: String, ruleId: String): RuleRec? = records[id(origin, "r:$ruleId")] as? RuleRec
 
     @Synchronized fun rules(origin: String? = null): List<RuleRec> =

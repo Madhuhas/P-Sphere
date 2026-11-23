@@ -139,8 +139,6 @@ class Facts(private val file: File) {
 
     // ── Text and places ──────────────────────────────────────────────────────
 
-    @Synchronized fun textOf(hash: String) = text[hash].orEmpty()
-
     /** Photos whose text contains every word of [words]. */
     @Synchronized
     fun withText(words: List<String>): Set<String> =

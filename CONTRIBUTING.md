@@ -93,10 +93,11 @@ These are product requirements, not preferences. A change that breaks one will n
 
 ### What you need
 
-- **JDK 17 or newer.** The one that ships with [Android Studio](https://developer.android.com/studio) works; point `JAVA_HOME` at it.
+- **JDK 17 or newer** for the shared core and the Android app. The one that ships with [Android Studio](https://developer.android.com/studio) works; point `JAVA_HOME` at it.
+- **JDK 22 or newer** for the desktop app (its Windows folder picker uses Java 22's foreign function API). Packaging the installers also needs it, because `jpackage` comes with the JDK.
 - **The Android SDK** (Android Studio installs it) for the Android app.
 - **Git** ([git-scm.com](https://git-scm.com)).
-- An Android phone or emulator for trying the app. Windows is the main development platform; macOS and Linux work for the shared core.
+- An Android phone or emulator for trying the app. Windows is the main development platform; the shared core and the desktop app also build and run on Linux and macOS.
 
 ### Get the code running
 
@@ -112,6 +113,11 @@ cd shared
 # 3. Build the Android app
 cd ../mobile
 ./gradlew assembleDebug    # app/build/outputs/apk/debug/app-debug.apk
+
+# 4. Test and run the desktop app (JDK 22)
+cd ../desktop-app
+./gradlew test
+./gradlew run -PdataDir=/some/test/folder   # keeps your real PSphere data untouched
 ```
 
 ### Project layout
@@ -120,9 +126,11 @@ cd ../mobile
 | --- | --- |
 | `shared/` | The pure-Kotlin core used by every app (package `com.psphere.core`): protocol, encryption, linking, rules, relay, resume and the catalog. A standalone Gradle build with its own tests. |
 | `mobile/` | The Android app (Kotlin, Jetpack Compose, package `com.psphere`). Includes `shared/` as a composite build. |
-| `desktop-app/` | The Windows app (Kotlin, Compose for Desktop, package `com.psphere.desktop`). Also includes `shared/`. Run it with `./gradlew run`. |
+| `desktop-app/` | The desktop app for Windows, Linux and macOS (Kotlin, Compose for Desktop, package `com.psphere.desktop`). Also includes `shared/`. Run it with `./gradlew run`. |
+| `ios/PSphereKit` | Early work on the iPhone and iPad engine, in Swift (paused). Its tests run in CI. |
 | `docs/p2p-v3.md` | The spec: what PSphere does and how it works underneath. |
-| `website/` | The website's source. The published site, [psphere.pages.dev](https://psphere.pages.dev), is built from [PSphere-Website](https://github.com/Madhuhas/PSphere-Website). |
+
+The website, [psphere.pages.dev](https://psphere.pages.dev), lives in a separate repository.
 
 ### Windows: "Unable to delete directory"
 
@@ -139,7 +147,7 @@ Gradle on Windows sometimes fails with "Unable to delete directory …/build/…
 
 ## Testing your change
 
-- **Run `./gradlew test` in `shared/`.** It is offline: the tests use fake devices in temporary folders, never the network or your files.
+- **Run `./gradlew test` in `shared/`** (and in `desktop-app/` for desktop changes). It is offline: the tests use fake devices in temporary folders, never the network or your files.
 - **Add a test for new behaviour,** and a test that fails without your fix for a bug. Tests live in `shared/src/test/kotlin/com/psphere/core/`.
 - **Android changes:** build with `./gradlew assembleDebug` in `mobile/`, install it, and look at what you changed, in a light and a dark theme.
 - **Changes to linking or backing up:** try them against the app with the test device in `shared/`, which acts as a laptop:

@@ -34,6 +34,9 @@ object ConnectionCheck {
 
     fun link(ctx: Context): Link {
         val cm = ctx.getSystemService(ConnectivityManager::class.java) ?: return Link(wifi = false, vpn = false)
+        // Every network, not just the active one: with a VPN on, the active network is the VPN,
+        // and the Wi-Fi under it would be missed. The replacement API needs a callback.
+        @Suppress("DEPRECATION")
         val all = cm.allNetworks.mapNotNull { cm.getNetworkCapabilities(it) }
         return Link(
             wifi = all.any { it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || it.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) },
