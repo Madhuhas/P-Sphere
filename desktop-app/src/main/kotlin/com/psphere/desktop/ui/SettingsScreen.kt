@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import com.psphere.desktop.engine.Engine
 import com.psphere.desktop.engine.DesktopSystem
 
-const val APP_VERSION = "2.5.1"
+const val APP_VERSION = "2.6.0"
 
 @Composable
 fun SettingsScreen(onOpenDevice: (String) -> Unit, onLink: () -> Unit, onCheckConnection: () -> Unit = {}) {

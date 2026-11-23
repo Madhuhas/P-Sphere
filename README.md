@@ -73,7 +73,7 @@ folders too. Runs in the tray.
 </table>
 </div>
 
-> **Early development.** Version 2.5.1 is a pre-release. Both apps are tested on real devices, but expect rough edges, and please [tell us what breaks](https://github.com/Madhuhas/P-Sphere/issues/new?template=bug_report.yml).
+> **Early development.** Version 2.6 is a pre-release. Both apps are tested on real devices, but expect rough edges, and please [tell us what breaks](https://github.com/Madhuhas/P-Sphere/issues/new?template=bug_report.yml).
 
 ---
 
@@ -110,13 +110,25 @@ A shared board for all your linked devices. Put text, a link or a file on the Sh
 
 On your phone, PSphere lists the photos already backed up safely on another device. Free them up and they're removed from the phone only, after PSphere checks again that the copies are really there. They stay in Photos as previews.
 
+## Find your devices
+
+Each device card shows the other device's battery and free space, live while it's on the same Wi-Fi and "as of" the last time otherwise. Lost your phone in the house? Tap **Ring** on the computer and the phone plays its alarm for a minute, even on silent. A computer can be rung too, and can turn that off in Settings.
+
+## Check connection
+
+When a device can't connect, **Settings › Check connection** says why in plain words: not on Wi-Fi, the other device is off or PSphere isn't open on it, or a Wi-Fi that keeps devices apart. On Windows it also spots the usual cause, the firewall on a network Windows treats as public, and fixes it after one permission prompt.
+
+## One-click updates
+
+**Settings › Check for updates** shows what's new in the next version. On Windows, **Update** downloads it, checks it, and PSphere closes and opens again on the new version. On Android, Android asks you to confirm the update. The download is checked against its SHA-256 before anything is installed.
+
 ## Backup, not mirror
 
 Deleting a file never deletes its copies. When a file changes, the backup is replaced and the old version is kept for 30 days. A device that was off catches up later from any device that has the files, and big videos resume where they stopped.
 
 ## Private by design
 
-Only devices you've linked can connect, by scanning a QR code or comparing a 6-digit code on both screens. Every connection is encrypted with TLS, each device checks the other's key, and every file is checked against its SHA-256 fingerprint when it arrives. We [tested this on real devices](https://psphere.pages.dev/security).
+Only devices you've linked can connect, by scanning a QR code or comparing a 6-digit code on both screens. Every connection is encrypted with TLS, each device checks the other's key, and every file is checked against its SHA-256 fingerprint when it arrives. We [tested this on real devices](https://psphere.pages.dev/security). The app only goes online when you check for updates or update.
 
 ---
 
