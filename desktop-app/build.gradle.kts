@@ -44,7 +44,7 @@ val onnxRuntimeSlim = tasks.register<Jar>("onnxRuntimeSlim") {
 }
 
 dependencies {
-    onnxRuntime("com.microsoft.onnxruntime:onnxruntime:1.20.0")
+    onnxRuntime("com.microsoft.onnxruntime:onnxruntime:1.32.0")
     implementation("com.psphere:psphere-shared")
     implementation(compose.desktop.currentOs)
     implementation("org.jetbrains.compose.material3:material3:1.9.0")
